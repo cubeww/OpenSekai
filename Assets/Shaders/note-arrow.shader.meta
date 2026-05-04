@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 8162500d83a5b3442b92d880bd1a0834
+timeCreated: 1777777745
+licenseType: Free
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData:
+  assetBundleName: shader/live
+  assetBundleVariant:
