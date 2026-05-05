@@ -144,32 +144,48 @@ namespace Sekai
 
 		public void Excute(INote note, Func<bool> checkPlayedHaptic)
 		{
-			if (note == null || note.Result == NoteResult.None || note.Result == NoteResult.Pass)
+			if (note == null || note.Result == NoteResult.None || note.Result == NoteResult.Miss || note.Result == NoteResult.Pass)
 			{
 				return;
 			}
 
 			noteInfo.result = note.Result;
-			noteInfo.category = LiveUtility.NormalizeViewCategory(note.Category);
+			noteInfo.category = note.Category;
 			noteInfo.type = note.Type;
 			noteInfo.direction = note.Direction;
-			noteInfo.laneStart = note.DefaultLeftLane;
-			noteInfo.laneEnd = note.DefaultRightLane;
+			noteInfo.laneStart = note.LaneStart;
+			noteInfo.laneEnd = note.LaneEnd;
 			noteInfo.pairNote = note.PairNote;
 			noteInfo.noteId = note.Id;
 
-			if (noteInfo.result == NoteResult.Miss || noteInfo.result == NoteResult.Bad)
+			switch (noteInfo.category)
 			{
-				PlayLaneEffect();
-				return;
+				case NoteCategory.Connection:
+					Connection();
+					break;
+				case NoteCategory.Flick:
+				case NoteCategory.FrictionFlick:
+					PlayLaneEffect();
+					TapAura();
+					TapGen();
+					FlickSlash();
+					break;
+				case NoteCategory.Friction:
+				case NoteCategory.FrictionLong:
+					Friction();
+					break;
+				case NoteCategory.FrictionHide:
+				case NoteCategory.FrictionHideLong:
+				case NoteCategory.Combo:
+				case NoteCategory.Hidden:
+					return;
+				default:
+					PlayLaneEffect();
+					TapAura();
+					TapGen();
+					break;
 			}
 
-			PlayLaneEffect();
-			TapAura();
-			TapGen();
-			FlickSlash();
-			Connection();
-			Friction();
 			PlayHaptic(checkPlayedHaptic);
 		}
 
@@ -257,7 +273,17 @@ namespace Sekai
 		private void TapAura()
 		{
 			EffectPool pool = GetNotePool(auraPoolDict);
-			SpawnAtNoteCenter(pool);
+			if (pool == null)
+			{
+				return;
+			}
+
+			int laneStart = Mathf.Clamp(noteInfo.laneStart, 0, LaneCount - 1);
+			int laneEnd = Mathf.Clamp(noteInfo.laneEnd, laneStart, LaneCount - 1);
+			for (int lane = laneStart; lane <= laneEnd; lane++)
+			{
+				SpawnAtLane(pool, lane);
+			}
 		}
 
 		private void TapGen()
@@ -277,7 +303,7 @@ namespace Sekai
 				return;
 			}
 
-			ParticleSystemController effect = SpawnAtNoteCenter(pool);
+			ParticleSystemController effect = SpawnAtNoteCenter(pool, false);
 			if (effect == null)
 			{
 				return;
@@ -296,6 +322,7 @@ namespace Sekai
 				effect.transform.localEulerAngles = Vector3.zero;
 			}
 			effect.transform.localScale = new Vector3(noteInfo.laneEnd + 1 - noteInfo.laneStart, 1f, 1f);
+			effect.Play();
 		}
 
 		private void PlayUnpickedEffect(int lane)
@@ -307,23 +334,9 @@ namespace Sekai
 		{
 			int laneStart = Mathf.Clamp(noteInfo.laneStart, 0, LaneCount - 1);
 			int laneEnd = Mathf.Clamp(noteInfo.laneEnd, laneStart, LaneCount - 1);
-			if (Time.frameCount != lastFrame && lastTapLanes != null)
-			{
-				Array.Clear(lastTapLanes, 0, lastTapLanes.Length);
-				lastFrame = Time.frameCount;
-			}
-
 			for (int lane = laneStart; lane <= laneEnd; lane++)
 			{
-				if (lastTapLanes != null && lastTapLanes[lane] == Time.frameCount)
-				{
-					continue;
-				}
 				TapLane(lane);
-				if (lastTapLanes != null)
-				{
-					lastTapLanes[lane] = Time.frameCount;
-				}
 			}
 		}
 
@@ -363,7 +376,7 @@ namespace Sekai
 			Handheld.Vibrate();
 		}
 
-		private ParticleSystemController SpawnAtNoteCenter(EffectPool pool)
+		private ParticleSystemController SpawnAtNoteCenter(EffectPool pool, bool play = true)
 		{
 			if (pool == null)
 			{
@@ -377,6 +390,29 @@ namespace Sekai
 			}
 
 			effect.transform.localPosition = GetNoteCenterGroundPosition();
+			effect.transform.localEulerAngles = Vector3.zero;
+			effect.transform.localScale = Vector3.one;
+			if (play)
+			{
+				effect.Play();
+			}
+			return effect;
+		}
+
+		private ParticleSystemController SpawnAtLane(EffectPool pool, int lane)
+		{
+			if (pool == null)
+			{
+				return null;
+			}
+
+			ParticleSystemController effect = pool.Spawn();
+			if (effect == null)
+			{
+				return null;
+			}
+
+			effect.transform.localPosition = GetLaneGroundPosition(lane);
 			effect.transform.localEulerAngles = Vector3.zero;
 			effect.transform.localScale = Vector3.one;
 			effect.Play();

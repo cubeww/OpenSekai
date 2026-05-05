@@ -24,10 +24,10 @@ namespace Sekai
 				Stop();
 			}
 
-			public void Play(Vector3 position)
+			public void Play(INote note)
 			{
 				IsUsed = true;
-				SetPosition(position);
+				SetTransform(note);
 				if (Aura != null && !Aura.IsPlaying)
 				{
 					Aura.Play();
@@ -38,11 +38,14 @@ namespace Sekai
 				}
 			}
 
-			public void SetPosition(Vector3 position)
+			public void SetTransform(INote note)
 			{
+				Vector3 position = GetNoteCenterPosition(note);
 				if (Aura != null)
 				{
 					Aura.transform.localPosition = position;
+					float width = Mathf.Max(1f, note.LaneEndF + 1f - note.LaneStartF);
+					Aura.transform.localScale = new Vector3(width, 1f, 1f);
 				}
 				if (Gen != null)
 				{
@@ -183,11 +186,11 @@ namespace Sekai
 
 				if (note.State == NoteState.InputBegan || note.State == NoteState.Input)
 				{
-					effect.Play(GetNoteCenterPosition(note));
+					effect.Play(note);
 				}
 				else
 				{
-					effect.SetPosition(GetNoteCenterPosition(note));
+					effect.SetTransform(note);
 				}
 			}
 

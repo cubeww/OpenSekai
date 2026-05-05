@@ -103,7 +103,7 @@ namespace Sekai
 
 			if (isPlayInternal && particleSystem != null)
 			{
-				particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+				particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 			}
 			particleSystem?.Play(true);
 			playFrame = Time.frameCount;
@@ -117,7 +117,7 @@ namespace Sekai
 				CacheComponents();
 			}
 
-			particleSystem?.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+			particleSystem?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 			isPlayInternal = false;
 		}
 
