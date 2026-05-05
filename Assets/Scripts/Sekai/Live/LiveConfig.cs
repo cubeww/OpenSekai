@@ -6,6 +6,8 @@ namespace Sekai.Live
 	{
 		public static readonly string ConfigBundleNamePath = "Live/Config/LiveBundleBuildData";
 
+		public static int Life = 1000;
+
 		public static float JudgeTime = 0.1f;
 
 		public static float GetNoteLineParentProgress(float time, INote startNote, INote endNote)

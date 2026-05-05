@@ -11,7 +11,20 @@ namespace Sekai
 
         public void Setup(MusicDifficulty musicDifficulty)
         {
-            if (_appendObject != null) _appendObject.SetActive(musicDifficulty == MusicDifficulty.Append);
+            if (musicDifficulty == MusicDifficulty.Append)
+            {
+                if (_defaultImage != null) _defaultImage.SetActive(false);
+                if (_appendObject != null) _appendObject.SetActive(true);
+                return;
+            }
+
+            if (_defaultImage != null)
+            {
+                _defaultImage.color = ColorUtility.GetDifficultyColor(musicDifficulty);
+                _defaultImage.SetActive(true);
+            }
+
+            if (_appendObject != null) _appendObject.SetActive(false);
         }
 
         public void Setup(string musicDifficulty)

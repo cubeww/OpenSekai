@@ -16,6 +16,11 @@ namespace Sekai.Core.Live
 
         public LiveBootDataBase BootData { get; protected set; }
 
+        public LiveSettingData Settings
+        {
+            get { return BootData != null ? BootData.LiveSettingData : null; }
+        }
+
         public Camera BaseCamera
         {
             get { return baseCamera; }

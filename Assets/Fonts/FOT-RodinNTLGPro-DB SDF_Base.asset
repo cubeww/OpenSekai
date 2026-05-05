@@ -1,0 +1,164 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
+  m_Name: FOT-RodinNTLGPro-DB SDF_Base
+  m_EditorClassIdentifier: 
+  m_Version: 1.1.0
+  m_FaceInfo:
+    m_FaceIndex: 0
+    m_FamilyName: FOT-RodinNTLG Pro
+    m_StyleName: DB
+    m_PointSize: 35
+    m_Scale: 1
+    m_UnitsPerEM: 0
+    m_LineHeight: 70
+    m_AscentLine: 30.800001
+    m_CapLine: 28
+    m_MeanLine: 20
+    m_Baseline: 0
+    m_DescentLine: -4.2
+    m_SuperscriptOffset: 30.800001
+    m_SuperscriptSize: 0.5
+    m_SubscriptOffset: -4.2
+    m_SubscriptSize: 0.5
+    m_UnderlineOffset: -3.5
+    m_UnderlineThickness: 1.75
+    m_StrikethroughOffset: 8
+    m_StrikethroughThickness: 1.75
+    m_TabWidth: 12
+  m_Material: {fileID: 2100000, guid: 129844479cdb7ac4baae0e594c7a80da, type: 2}
+  m_SourceFontFileGUID: cef5e75ec725eaa459e731429343ab77
+  m_CreationSettings:
+    sourceFontFileName: 
+    sourceFontFileGUID: cef5e75ec725eaa459e731429343ab77
+    faceIndex: 0
+    pointSizeSamplingMode: 1
+    pointSize: 35
+    padding: 5
+    paddingMode: 0
+    packingMode: 0
+    atlasWidth: 8
+    atlasHeight: 8
+    characterSetSelectionMode: 7
+    characterSequence: ' '
+    referencedFontAssetGUID: a3006a04bcc9ee4499918d8b6e934230
+    referencedTextAssetGUID: 
+    fontStyle: 0
+    fontStyleModifier: 0
+    renderMode: 4165
+    includeFontFeatures: 0
+  m_SourceFontFile: {fileID: 0}
+  m_SourceFontFilePath: 
+  m_AtlasPopulationMode: 0
+  InternalDynamicOS: 0
+  m_GlyphTable:
+  - m_Index: 1
+    m_Metrics:
+      m_Width: 0
+      m_Height: 0
+      m_HorizontalBearingX: 0
+      m_HorizontalBearingY: 0
+      m_HorizontalAdvance: 12.078125
+    m_GlyphRect:
+      m_X: 0
+      m_Y: 0
+      m_Width: 0
+      m_Height: 0
+    m_Scale: 1
+    m_AtlasIndex: 0
+    m_ClassDefinitionType: 0
+  m_CharacterTable:
+  - m_ElementType: 1
+    m_Unicode: 32
+    m_GlyphIndex: 1
+    m_Scale: 1
+  m_AtlasTextures:
+  - {fileID: 2800000, guid: 2e164dcd34117a7429047e85cb9bd858, type: 3}
+  m_AtlasTextureIndex: 0
+  m_IsMultiAtlasTexturesEnabled: 0
+  m_GetFontFeatures: 1
+  m_ClearDynamicDataOnBuild: 0
+  m_AtlasWidth: 8
+  m_AtlasHeight: 8
+  m_AtlasPadding: 5
+  m_AtlasRenderMode: 4165
+  m_UsedGlyphRects: []
+  m_FreeGlyphRects:
+  - m_X: 0
+    m_Y: 0
+    m_Width: 7
+    m_Height: 7
+  m_FontFeatureTable:
+    m_MultipleSubstitutionRecords: []
+    m_LigatureSubstitutionRecords: []
+    m_GlyphPairAdjustmentRecords: []
+    m_MarkToBaseAdjustmentRecords: []
+    m_MarkToMarkAdjustmentRecords: []
+  m_ShouldReimportFontFeatures: 0
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: 72f6a0b6cb89a5048ba6de2e1544f65b, type: 2}
+  - {fileID: 11400000, guid: 07ebab94f8d54ea47b2f499bc75e18af, type: 2}
+  m_FontWeightTable:
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 0}
+  fontWeights: []
+  normalStyle: 0
+  normalSpacingOffset: 0
+  boldStyle: 0.75
+  boldSpacing: 7
+  italicStyle: 35
+  tabSize: 10
+  m_fontInfo:
+    Name: 
+    PointSize: 0
+    Scale: 0
+    CharacterCount: 0
+    LineHeight: 0
+    Baseline: 0
+    Ascender: 0
+    CapHeight: 0
+    Descender: 0
+    CenterLine: 0
+    SuperscriptOffset: 0
+    SubscriptOffset: 0
+    SubSize: 0
+    Underline: 0
+    UnderlineThickness: 0
+    strikethrough: 0
+    strikethroughThickness: 0
+    TabWidth: 0
+    Padding: 0
+    AtlasWidth: 0
+    AtlasHeight: 0
+  m_glyphInfoList: []
+  m_KerningTable:
+    kerningPairs: []
+  fallbackFontAssets: []
+  atlas: {fileID: 0}

@@ -171,65 +171,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: 114236825115137097, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_fontAsset
+    - target: {fileID: 114161523128174384, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
+      propertyPath: m_Material
       value: 
-      objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114236825115137097, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114236825115137097, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
-      value: 1801810542
       objectReference: {fileID: 0}
     - target: {fileID: 114469561979407964, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_fontAsset
+      propertyPath: m_text
       value: 
-      objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114469561979407964, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114469561979407964, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
-      value: 1801810542
-      objectReference: {fileID: 0}
-    - target: {fileID: 114610208554618962, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114610208554618962, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114610208554618962, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
-      value: 1801810542
-      objectReference: {fileID: 0}
-    - target: {fileID: 114856321325849650, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114856321325849650, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114856321325849650, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
-      value: 1801810542
       objectReference: {fileID: 0}
     - target: {fileID: 114942066236133985, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_fontAsset
+      propertyPath: m_text
       value: 
-      objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 114942066236133985, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-    - target: {fileID: 114942066236133985, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
-      value: 1801810542
+      propertyPath: m_fontSize
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 224452237593846326, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_AnchorMax.y
@@ -265,6 +221,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4177930474251431, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
   m_PrefabInstance: {fileID: 1552784111}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1552784113 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114294885792020211, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
+  m_PrefabInstance: {fileID: 1552784111}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6236e3b269283f40846f584bc9ba54f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1748972166
 GameObject:
   m_ObjectHideFlags: 0
@@ -314,8 +281,8 @@ MonoBehaviour:
   backgroundTexture: {fileID: 0}
   baseCamera: {fileID: 0}
   liveViews:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 1943756286}
+  - {fileID: 1552784113}
   renderTextureWidth: 1920
   renderTextureHeight: 1080
   previewMusicId: 1
@@ -323,6 +290,15 @@ MonoBehaviour:
   livePlayMode: 0
   startOnAwake: 1
   musicStartOnAwake: 1
+  liveStartWaitTime: 6
+  openingTransitionCover: {fileID: 0}
+  openingTransitionFadeDuration: 1
+  previewTitle: Tell Your World
+  previewLyricist: kz
+  previewComposer: kz
+  previewArranger: kz
+  previewVocalCaption: Miku
+  previewDifficulty: 6
 --- !u!1001 &1943756284
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -385,6 +361,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4320256170494724, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
   m_PrefabInstance: {fileID: 1943756284}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1943756286 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114017697238300914, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
+  m_PrefabInstance: {fileID: 1943756284}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1315f4b0860ee954d93d6179b07e61b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -20,6 +20,10 @@ namespace Sekai.Core.Live
         {
         }
 
+        public virtual void RhythmGameStart()
+        {
+        }
+
         public virtual void Pause(float time)
         {
         }
@@ -33,6 +37,10 @@ namespace Sekai.Core.Live
         }
 
         public virtual void OnFailure(float time)
+        {
+        }
+
+        public virtual void Finish()
         {
         }
     }
