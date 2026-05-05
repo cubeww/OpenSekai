@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Sekai.Core.Live
@@ -7,6 +8,8 @@ namespace Sekai.Core.Live
         [SerializeField] private RenderTexture backgroundTexture;
 
         [SerializeField] private Camera baseCamera;
+
+        public readonly List<ParticleSystemController> ParticleSystemControllers = new List<ParticleSystemController>();
 
         public RenderTexture BackgroundTexture
         {
@@ -30,6 +33,46 @@ namespace Sekai.Core.Live
         public void SetupBootDataForPreview(LiveBootDataBase bootData)
         {
             BootData = bootData;
+        }
+
+        public void RegisterParticleSystemController(ParticleSystemController controller)
+        {
+            if (controller == null || ParticleSystemControllers.Contains(controller))
+            {
+                return;
+            }
+
+            ParticleSystemControllers.Add(controller);
+        }
+
+        public void UnregisterParticleSystemController(ParticleSystemController controller)
+        {
+            if (controller == null)
+            {
+                return;
+            }
+
+            ParticleSystemControllers.Remove(controller);
+        }
+
+        protected virtual void OnUpdate()
+        {
+            if (Time.frameCount % 5 != 0)
+            {
+                return;
+            }
+
+            for (int i = ParticleSystemControllers.Count - 1; i >= 0; i--)
+            {
+                ParticleSystemController controller = ParticleSystemControllers[i];
+                if (controller == null)
+                {
+                    ParticleSystemControllers.RemoveAt(i);
+                    continue;
+                }
+
+                controller.OnUpdate();
+            }
         }
     }
 }

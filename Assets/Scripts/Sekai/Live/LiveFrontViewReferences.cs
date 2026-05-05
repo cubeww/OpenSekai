@@ -21,6 +21,15 @@ namespace Sekai.Live
         [SerializeField] private ScreenEffectView screenEffectView;
         [SerializeField] private Transform effectRoot;
         [SerializeField] private Camera effectCamera;
+        [SerializeField] private GameObject tapSingleEffectPrefab;
+        [SerializeField] private GameObject tapFlickEffectPrefab;
+        [SerializeField] private GameObject tapLoopEffectPrefab;
+        [SerializeField] private TapEffectView.EffectPrefab[] tapEffectPrefabs;
+        [SerializeField] private GameObject longHoldAuraPrefab;
+        [SerializeField] private GameObject longHoldGenPrefab;
+        [SerializeField] private GameObject criticalLongHoldAuraPrefab;
+        [SerializeField] private GameObject criticalLongHoldGenPrefab;
+        [SerializeField] private int longTapEffectPoolCount = 16;
         [SerializeField] private GameObject autoLabel;
         [SerializeField] private ConsecutiveAutoLiveView consecutiveAutoLiveView;
         [SerializeField] private NotePrefabSet[] notePrefabs;

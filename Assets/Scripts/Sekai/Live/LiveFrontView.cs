@@ -21,8 +21,11 @@ namespace Sekai.Live
         private Tween musicStartDelayTween;
         private Tween backgroundBrightnessTween;
         private bool isAuto;
+        private bool isPlayedHaptic;
         private int life;
         private NotesViewManager notesViewManager;
+        private TapEffectView tapEffect;
+        private LongTapEffectView longTapEffectView;
         // Original prefab keeps this at 0; URP 2D sorting draws it over negative-order lanes in this project.
         private const int BackgroundSortingOrder = -200;
 
@@ -45,7 +48,7 @@ namespace Sekai.Live
 
             skillView?.Setup();
             countdownView?.Setup();
-            screenEffectView?.Setup();
+            screenEffectView?.Setup(baseController);
             consecutiveAutoLiveView?.Setup(OnConsecutiveAutoLivePause, OnConsecutiveAutoLiveResume, OnConsecutiveAutoLiveFinish, frontViewCamera);
             SetupBackground();
 
@@ -105,6 +108,8 @@ namespace Sekai.Live
         public override void Retry()
         {
             notesViewManager?.Clear();
+            longTapEffectView?.Clear();
+            tapEffect?.Clear();
             comboView?.Clear();
             cutinManager?.Clear();
             skillView?.Clear();
@@ -170,9 +175,35 @@ namespace Sekai.Live
                 return;
             }
 
+            tapEffect = effectRoot.GetComponent<TapEffectView>();
+            if (tapEffect == null)
+            {
+                tapEffect = effectRoot.gameObject.AddComponent<TapEffectView>();
+            }
+            tapEffect.Setup(baseController, tapEffectPrefabs, tapSingleEffectPrefab, tapFlickEffectPrefab, tapLoopEffectPrefab);
+
+            Transform longTapEffectTransform = effectRoot.Find("LongTapEffect");
+            if (longTapEffectTransform != null)
+            {
+                longTapEffectView = longTapEffectTransform.GetComponent<LongTapEffectView>();
+                if (longTapEffectView == null)
+                {
+                    longTapEffectView = longTapEffectTransform.gameObject.AddComponent<LongTapEffectView>();
+                }
+            }
+            else
+            {
+                GameObject longTapEffectObject = new GameObject("LongTapEffect");
+                longTapEffectView = longTapEffectObject.AddComponent<LongTapEffectView>();
+                longTapEffectView.transform.SetParent(effectRoot, false);
+            }
+            longTapEffectView.Setup(longHoldAuraPrefab, longHoldGenPrefab, criticalLongHoldAuraPrefab, criticalLongHoldGenPrefab, longTapEffectPoolCount, baseController);
+
             effectRoot.position = transform.position;
             if (effectCamera != null)
             {
+                Shader.SetGlobalMatrix(ShaderPropertyID.TAP_EFFECT_VIEW_MATRIX_ID, effectCamera.worldToCameraMatrix);
+                Shader.SetGlobalMatrix(ShaderPropertyID.TAP_EFFECT_PROJECTION_MATRIX_ID, GL.GetGPUProjectionMatrix(effectCamera.projectionMatrix, false));
                 effectCamera.enabled = false;
             }
         }
@@ -341,6 +372,7 @@ namespace Sekai.Live
 
         public override void OnUpdate(float time)
         {
+            isPlayedHaptic = false;
             float viewTime = time;
             if (baseController != null &&
                 baseController.BootData != null &&
@@ -352,16 +384,42 @@ namespace Sekai.Live
 
             skillView?.OnUpdate(viewTime);
             notesViewManager?.OnUpdate(viewTime);
+            longTapEffectView?.Excute(viewTime);
         }
 
         public override void SpawnNote(INote note)
         {
             notesViewManager?.SpawnNote(note);
+            if (note is LongNote)
+            {
+                longTapEffectView?.Add(note);
+            }
         }
 
         public override void UnspawnNote(INote note)
         {
             notesViewManager?.UnspawnNote(note);
+            if (note is LongNote)
+            {
+                longTapEffectView?.Remove(note);
+            }
+        }
+
+        public override void JudgmentNote(INote note)
+        {
+            if (note == null)
+            {
+                return;
+            }
+
+            Effect(note);
+            judgmentView?.Excute(note.JudgeInfo);
+            judgmentDescriptionView?.Excute(note.JudgeInfo);
+        }
+
+        public override void Unpicked(int lane, ref LiveTouch touch)
+        {
+            tapEffect?.Unpicked(lane, ref touch);
         }
 
         private void EnsureBackgroundMesh()
@@ -414,6 +472,19 @@ namespace Sekai.Live
                 Destroy(runtimeBackgroundMesh);
                 runtimeBackgroundMesh = null;
             }
+        }
+
+        private void Effect(INote note)
+        {
+            tapEffect?.Excute(note, CheckPlayedHaptic);
+            screenEffectView?.Excute(note);
+        }
+
+        private bool CheckPlayedHaptic()
+        {
+            bool result = isPlayedHaptic;
+            isPlayedHaptic = true;
+            return result;
         }
 
         private void LateUpdate()

@@ -89,6 +89,16 @@ namespace Sekai.Live
 			return new Vector2(size * 1.2178f + 2.06f, 1.7222f);
 		}
 
+		public static float CalcLaneTransformX(int lane)
+		{
+			return CalcLaneTransformX((float)lane);
+		}
+
+		public static float CalcLaneTransformX(float lane)
+		{
+			return lane * 0.84f - 4.62f;
+		}
+
 		public static void CalcExcuteNoteLane(NoteBase noteBase, ref INote currentNote, ref INote nextNote, ref MusicScoreInfo currentFrameInfo, MusicScoreInfo musicScoreInfo, INote childNote)
 		{
 			if (noteBase == null || currentNote == null || nextNote == null || childNote == null)

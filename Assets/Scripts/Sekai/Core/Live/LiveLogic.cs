@@ -299,6 +299,26 @@ namespace Sekai.Core.Live
 		{
 		}
 
+		public void OnAutoInput()
+		{
+			for (int i = noteStartIndex; noteArray != null && i < noteArray.Length; i++)
+			{
+				NoteBase note = noteArray[i];
+				if (note == null)
+				{
+					continue;
+				}
+				if (note.MusicScoreInfo.time > currentFrameInfo.time)
+				{
+					break;
+				}
+				if (note.State != NoteState.Done)
+				{
+					note.AutoJudgment(currentFrameInfo);
+				}
+			}
+		}
+
 		private void ForEachLiveView(Action<LiveViewBase> action)
 		{
 			if (liveViews == null || action == null)

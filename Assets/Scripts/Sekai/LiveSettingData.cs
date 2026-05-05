@@ -8,7 +8,7 @@ namespace Sekai
 
         public bool UseSimultaneousPushingLine { get; set; } = true;
 
-        public float NoteSpeed { get; set; } = 7f;
+        public float NoteSpeed { get; set; } = 10f;
 
         public float Brightness { get; set; } = 1f;
     }

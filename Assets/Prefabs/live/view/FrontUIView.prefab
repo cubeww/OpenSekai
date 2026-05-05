@@ -24096,6 +24096,96 @@ MonoBehaviour:
   screenEffectView: {fileID: 114274303670636188}
   effectRoot: {fileID: 4359435272656907}
   effectCamera: {fileID: 20126042694364515}
+  tapSingleEffectPrefab: {fileID: 1709254077376921, guid: 0d77bc29e54e64a409264b8518d32978, type: 3}
+  tapFlickEffectPrefab: {fileID: 1709254077376921, guid: c7f562e9f252c7f498f5c08f2dc996e7, type: 3}
+  tapLoopEffectPrefab: {fileID: 1709254077376921, guid: bbcf2e02b8f0bfe4ebd780f0da0ffc5b, type: 3}
+  tapEffectPrefabs:
+  - name: fx_lane_tap
+    prefab: {fileID: 1709254077376921, guid: eccb6286442fa324e86cba7d6fe89754, type: 3}
+    poolCount: 1
+  - name: fx_lane_default
+    prefab: {fileID: 1709254077376921, guid: 31c9badf70a6bd94b9373f39ba62f547, type: 3}
+    poolCount: 1
+  - name: fx_lane_critical
+    prefab: {fileID: 1709254077376921, guid: 6313b0f763236ee488e21929205c7e59, type: 3}
+    poolCount: 1
+  - name: fx_lane_flick
+    prefab: {fileID: 1709254077376921, guid: a1a3069ad51a3114baca7078f8509e2c, type: 3}
+    poolCount: 1
+  - name: fx_lane_critical_flick
+    prefab: {fileID: 1709254077376921, guid: c1c829477f45ffb408cc7093e41ea371, type: 3}
+    poolCount: 1
+  - name: fx_note_normal_aura
+    prefab: {fileID: 1709254077376921, guid: 3a1fcdc35373b364cbc0f1e4e3f8c4d5, type: 3}
+    poolCount: 12
+  - name: fx_note_normal_gen
+    prefab: {fileID: 1709254077376921, guid: a0f0f398122925b449bff26b8d4e7c9e, type: 3}
+    poolCount: 6
+  - name: fx_note_normal_aura_Great
+    prefab: {fileID: 1709254077376921, guid: be8ddb09559332a4496b984f02afa3f8, type: 3}
+    poolCount: 12
+  - name: fx_note_normal_gen_Great
+    prefab: {fileID: 1709254077376921, guid: 0e4ef7d294dd63a4e8966946c20e9764, type: 3}
+    poolCount: 6
+  - name: fx_note_normal_aura_Good
+    prefab: {fileID: 1709254077376921, guid: 2e5ec82638c031c4d9b48dc37f0c24ca, type: 3}
+    poolCount: 12
+  - name: fx_note_normal_gen_Good
+    prefab: {fileID: 1709254077376921, guid: b3e2a85f7eb911341b4f49dfd0b078dd, type: 3}
+    poolCount: 6
+  - name: fx_note_critical_normal_aura
+    prefab: {fileID: 1709254077376921, guid: d15e085ab872baf4f9ce1c79756c50bb, type: 3}
+    poolCount: 12
+  - name: fx_note_critical_normal_gen
+    prefab: {fileID: 1709254077376921, guid: 411ebe3ccecd9244ba5830872fc363ee, type: 3}
+    poolCount: 6
+  - name: fx_note_long_aura
+    prefab: {fileID: 1709254077376921, guid: 29cebea8d4dd7db4da8c0fbe97b1db92, type: 3}
+    poolCount: 12
+  - name: fx_note_long_gen
+    prefab: {fileID: 1709254077376921, guid: a9b27ddece41a0a45911e54988224bbd, type: 3}
+    poolCount: 6
+  - name: fx_note_critical_long_aura
+    prefab: {fileID: 1709254077376921, guid: afd40a2004ab1e543993011b6aec5865, type: 3}
+    poolCount: 12
+  - name: fx_note_critical_long_gen
+    prefab: {fileID: 1709254077376921, guid: 94406edd7b7a8614d834f8fe89920636, type: 3}
+    poolCount: 6
+  - name: fx_note_flick_aura
+    prefab: {fileID: 1709254077376921, guid: 956ed56be91d46b468a7a0c5f8767b5f, type: 3}
+    poolCount: 12
+  - name: fx_note_flick_gen
+    prefab: {fileID: 1709254077376921, guid: 48c5872a874111243ae44a0ebe3859c6, type: 3}
+    poolCount: 6
+  - name: fx_note_critical_flick_aura
+    prefab: {fileID: 1709254077376921, guid: 297ab6837474c4047ac5f353bf741134, type: 3}
+    poolCount: 12
+  - name: fx_note_critical_flick_gen
+    prefab: {fileID: 1709254077376921, guid: c27963340e5f1a142ad37119131b9215, type: 3}
+    poolCount: 6
+  - name: fx_note_flick_flash
+    prefab: {fileID: 1709254077376921, guid: 0e642d9858f29a445a6631e41b3dc23b, type: 3}
+    poolCount: 5
+  - name: fx_note_critical_flick_flash
+    prefab: {fileID: 1709254077376921, guid: ec772d2f0bd3f2a4db3f146ea00ac925, type: 3}
+    poolCount: 5
+  - name: fx_note_long_hold_via_aura
+    prefab: {fileID: 1709254077376921, guid: 32a8a5da433eb844c8cd12807a91318a, type: 3}
+    poolCount: 5
+  - name: fx_note_critical_long_hold_via_aura
+    prefab: {fileID: 1709254077376921, guid: cb449cf855b6cda41aec6e13f4357d6f, type: 3}
+    poolCount: 5
+  - name: fx_note_trace_aura
+    prefab: {fileID: 1709254077376921, guid: 441816cfec49aab49a9b3948e1eda927, type: 3}
+    poolCount: 5
+  - name: fx_note_critical_trace_aura
+    prefab: {fileID: 1709254077376921, guid: e0345984368fd204397329562b3f322c, type: 3}
+    poolCount: 5
+  longHoldAuraPrefab: {fileID: 1709254077376921, guid: 67830549a6622cd44a1620a5a65775ca, type: 3}
+  longHoldGenPrefab: {fileID: 1709254077376921, guid: 355062a7bf0cedc48bd83fcf3db9c5d3, type: 3}
+  criticalLongHoldAuraPrefab: {fileID: 1709254077376921, guid: ba633875c59928a49b04cc36ffd53a51, type: 3}
+  criticalLongHoldGenPrefab: {fileID: 1709254077376921, guid: ce40f35c8eb8ebc4c9acb62202bbf39b, type: 3}
+  longTapEffectPoolCount: 16
   autoLabel: {fileID: 1190181876552715}
   consecutiveAutoLiveView: {fileID: 114744650500539449}
   notePrefabs:
@@ -26274,6 +26364,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ba56fe48fe3b795bd50c5152a1d8d36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  damageEffectPrefab: {fileID: 0}
 --- !u!1 &1896002537488308
 GameObject:
   m_ObjectHideFlags: 0

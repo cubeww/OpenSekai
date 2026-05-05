@@ -19,7 +19,7 @@ namespace Sekai.Core.Live
         [SerializeField] private MusicDifficulty previewDifficulty = MusicDifficulty.Easy;
         [SerializeField] private int previewPlayLevel = 1;
         [SerializeField] private int previewTotalNoteCount;
-        [SerializeField] private float previewFillerSec;
+        [SerializeField] private float previewFillerSec = 9f;
         [SerializeField] private string previewTitle = "Tell Your World";
         [SerializeField] private string previewLyricist = "kz";
         [SerializeField] private string previewComposer = "kz";
@@ -27,6 +27,8 @@ namespace Sekai.Core.Live
         [SerializeField] private string previewVocalCaption = "Miku";
         [SerializeField] private string previewVocalType = "sekai";
         [SerializeField] private string previewVocalAssetBundleName;
+        [SerializeField] private AudioClip previewMusicClip;
+        [SerializeField] private AudioSource musicAudioSource;
         [SerializeField] private bool isAuto;
         [SerializeField] private bool canSkipDisplayMusicInfo;
         [SerializeField] private bool isCollaboration;
@@ -41,7 +43,8 @@ namespace Sekai.Core.Live
         private Coroutine liveStartCoroutine;
         private LiveLogic liveLogic;
         private bool isRhythmGameRunning;
-        private float rhythmGameStartRealtime;
+        private float fallbackMusicStartRealtime;
+        private float currentMusicTime;
 
         protected virtual void Awake()
         {
@@ -161,6 +164,8 @@ namespace Sekai.Core.Live
 
         protected virtual void OnMusicStart()
         {
+            PlayMusic();
+
             if (liveViews == null)
             {
                 return;
@@ -170,7 +175,7 @@ namespace Sekai.Core.Live
             {
                 if (liveViews[i] != null)
                 {
-                    liveViews[i].MusicStart(0f);
+                    liveViews[i].MusicStart(currentMusicTime);
                 }
             }
         }
@@ -179,7 +184,6 @@ namespace Sekai.Core.Live
         {
             SetupLiveLogic();
             isRhythmGameRunning = true;
-            rhythmGameStartRealtime = Time.time;
 
             if (liveViews == null)
             {
@@ -197,13 +201,20 @@ namespace Sekai.Core.Live
 
         protected virtual void Update()
         {
+            base.OnUpdate();
+
             if (!isRhythmGameRunning)
             {
                 return;
             }
 
-            float musicTime = Time.time - rhythmGameStartRealtime;
-            liveLogic?.OnUpdate(musicTime, Time.frameCount);
+            currentMusicTime = GetCurrentMusicTime();
+            float scoreInfoTime = currentMusicTime - GetMusicFillerSec();
+            liveLogic?.OnUpdate(scoreInfoTime, Time.realtimeSinceStartup);
+            if (BootData != null && BootData.IsAuto)
+            {
+                liveLogic?.OnAutoInput();
+            }
 
             if (liveViews == null)
             {
@@ -212,7 +223,7 @@ namespace Sekai.Core.Live
 
             for (int i = 0; i < liveViews.Length; i++)
             {
-                liveViews[i]?.OnUpdate(musicTime);
+                liveViews[i]?.OnUpdate(currentMusicTime);
             }
         }
 
@@ -230,6 +241,7 @@ namespace Sekai.Core.Live
             }
 
             isRhythmGameRunning = false;
+            StopMusic();
 
             if (BackgroundTexture != null)
             {
@@ -272,6 +284,7 @@ namespace Sekai.Core.Live
 
         private IEnumerator LiveStart(float waitTime)
         {
+            yield return StartCoroutine(MusicReady());
             OnMusicStart();
 
             if (waitTime > 0f)
@@ -295,6 +308,80 @@ namespace Sekai.Core.Live
                 name = "LiveBackgroundTexture"
             };
             BackgroundTexture.Create();
+        }
+
+        private IEnumerator MusicReady()
+        {
+            if (previewMusicClip == null || previewMusicClip.loadState == AudioDataLoadState.Loaded)
+            {
+                yield break;
+            }
+
+            if (previewMusicClip.loadState == AudioDataLoadState.Unloaded)
+            {
+                previewMusicClip.LoadAudioData();
+            }
+
+            while (previewMusicClip.loadState == AudioDataLoadState.Loading)
+            {
+                yield return null;
+            }
+        }
+
+        private void PlayMusic()
+        {
+            currentMusicTime = 0f;
+            fallbackMusicStartRealtime = Time.realtimeSinceStartup;
+
+            if (previewMusicClip == null)
+            {
+                return;
+            }
+
+            if (musicAudioSource == null)
+            {
+                musicAudioSource = GetComponent<AudioSource>();
+                if (musicAudioSource == null)
+                {
+                    musicAudioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
+
+            musicAudioSource.clip = previewMusicClip;
+            musicAudioSource.loop = false;
+            musicAudioSource.playOnAwake = false;
+            musicAudioSource.spatialBlend = 0f;
+            musicAudioSource.time = 0f;
+            musicAudioSource.Play();
+        }
+
+        private void StopMusic()
+        {
+            if (musicAudioSource != null)
+            {
+                musicAudioSource.Stop();
+            }
+        }
+
+        private float GetCurrentMusicTime()
+        {
+            if (musicAudioSource != null && musicAudioSource.clip != null)
+            {
+                return musicAudioSource.timeSamples > 0
+                    ? (float)musicAudioSource.timeSamples / musicAudioSource.clip.frequency
+                    : musicAudioSource.time;
+            }
+
+            return Mathf.Max(0f, Time.realtimeSinceStartup - fallbackMusicStartRealtime);
+        }
+
+        private float GetMusicFillerSec()
+        {
+            return BootData != null &&
+                   BootData.MusicData != null &&
+                   BootData.MusicData.Music != null
+                ? BootData.MusicData.Music.fillerSec
+                : 0f;
         }
     }
 }
