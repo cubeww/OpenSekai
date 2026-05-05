@@ -1,6 +1,8 @@
+using DG.Tweening;
 using Sekai.Core.Live;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Sekai.Live
 {
@@ -16,6 +18,10 @@ namespace Sekai.Live
         private Material backgroundMaterial;
         private Mesh runtimeBackgroundMesh;
         private Dictionary<SpriteRenderer, float> spriteRendererAlphaDict;
+        private Dictionary<Graphic, float> graphicAlphaDict;
+        private Tween liveUiFadeTween;
+        private Tween musicStartDelayTween;
+        private Tween backgroundBrightnessTween;
         private bool isAuto;
         private int life;
 
@@ -50,10 +56,11 @@ namespace Sekai.Live
             {
                 autoLabel.SetActive(false);
             }
+            consecutiveAutoLiveView?.Hide();
 
             isAuto = baseController != null && baseController.BootData != null && baseController.BootData.IsAuto;
             laneView?.Setup(baseController != null ? baseController.Settings : null);
-            CacheSpriteRendererAlphas();
+            CacheLiveRootAlphas();
             UpdateSpriteAlpha(0f);
         }
 
@@ -74,21 +81,9 @@ namespace Sekai.Live
 
         public override void MusicStart(float time)
         {
+            KillLiveTweens();
             UpdateSpriteAlpha(0f);
-            musicInfo?.Play();
-
-            if (backgroundMaterial == null)
-            {
-                return;
-            }
-
-            float brightness = previewBrightness;
-            if (baseController != null && baseController.Settings != null)
-            {
-                brightness = baseController.Settings.Brightness;
-            }
-
-            backgroundMaterial.color = new Color(brightness, brightness, brightness, 1f);
+            musicStartDelayTween = DOVirtual.DelayedCall(0.1f, PlayMusicInfoAndFadeBackground, false).SetTarget(this);
         }
 
         public override void RhythmGameStart()
@@ -108,6 +103,8 @@ namespace Sekai.Live
             {
                 autoLabel.SetActive(false);
             }
+            consecutiveAutoLiveView?.Hide();
+            KillLiveTweens();
             UpdateSpriteAlpha(0f);
         }
 
@@ -165,9 +162,10 @@ namespace Sekai.Live
             }
         }
 
-        private void CacheSpriteRendererAlphas()
+        private void CacheLiveRootAlphas()
         {
             spriteRendererAlphaDict = new Dictionary<SpriteRenderer, float>();
+            graphicAlphaDict = new Dictionary<Graphic, float>();
             if (liveRoot == null)
             {
                 return;
@@ -182,16 +180,41 @@ namespace Sekai.Live
                     spriteRendererAlphaDict.Add(renderer, renderer.color.a);
                 }
             }
+
+            Graphic[] graphics = liveRoot.GetComponentsInChildren<Graphic>(true);
+            for (int i = 0; i < graphics.Length; i++)
+            {
+                Graphic graphic = graphics[i];
+                if (graphic != null && !graphicAlphaDict.ContainsKey(graphic))
+                {
+                    graphicAlphaDict.Add(graphic, graphic.color.a);
+                }
+            }
         }
 
         private void UpdateSpriteAlpha(float alpha)
         {
-            if (spriteRendererAlphaDict == null)
+            if (spriteRendererAlphaDict != null)
+            {
+                foreach (KeyValuePair<SpriteRenderer, float> pair in spriteRendererAlphaDict)
+                {
+                    if (pair.Key == null)
+                    {
+                        continue;
+                    }
+
+                    Color color = pair.Key.color;
+                    color.a = pair.Value * alpha;
+                    pair.Key.color = color;
+                }
+            }
+
+            if (graphicAlphaDict == null)
             {
                 return;
             }
 
-            foreach (KeyValuePair<SpriteRenderer, float> pair in spriteRendererAlphaDict)
+            foreach (KeyValuePair<Graphic, float> pair in graphicAlphaDict)
             {
                 if (pair.Key == null)
                 {
@@ -206,14 +229,31 @@ namespace Sekai.Live
 
         private void FadeIn()
         {
-            UpdateSpriteAlpha(1f);
+            if (liveUiFadeTween != null)
+            {
+                liveUiFadeTween.Kill();
+                liveUiFadeTween = null;
+            }
+
+            liveUiFadeTween = DOVirtual.Float(0f, 1f, 2f, UpdateSpriteAlpha)
+                .SetEase(Ease.InOutQuad)
+                .SetTarget(this)
+                .OnComplete(() =>
+                {
+                    liveUiFadeTween = null;
+                    if (autoLabel != null)
+                    {
+                        bool showAutoLabel = isAuto && !AutoLiveUtility.IsRunningConsecutiveAutoLive();
+                        autoLabel.SetActive(showAutoLabel);
+                    }
+                });
             if (fade != null)
             {
                 fade.enabled = false;
             }
             if (autoLabel != null)
             {
-                autoLabel.SetActive(isAuto);
+                autoLabel.SetActive(false);
             }
         }
 
@@ -223,12 +263,71 @@ namespace Sekai.Live
             {
                 autoLabel.SetActive(false);
             }
+            KillLiveTweens();
+            UpdateSpriteAlpha(0f);
             if (fade != null)
             {
                 fade.enabled = true;
                 Color color = fade.color;
                 color.a = 1f;
                 fade.color = color;
+            }
+        }
+
+        private void PlayMusicInfoAndFadeBackground()
+        {
+            musicInfo?.Play();
+            musicStartDelayTween = null;
+            StartBackgroundBrightnessFade(GetTargetBrightness(), 2f);
+        }
+
+        private void StartBackgroundBrightnessFade(float brightness, float duration)
+        {
+            if (backgroundMaterial == null)
+            {
+                return;
+            }
+
+            if (backgroundBrightnessTween != null)
+            {
+                backgroundBrightnessTween.Kill();
+                backgroundBrightnessTween = null;
+            }
+
+            Color targetColor = new Color(brightness, brightness, brightness, 1f);
+            backgroundBrightnessTween = backgroundMaterial.DOColor(targetColor, duration)
+                .SetTarget(this)
+                .OnComplete(() => backgroundBrightnessTween = null);
+        }
+
+        private float GetTargetBrightness()
+        {
+            if (baseController != null && baseController.Settings != null)
+            {
+                return baseController.Settings.Brightness;
+            }
+
+            return previewBrightness;
+        }
+
+        private void KillLiveTweens()
+        {
+            if (liveUiFadeTween != null)
+            {
+                liveUiFadeTween.Kill();
+                liveUiFadeTween = null;
+            }
+
+            if (musicStartDelayTween != null)
+            {
+                musicStartDelayTween.Kill();
+                musicStartDelayTween = null;
+            }
+
+            if (backgroundBrightnessTween != null)
+            {
+                backgroundBrightnessTween.Kill();
+                backgroundBrightnessTween = null;
             }
         }
 
@@ -288,6 +387,8 @@ namespace Sekai.Live
 
         private void OnDestroy()
         {
+            KillLiveTweens();
+
             if (backgroundMaterial != null)
             {
                 Destroy(backgroundMaterial);

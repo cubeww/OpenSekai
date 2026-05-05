@@ -275,9 +275,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1748972166}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b03b59ad4a407c4aa4cb1a52640b4e2, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d13b4a6d5b446c4ca8c1a2d3b8d6f10, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Sekai.Live.LivePreviewController
+  m_EditorClassIdentifier: Assembly-CSharp::Sekai.Core.Live.SoloLiveController
   backgroundTexture: {fileID: 0}
   baseCamera: {fileID: 0}
   liveViews:
@@ -288,17 +288,26 @@ MonoBehaviour:
   previewMusicId: 1
   musicCategory: 2
   livePlayMode: 0
-  startOnAwake: 1
-  musicStartOnAwake: 1
-  liveStartWaitTime: 6
-  openingTransitionCover: {fileID: 0}
-  openingTransitionFadeDuration: 1
+  previewVocalId: 1
+  previewDifficulty: 6
+  previewPlayLevel: 1
+  previewTotalNoteCount: 0
+  previewFillerSec: 0
   previewTitle: Tell Your World
   previewLyricist: kz
   previewComposer: kz
   previewArranger: kz
-  previewVocalCaption: Miku
-  previewDifficulty: 6
+  previewVocalCaption: "OpenSekai \u590D\u523B"
+  previewVocalType: sekai
+  previewVocalAssetBundleName: 
+  isAuto: 0
+  canSkipDisplayMusicInfo: 0
+  isCollaboration: 0
+  collaborationId: 0
+  collaborationLabel: 
+  startOnAwake: 1
+  musicStartOnAwake: 1
+  liveStartWaitTime: 6
 --- !u!1001 &1943756284
 PrefabInstance:
   m_ObjectHideFlags: 0

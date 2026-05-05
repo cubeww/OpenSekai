@@ -1,6 +1,6 @@
+using DG.Tweening;
 using Sekai;
 using Sekai.UI;
-using System.Collections;
 using UnityEngine;
 
 namespace Sekai.Live
@@ -21,7 +21,7 @@ namespace Sekai.Live
         [SerializeField] private UIPartsMusicCollaborationRibbon collaborationRibbon;
         public float JacketFadeOutDelaySec = 5.5f;
 
-        private Coroutine playCoroutine;
+        private Tween playTween;
 
         public float AnimationDurationSec
         {
@@ -92,14 +92,86 @@ namespace Sekai.Live
                 safeAreaAdjuster.Apply();
             }
 
-            gameObject.SetActive(true);
-            if (playCoroutine != null)
+            if (difficultyJacket != null && jacket != null)
             {
-                StopAllCoroutines();
-                playCoroutine = null;
+                difficultyJacket.transform.position = jacket.transform.position;
             }
 
-            playCoroutine = StartCoroutine(PlayCoroutine(durationScale, disableOnlyJacketOnFinish, bgFadeoutDuration));
+            KillTweens();
+            playTween = DOVirtual.DelayedCall(0.01f, () =>
+            {
+                playTween = null;
+                if (viewGroup != null)
+                {
+                    viewGroup.DOFade(0f, 0f);
+                }
+
+                gameObject.SetActive(true);
+
+                if (viewGroup != null)
+                {
+                    viewGroup.DOFade(1f, durationScale * 0.5f);
+                }
+
+                DOVirtual.DelayedCall(0.2f, () =>
+                {
+                    if (infoGroup == null)
+                    {
+                        return;
+                    }
+
+                    for (int i = 0; i < infoGroup.Length; i++)
+                    {
+                        if (infoGroup[i] != null)
+                        {
+                            infoGroup[i].DOFade(1f, durationScale * 0.5f);
+                        }
+                    }
+                }, true).SetTarget(this);
+
+                DOVirtual.DelayedCall(0.8f, () =>
+                {
+                    if (difficultyJacket == null)
+                    {
+                        return;
+                    }
+
+                    Transform target = difficultyJacket.transform;
+                    Vector3 position = new Vector3(target.localPosition.x - 44f, target.localPosition.y - 44f, 0f);
+                    target.DOLocalMove(position, 2f, false).SetEase((Ease)3);
+                }, true).SetTarget(this);
+
+                PlayBackgroundAnimation(durationScale * 1.5f, durationScale * 2.5f);
+                PlayBackgroundAnimation(durationScale * 3.5f, durationScale * 2.5f);
+
+                DOVirtual.DelayedCall(JacketFadeOutDelaySec * durationScale + bgFadeoutDuration, () =>
+                {
+                    if (disableOnlyJacketOnFinish)
+                    {
+                        if (infoGroup == null)
+                        {
+                            return;
+                        }
+
+                        for (int i = 0; i < infoGroup.Length; i++)
+                        {
+                            if (infoGroup[i] != null)
+                            {
+                                infoGroup[i].DOFade(0f, durationScale * 0.5f);
+                            }
+                        }
+                    }
+                    else if (viewGroup != null)
+                    {
+                        viewGroup.DOFade(0f, durationScale * 0.5f)
+                            .OnComplete(() => gameObject.SetActive(false));
+                    }
+                    else
+                    {
+                        gameObject.SetActive(false);
+                    }
+                }, true).SetTarget(this);
+            }, true).SetTarget(this);
         }
 
         public void FadeViewGroup(float alpha)
@@ -110,7 +182,16 @@ namespace Sekai.Live
         public void PlayBackgroundAnimation(float delayTimeSec, float duration)
         {
             if (mask == null) return;
-            StartCoroutine(PlayBackgroundAnimationCoroutine(delayTimeSec, duration));
+            DOVirtual.DelayedCall(delayTimeSec, () =>
+            {
+                if (mask == null)
+                {
+                    return;
+                }
+
+                mask.DOLocalMoveY(-810f, 0f, false);
+                mask.DOLocalMoveY(810f, duration, false);
+            }, true).SetTarget(this);
         }
 
         private void SetupDifficulty(string difficulty)
@@ -126,176 +207,25 @@ namespace Sekai.Live
             }
         }
 
-        private IEnumerator PlayCoroutine(float durationScale, bool disableOnlyJacketOnFinish, float bgFadeoutDuration)
+        private void KillTweens()
         {
-            yield return new WaitForSecondsRealtime(0.01f);
-
-            if (difficultyJacket != null && jacket != null)
+            if (playTween != null)
             {
-                difficultyJacket.transform.position = jacket.transform.position;
+                playTween.Kill();
+                playTween = null;
             }
 
-            if (viewGroup != null)
+            DOTween.Kill(this);
+            if (viewGroup != null) viewGroup.DOKill();
+            if (infoGroup != null)
             {
-                viewGroup.alpha = 0f;
-            }
-            SetInfoGroupsAlpha(0f);
-
-            if (viewGroup != null)
-            {
-                StartCoroutine(FadeCanvasGroup(viewGroup, 1f, durationScale * 0.5f));
-            }
-
-            StartCoroutine(DelayedAction(0.2f, () =>
-            {
-                if (infoGroup == null)
-                {
-                    return;
-                }
-
                 for (int i = 0; i < infoGroup.Length; i++)
                 {
-                    if (infoGroup[i] != null)
-                    {
-                        StartCoroutine(FadeCanvasGroup(infoGroup[i], 1f, durationScale * 0.5f));
-                    }
-                }
-            }));
-
-            StartCoroutine(DelayedAction(0.8f, () =>
-            {
-                if (difficultyJacket == null)
-                {
-                    return;
-                }
-
-                Transform target = difficultyJacket.transform;
-                Vector3 position = new Vector3(target.localPosition.x - 44f, target.localPosition.y - 44f, 0f);
-                StartCoroutine(MoveLocal(target, position, 2f));
-            }));
-
-            PlayBackgroundAnimation(durationScale * 1.5f, durationScale * 2.5f);
-            PlayBackgroundAnimation(durationScale * 3.5f, durationScale * 2.5f);
-
-            float fadeOutDelay = JacketFadeOutDelaySec * durationScale + bgFadeoutDuration;
-            yield return new WaitForSecondsRealtime(Mathf.Max(0f, fadeOutDelay));
-
-            if (disableOnlyJacketOnFinish)
-            {
-                if (infoGroup != null)
-                {
-                    for (int i = 0; i < infoGroup.Length; i++)
-                    {
-                        if (infoGroup[i] != null)
-                        {
-                            StartCoroutine(FadeCanvasGroup(infoGroup[i], 0f, durationScale * 0.5f));
-                        }
-                    }
+                    if (infoGroup[i] != null) infoGroup[i].DOKill();
                 }
             }
-            else if (viewGroup != null)
-            {
-                yield return FadeCanvasGroup(viewGroup, 0f, durationScale * 0.5f);
-                gameObject.SetActive(false);
-            }
-            else
-            {
-                gameObject.SetActive(false);
-            }
-
-            playCoroutine = null;
-        }
-
-        private IEnumerator DelayedAction(float delay, System.Action action)
-        {
-            yield return new WaitForSecondsRealtime(Mathf.Max(0f, delay));
-            action?.Invoke();
-        }
-
-        private IEnumerator FadeCanvasGroup(CanvasGroup canvasGroup, float targetAlpha, float duration)
-        {
-            if (canvasGroup == null)
-            {
-                yield break;
-            }
-
-            float startAlpha = canvasGroup.alpha;
-            if (duration <= 0f)
-            {
-                canvasGroup.alpha = targetAlpha;
-                yield break;
-            }
-
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, Mathf.Clamp01(elapsed / duration));
-                yield return null;
-            }
-
-            canvasGroup.alpha = targetAlpha;
-        }
-
-        private IEnumerator MoveLocal(Transform target, Vector3 targetPosition, float duration)
-        {
-            if (target == null)
-            {
-                yield break;
-            }
-
-            Vector3 startPosition = target.localPosition;
-            if (duration <= 0f)
-            {
-                target.localPosition = targetPosition;
-                yield break;
-            }
-
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                t = 0.5f - Mathf.Cos(t * Mathf.PI) * 0.5f;
-                target.localPosition = Vector3.LerpUnclamped(startPosition, targetPosition, t);
-                yield return null;
-            }
-
-            target.localPosition = targetPosition;
-        }
-
-        private IEnumerator PlayBackgroundAnimationCoroutine(float delayTimeSec, float duration)
-        {
-            yield return new WaitForSecondsRealtime(Mathf.Max(0f, delayTimeSec));
-
-            if (mask == null)
-            {
-                yield break;
-            }
-
-            Vector3 start = mask.localPosition;
-            start.y = -810f;
-            mask.localPosition = start;
-
-            Vector3 end = start;
-            end.y = 810f;
-            yield return MoveLocal(mask, end, duration);
-        }
-
-        private void SetInfoGroupsAlpha(float alpha)
-        {
-            if (infoGroup == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < infoGroup.Length; i++)
-            {
-                if (infoGroup[i] != null)
-                {
-                    infoGroup[i].alpha = alpha;
-                }
-            }
+            if (difficultyJacket != null) difficultyJacket.transform.DOKill();
+            if (mask != null) mask.DOKill();
         }
 
         private static string FormatCreatorText(string lyricist, string composer, string arranger)
@@ -329,6 +259,11 @@ namespace Sekai.Live
             }
 
             return string.IsNullOrEmpty(vocal.musicVocalType) ? string.Empty : vocal.musicVocalType;
+        }
+
+        private void OnDestroy()
+        {
+            KillTweens();
         }
     }
 }
