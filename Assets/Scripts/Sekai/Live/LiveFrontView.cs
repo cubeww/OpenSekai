@@ -2,7 +2,6 @@ using DG.Tweening;
 using Sekai.Core.Live;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Sekai.Live
 {
@@ -18,7 +17,6 @@ namespace Sekai.Live
         private Material backgroundMaterial;
         private Mesh runtimeBackgroundMesh;
         private Dictionary<SpriteRenderer, float> spriteRendererAlphaDict;
-        private Dictionary<Graphic, float> graphicAlphaDict;
         private Tween liveUiFadeTween;
         private Tween musicStartDelayTween;
         private Tween backgroundBrightnessTween;
@@ -60,7 +58,7 @@ namespace Sekai.Live
 
             isAuto = baseController != null && baseController.BootData != null && baseController.BootData.IsAuto;
             laneView?.Setup(baseController != null ? baseController.Settings : null);
-            CacheLiveRootAlphas();
+            CacheSpriteRendererAlphas();
             UpdateSpriteAlpha(0f);
         }
 
@@ -162,10 +160,9 @@ namespace Sekai.Live
             }
         }
 
-        private void CacheLiveRootAlphas()
+        private void CacheSpriteRendererAlphas()
         {
             spriteRendererAlphaDict = new Dictionary<SpriteRenderer, float>();
-            graphicAlphaDict = new Dictionary<Graphic, float>();
             if (liveRoot == null)
             {
                 return;
@@ -180,41 +177,16 @@ namespace Sekai.Live
                     spriteRendererAlphaDict.Add(renderer, renderer.color.a);
                 }
             }
-
-            Graphic[] graphics = liveRoot.GetComponentsInChildren<Graphic>(true);
-            for (int i = 0; i < graphics.Length; i++)
-            {
-                Graphic graphic = graphics[i];
-                if (graphic != null && !graphicAlphaDict.ContainsKey(graphic))
-                {
-                    graphicAlphaDict.Add(graphic, graphic.color.a);
-                }
-            }
         }
 
         private void UpdateSpriteAlpha(float alpha)
         {
-            if (spriteRendererAlphaDict != null)
-            {
-                foreach (KeyValuePair<SpriteRenderer, float> pair in spriteRendererAlphaDict)
-                {
-                    if (pair.Key == null)
-                    {
-                        continue;
-                    }
-
-                    Color color = pair.Key.color;
-                    color.a = pair.Value * alpha;
-                    pair.Key.color = color;
-                }
-            }
-
-            if (graphicAlphaDict == null)
+            if (spriteRendererAlphaDict == null)
             {
                 return;
             }
 
-            foreach (KeyValuePair<Graphic, float> pair in graphicAlphaDict)
+            foreach (KeyValuePair<SpriteRenderer, float> pair in spriteRendererAlphaDict)
             {
                 if (pair.Key == null)
                 {

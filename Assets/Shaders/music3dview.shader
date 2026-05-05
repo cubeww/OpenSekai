@@ -14,6 +14,8 @@ Shader "Sekai/Unlit/Music3DView"
 
         Pass
         {
+            Tags { "RenderType" = "Opaque" }
+
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
