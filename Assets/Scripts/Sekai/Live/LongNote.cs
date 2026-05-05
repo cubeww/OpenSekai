@@ -39,6 +39,25 @@ namespace Sekai.Live
 			set { LaneEndF = value; }
 		}
 
+		public override NoteState State
+		{
+			get { return base.State; }
+			protected set
+			{
+				NoteState current = State;
+				if ((current == NoteState.Playing && value == NoteState.InputBegan) ||
+					(current == NoteState.Last && value == NoteState.InputBegan))
+				{
+					onJudgment?.Invoke(this);
+					onUpdateCombo?.Invoke(this);
+					onUpdateScore?.Invoke(this);
+					onDamage?.Invoke(this);
+				}
+
+				base.State = value;
+			}
+		}
+
 		public override Action<NoteBase> OnUpdateScore
 		{
 			set
@@ -132,6 +151,236 @@ namespace Sekai.Live
 			base.SetChildNote(note);
 			NoteList.Add(note);
 			ViewNoteList.Add(note);
+		}
+
+		public override void Excute(MusicScoreInfo currentFrameInfo, float offsetTime)
+		{
+			this.offsetTime = offsetTime;
+			if (State == NoteState.Wait)
+			{
+				State = NoteState.Playing;
+			}
+			if (State == NoteState.Last)
+			{
+				JudgeInfo = (NoteResult.Miss, NoteResultDescription.None);
+				State = NoteState.Release;
+				onDamage?.Invoke(this);
+				onUpdateCombo?.Invoke(this);
+				onJudgment?.Invoke(this);
+			}
+
+			OffsetJudgeTime = currentFrameInfo.time - MusicScoreInfo.time;
+			Progress = CalcProgress(currentFrameInfo, offsetTime);
+			ExecuteSubNotes(currentFrameInfo);
+			UpdateExecutingLane(currentFrameInfo);
+
+			if (State == NoteState.Playing && LiveConfig.JudgeTime < currentFrameInfo.time - MusicScoreInfo.time)
+			{
+				State = NoteState.Last;
+				return;
+			}
+			if ((State == NoteState.InputBegan || State == NoteState.Input) && lastInputFrame + LiveConfig.LiveMasterData.MissMesh < Time.frameCount)
+			{
+				State = NoteState.Release;
+			}
+		}
+
+		public virtual void ForceTerminate()
+		{
+			if (State == NoteState.Done)
+			{
+				return;
+			}
+
+			JudgeInfo = IsChildSuccessful()
+				? (NoteResult.JustPerfect, NoteResultDescription.None)
+				: (NoteResult.Miss, NoteResultDescription.None);
+			State = NoteState.Done;
+		}
+
+		protected override void OnUnSpawnNote()
+		{
+			ConnectionNoteTerminate();
+			onUnspawn?.Invoke(this);
+		}
+
+		public override bool Judgment(ref LiveTouch touch, float lane)
+		{
+			if (State == NoteState.Done)
+			{
+				return false;
+			}
+
+			if (State == NoteState.Playing || State == NoteState.Last)
+			{
+				if (Result == NoteResult.None)
+				{
+					JudgeInfo = (NoteResult.JustPerfect, NoteResultDescription.None);
+				}
+				State = NoteState.InputBegan;
+			}
+			else
+			{
+				State = State == NoteState.Release ? NoteState.InputBegan : NoteState.Input;
+			}
+
+			lastInputFrame = Time.frameCount;
+			OffsetJudgeTime = 0f;
+			ConnectionNoteJudgment(ref touch, lane);
+			if (childNote != null &&
+				childNote.HasJudgment &&
+				LiveConfig.IsLongEndJudgeTime(childNote.OffsetJudgeTime) &&
+				childNote.IsJudgment(ref touch, lane) &&
+				childNote.Judgment(ref touch, lane))
+			{
+				State = NoteState.Done;
+			}
+			return true;
+		}
+
+		protected void ConnectionNoteJudgment(ref LiveTouch touch, float lane)
+		{
+			if (State != NoteState.InputBegan && State != NoteState.Input && State != NoteState.Release)
+			{
+				return;
+			}
+
+			for (int i = 1; i < NoteList.Count - 1; i++)
+			{
+				NoteList[i].Judgment(ref touch, lane);
+			}
+		}
+
+		protected void ConnectionNoteTerminate()
+		{
+			for (int i = 1; i < NoteList.Count - 1; i++)
+			{
+				NoteList[i].Terminate();
+			}
+		}
+
+		public override float LaneDistance(ref MusicScoreInfo currentFrameInfo, float inputLane)
+		{
+			if (childNote != null && LiveConfig.IsLongEndJudgeTime(childNote.MusicScoreInfo.time - currentFrameInfo.time))
+			{
+				return childNote.LaneDistance(ref currentFrameInfo, inputLane);
+			}
+
+			return base.LaneDistance(ref currentFrameInfo, inputLane);
+		}
+
+		public override bool IsJudgment(ref LiveTouch touch, float lane)
+		{
+			if (State == NoteState.Done)
+			{
+				return false;
+			}
+
+			float laneStart = Result != NoteResult.None || Description != NoteResultDescription.None ? JudgedLaneStart : JudgeLaneStart;
+			float laneEnd = Result != NoteResult.None || Description != NoteResultDescription.None ? JudgedLaneEnd : JudgeLaneEnd;
+			if (laneStart > lane || laneEnd < lane)
+			{
+				return false;
+			}
+
+			return IsJudgmentTime() && (State != NoteState.Playing && State != NoteState.Last || touch.phase == TouchPhase.Began);
+		}
+
+		public virtual bool IsJudgmentChild(ref LiveTouch touch, float lane)
+		{
+			for (int i = 1; i < NoteList.Count - 1; i++)
+			{
+				if (NoteList[i].IsJudgment(ref touch, lane))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public override bool AutoJudgment(MusicScoreInfo currentFrameInfo)
+		{
+			if (State == NoteState.Done || MusicScoreInfo.time > currentFrameInfo.time)
+			{
+				return false;
+			}
+
+			lastInputFrame = Time.frameCount;
+			JudgeInfo = (NoteResult.Auto, NoteResultDescription.None);
+			State = State == NoteState.Playing || State == NoteState.Last || State == NoteState.Release
+				? NoteState.InputBegan
+				: NoteState.Input;
+			OffsetJudgeTime = 0f;
+			ConnectionNoteAutoJudgment(currentFrameInfo);
+			if (childNote != null && childNote.AutoJudgment(currentFrameInfo))
+			{
+				State = NoteState.Done;
+			}
+			return true;
+		}
+
+		private void ConnectionNoteAutoJudgment(MusicScoreInfo currentFrameInfo)
+		{
+			if (State != NoteState.InputBegan && State != NoteState.Input)
+			{
+				return;
+			}
+
+			for (int i = 1; i < NoteList.Count - 1; i++)
+			{
+				NoteList[i].AutoJudgment(currentFrameInfo);
+			}
+		}
+
+		protected void ExecuteSubNotes(MusicScoreInfo currentFrameInfo)
+		{
+			for (int i = 1; i < NoteList.Count; i++)
+			{
+				NoteBase note = NoteList[i];
+				float timeOffset = CalcTimeOffset != null ? CalcTimeOffset(note) : offsetTime;
+				if (currentFrameInfo.time <= note.MusicScoreInfo.time - timeOffset)
+				{
+					break;
+				}
+				note.Excute(currentFrameInfo, timeOffset);
+			}
+		}
+
+		protected void UpdateExecutingLane(MusicScoreInfo currentFrameInfo)
+		{
+			if (childNote == null)
+			{
+				return;
+			}
+
+			INote currentNote = this;
+			INote nextNote = childNote;
+			for (int i = 1; i < ViewNoteList.Count - 1; i++)
+			{
+				INote note = ViewNoteList[i];
+				if (note.IsSkip)
+				{
+					continue;
+				}
+				if (note.State == NoteState.Done)
+				{
+					currentNote = note;
+					continue;
+				}
+
+				nextNote = note;
+				break;
+			}
+
+			MusicScoreInfo startInfo = MusicScoreInfo;
+			LiveUtility.CalcExcuteNoteLane(this, ref currentNote, ref nextNote, ref currentFrameInfo, startInfo, childNote);
+		}
+
+		private bool IsChildSuccessful()
+		{
+			INote child = ChildNote;
+			return child != null && (child.Result > NoteResult.Pass || child.State == NoteState.Input);
 		}
 
 		private void ForEachSubNote(Action<NoteBase> action)

@@ -6,6 +6,10 @@ namespace Sekai
 
         public bool UseAllPerfectEffect { get; set; } = true;
 
+        public bool UseSimultaneousPushingLine { get; set; } = true;
+
+        public float NoteSpeed { get; set; } = 7f;
+
         public float Brightness { get; set; } = 1f;
     }
 }

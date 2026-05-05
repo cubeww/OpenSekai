@@ -65,15 +65,8 @@ Shader "Sekai/Live/Note/Arrow"
 
             fixed4 frag(v2f i) : SV_Target
             {
-                float scroll = frac(_Time.z);
-                float2 sampleUv = float2(i.uv.x, i.uv.y + 1.0 - scroll * 2.0);
-                fixed4 tex = tex2D(_MainTex, sampleUv);
-
-                float2 local = float2(frac(i.uv.x * 4.0), i.uv.y) - 0.5;
-                float angle = radians(i.color.r * 180.0 - 90.0);
-                float rotated = dot(float2(cos(angle), -sin(angle)), local);
-                float band = saturate((1.0 - abs((rotated + 0.5) * 2.0 - 1.0)) * 10.0 - 4.0);
-                fixed alpha = band * tex.a * _NoteShowRate;
+                fixed4 tex = tex2D(_MainTex, i.uv);
+                fixed alpha = tex.a * i.color.a * _NoteShowRate;
                 return fixed4(tex.rgb * alpha, alpha);
             }
             ENDCG

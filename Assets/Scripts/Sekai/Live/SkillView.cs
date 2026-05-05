@@ -16,5 +16,6 @@ namespace Sekai.Live
         public void Load() { }
         public void Unload() { }
         public void Clear() { }
+        public void OnUpdate(float time) { }
     }
 }

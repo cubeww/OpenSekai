@@ -216,11 +216,28 @@ namespace Sekai.Live
 			{
 				return;
 			}
+			if (State >= NoteState.Last)
+			{
+				JudgeInfo = (NoteResult.Miss, NoteResultDescription.None);
+				State = NoteState.Done;
+				return;
+			}
+
 			OffsetJudgeTime = currentFrameInfo.time - MusicScoreInfo.time;
-			Progress = CalcProgress(currentFrameInfo, offsetTime);
-			if (State == NoteState.Wait && Progress >= 0f)
+			float progress = CalcProgress(currentFrameInfo, offsetTime);
+			if (progress < 0f && state != NoteState.Playing)
+			{
+				return;
+			}
+
+			if (State == NoteState.Wait)
 			{
 				State = NoteState.Playing;
+			}
+			Progress = progress;
+			if (OffsetJudgeTime > LiveConfig.LiveMasterData.JudgeTimeAfter)
+			{
+				State = NoteState.Last;
 			}
 		}
 
@@ -275,7 +292,7 @@ namespace Sekai.Live
 
 		public virtual bool IsJudgmentTime()
 		{
-			return true;
+			return OffsetJudgeTime >= -LiveConfig.LiveMasterData.JudgeTimeBefore && OffsetJudgeTime <= LiveConfig.LiveMasterData.JudgeTimeAfter;
 		}
 
 		public virtual bool AutoJudgment(MusicScoreInfo currentFrameInfo)

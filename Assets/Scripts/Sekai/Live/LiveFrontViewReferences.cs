@@ -23,5 +23,11 @@ namespace Sekai.Live
         [SerializeField] private Camera effectCamera;
         [SerializeField] private GameObject autoLabel;
         [SerializeField] private ConsecutiveAutoLiveView consecutiveAutoLiveView;
+        [SerializeField] private NotePrefabSet[] notePrefabs;
+        [SerializeField] private Texture longNoteLineTexture;
+        [SerializeField] private Texture guideLineTexture;
+        [SerializeField] private Texture simultaneousLineTexture;
+        [SerializeField] private Material longNoteLineMaterial;
+        [SerializeField] private Material pairNoteLineMaterial;
     }
 }

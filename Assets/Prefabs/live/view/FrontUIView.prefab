@@ -24098,6 +24098,33 @@ MonoBehaviour:
   effectCamera: {fileID: 20126042694364515}
   autoLabel: {fileID: 1190181876552715}
   consecutiveAutoLiveView: {fileID: 114744650500539449}
+  notePrefabs:
+  - category: 0
+    defaultPrefab: {fileID: 1709254077376921, guid: 66093b53116111e489056f1141f6713d, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: 65999e2dd21b6bc4da9f7c1df3e7d720, type: 3}
+  - category: 1
+    defaultPrefab: {fileID: 1709254077376921, guid: 4f1a11c670982de4b9c49852a06a584d, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: 4a8d7f9eac7a38d48ba1990eff802f9a, type: 3}
+  - category: 2
+    defaultPrefab: {fileID: 1709254077376921, guid: 663052dee50a2574584b81cdd37a64d6, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: 17365c12c1ee3864690c1929b874fc04, type: 3}
+  - category: 3
+    defaultPrefab: {fileID: 1709254077376921, guid: c8f000eef4c4d154f896ba0aadbeb6db, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: 7023b13ce405aa746841830c1f5fddaf, type: 3}
+  - category: 4
+    defaultPrefab: {fileID: 1709254077376921, guid: 47d3f09ee6a372a42a52cbfe3d594dc0, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: bc3b8a94e8eef75409d3c8130456d7c8, type: 3}
+  - category: 6
+    defaultPrefab: {fileID: 1709254077376921, guid: 21dce23ec3d54b848b05ebc1fb38a519, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: 6d4feba8180fe284b8a9cea5785145cc, type: 3}
+  - category: 8
+    defaultPrefab: {fileID: 1709254077376921, guid: 983d9364905b93b42a84220c342ed4be, type: 3}
+    criticalPrefab: {fileID: 1709254077376921, guid: b832715f0d1606f47bf9f507be7411e5, type: 3}
+  longNoteLineTexture: {fileID: 2800000, guid: 5e0c27f96b714ff44b662f4f2397baf4, type: 3}
+  guideLineTexture: {fileID: 2800000, guid: b85ca097f3422114fb5997683653dc28, type: 3}
+  simultaneousLineTexture: {fileID: 2800000, guid: 2ded48303fb4e3e4e91a2e2021e51e20, type: 3}
+  longNoteLineMaterial: {fileID: 2100000, guid: 778d57e0a85d40b4a9d3e6cb5b8ca1f4, type: 2}
+  pairNoteLineMaterial: {fileID: 2100000, guid: 0dca5375d9624b1d8dfb9d1eec1eb88b, type: 2}
 --- !u!114 &114271925019662038
 MonoBehaviour:
   m_ObjectHideFlags: 0

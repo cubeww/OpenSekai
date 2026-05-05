@@ -1,10 +1,14 @@
 namespace Sekai
 {
+    using Sekai.Live;
+
     public class LiveBootDataBase
     {
         public LiveMusicData MusicData { get; set; }
 
         public LiveSettingData LiveSettingData { get; set; } = new LiveSettingData();
+
+        public LiveBundleBuildData BundleBuildData { get; set; }
 
         public MusicCategory MusicCategory { get; set; } = MusicCategory.image;
 

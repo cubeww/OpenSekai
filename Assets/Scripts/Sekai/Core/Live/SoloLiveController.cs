@@ -1,5 +1,6 @@
 using System.Collections;
 using Sekai;
+using Sekai.Live;
 using UnityEngine;
 
 namespace Sekai.Core.Live
@@ -34,8 +35,13 @@ namespace Sekai.Core.Live
         [SerializeField] private bool startOnAwake = true;
         [SerializeField] private bool musicStartOnAwake = true;
         [SerializeField] private float liveStartWaitTime = BaseGameStartWaitTime;
+        [SerializeField] private TextAsset previewSusScore;
+        [SerializeField] private LiveBundleBuildData liveBundleBuildData;
 
         private Coroutine liveStartCoroutine;
+        private LiveLogic liveLogic;
+        private bool isRhythmGameRunning;
+        private float rhythmGameStartRealtime;
 
         protected virtual void Awake()
         {
@@ -77,6 +83,10 @@ namespace Sekai.Core.Live
                 {
                     BootData.LiveSettingData = new LiveSettingData();
                 }
+                if (BootData.BundleBuildData == null)
+                {
+                    BootData.BundleBuildData = liveBundleBuildData;
+                }
 
                 return;
             }
@@ -98,6 +108,7 @@ namespace Sekai.Core.Live
             bootData.IsAuto = isAuto;
             bootData.canSkipDisplayMusicInfo = canSkipDisplayMusicInfo;
             bootData.LiveSettingData = new LiveSettingData();
+            bootData.BundleBuildData = liveBundleBuildData;
 
             LiveMusicData musicData = bootData.MusicData ?? new LiveMusicData();
             musicData.Music = new MasterMusic
@@ -166,6 +177,10 @@ namespace Sekai.Core.Live
 
         protected virtual void OnRhythmGameStart()
         {
+            SetupLiveLogic();
+            isRhythmGameRunning = true;
+            rhythmGameStartRealtime = Time.time;
+
             if (liveViews == null)
             {
                 return;
@@ -177,6 +192,27 @@ namespace Sekai.Core.Live
                 {
                     liveViews[i].RhythmGameStart();
                 }
+            }
+        }
+
+        protected virtual void Update()
+        {
+            if (!isRhythmGameRunning)
+            {
+                return;
+            }
+
+            float musicTime = Time.time - rhythmGameStartRealtime;
+            liveLogic?.OnUpdate(musicTime, Time.frameCount);
+
+            if (liveViews == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < liveViews.Length; i++)
+            {
+                liveViews[i]?.OnUpdate(musicTime);
             }
         }
 
@@ -193,11 +229,21 @@ namespace Sekai.Core.Live
                 }
             }
 
+            isRhythmGameRunning = false;
+
             if (BackgroundTexture != null)
             {
                 BackgroundTexture.Release();
                 BackgroundTexture = null;
             }
+        }
+
+        private void SetupLiveLogic()
+        {
+            string scoreText = previewSusScore != null ? previewSusScore.text : null;
+            MusicScore musicScore = MusicScoreFactory.Create(scoreText, liveBundleBuildData);
+            liveLogic = new LiveLogic(liveBundleBuildData);
+            liveLogic.Setup(BootData, liveViews, musicScore);
         }
 
         private void SetupLiveViews()

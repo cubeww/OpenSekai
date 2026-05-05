@@ -22,6 +22,7 @@ namespace Sekai.Live
         private Tween backgroundBrightnessTween;
         private bool isAuto;
         private int life;
+        private NotesViewManager notesViewManager;
         // Original prefab keeps this at 0; URP 2D sorting draws it over negative-order lanes in this project.
         private const int BackgroundSortingOrder = -200;
 
@@ -60,8 +61,16 @@ namespace Sekai.Live
 
             isAuto = baseController != null && baseController.BootData != null && baseController.BootData.IsAuto;
             laneView?.Setup(baseController != null ? baseController.Settings : null);
+            notesViewManager = new NotesViewManager();
+            notesViewManager.Setup(liveRoot);
+            notesViewManager.SetAssets(notePrefabs, longNoteLineTexture, guideLineTexture, simultaneousLineTexture, longNoteLineMaterial, pairNoteLineMaterial);
             CacheSpriteRendererAlphas();
             UpdateSpriteAlpha(0f);
+        }
+
+        public override void CreateNotePool(Dictionary<(NoteCategory, NoteType), int> notePoolCount)
+        {
+            notesViewManager?.CreateNotePool(baseController, notePoolCount);
         }
 
         public override void OnLoad()
@@ -95,6 +104,7 @@ namespace Sekai.Live
 
         public override void Retry()
         {
+            notesViewManager?.Clear();
             comboView?.Clear();
             cutinManager?.Clear();
             skillView?.Clear();
@@ -327,6 +337,31 @@ namespace Sekai.Live
         private void OnConsecutiveAutoLiveFinish()
         {
             consecutiveAutoLiveView?.Hide();
+        }
+
+        public override void OnUpdate(float time)
+        {
+            float viewTime = time;
+            if (baseController != null &&
+                baseController.BootData != null &&
+                baseController.BootData.MusicData != null &&
+                baseController.BootData.MusicData.Music != null)
+            {
+                viewTime -= baseController.BootData.MusicData.Music.fillerSec;
+            }
+
+            skillView?.OnUpdate(viewTime);
+            notesViewManager?.OnUpdate(viewTime);
+        }
+
+        public override void SpawnNote(INote note)
+        {
+            notesViewManager?.SpawnNote(note);
+        }
+
+        public override void UnspawnNote(INote note)
+        {
+            notesViewManager?.UnspawnNote(note);
         }
 
         private void EnsureBackgroundMesh()

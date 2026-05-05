@@ -175,18 +175,6 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114469561979407964, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_text
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 114942066236133985, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_text
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 114942066236133985, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: m_fontSize
-      value: 40
-      objectReference: {fileID: 0}
     - target: {fileID: 224452237593846326, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -308,6 +296,8 @@ MonoBehaviour:
   startOnAwake: 1
   musicStartOnAwake: 1
   liveStartWaitTime: 6
+  previewSusScore: {fileID: 4900000, guid: 150ea8c0f56e210468f148432c5c9d63, type: 3}
+  liveBundleBuildData: {fileID: 0}
 --- !u!1001 &1943756284
 PrefabInstance:
   m_ObjectHideFlags: 0

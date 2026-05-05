@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Sekai.Live;
 using UnityEngine;
 
 namespace Sekai.Core.Live
@@ -13,6 +15,14 @@ namespace Sekai.Core.Live
         }
 
         public virtual void OnUnload()
+        {
+        }
+
+        public virtual void CreateNotePool(Dictionary<(NoteCategory, NoteType), int> notePoolCount)
+        {
+        }
+
+        public virtual void OnUpdate(float time)
         {
         }
 
@@ -41,6 +51,22 @@ namespace Sekai.Core.Live
         }
 
         public virtual void Finish()
+        {
+        }
+
+        public virtual void SpawnNote(INote note)
+        {
+        }
+
+        public virtual void UnspawnNote(INote note)
+        {
+        }
+
+        public virtual void JudgmentNote(INote note)
+        {
+        }
+
+        public virtual void Unpicked(int lane, ref LiveTouch touch)
         {
         }
     }
