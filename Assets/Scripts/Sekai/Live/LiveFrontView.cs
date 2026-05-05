@@ -22,6 +22,8 @@ namespace Sekai.Live
         private Tween backgroundBrightnessTween;
         private bool isAuto;
         private int life;
+        // Original prefab keeps this at 0; URP 2D sorting draws it over negative-order lanes in this project.
+        private const int BackgroundSortingOrder = -200;
 
         public override void Setup(BaseLiveController baseController)
         {
@@ -119,6 +121,7 @@ namespace Sekai.Live
             }
 
             EnsureBackgroundMesh();
+            backgroundRenderer.sortingOrder = BackgroundSortingOrder;
 
             float height = cameraSizeUpdater != null && cameraSizeUpdater.OrthographicSize > 0f ? cameraSizeUpdater.OrthographicSize * 2f : 10f;
             float aspect = Screen.height == 0 ? 1f : (float)Screen.width / Screen.height;
@@ -131,6 +134,10 @@ namespace Sekai.Live
             }
 
             backgroundMaterial = new Material(source);
+            if (backgroundMaterial.HasProperty("_ZWrite"))
+            {
+                backgroundMaterial.SetFloat("_ZWrite", 0f);
+            }
             backgroundRenderer.material = backgroundMaterial;
 
             if (baseController != null)
