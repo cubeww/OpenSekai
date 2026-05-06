@@ -298,7 +298,7 @@ MonoBehaviour:
   startOnAwake: 1
   musicStartOnAwake: 1
   liveStartWaitTime: 6
-  previewSusScore: {fileID: 4900000, guid: b4b4f07f5cd6c2e4583a2d0c73bdaf32, type: 3}
+  previewSusScore: {fileID: 4900000, guid: 150ea8c0f56e210468f148432c5c9d63, type: 3}
   liveBundleBuildData: {fileID: 0}
 --- !u!1001 &1943756284
 PrefabInstance:
