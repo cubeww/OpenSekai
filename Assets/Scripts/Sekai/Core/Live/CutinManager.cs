@@ -12,5 +12,6 @@ namespace Sekai.Core.Live
         public void Load() { }
         public void Unload() { }
         public void Clear() { }
+        public void PlayCombo(LiveScore score) { }
     }
 }

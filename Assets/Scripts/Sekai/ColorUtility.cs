@@ -5,6 +5,32 @@ namespace Sekai
 {
     public static class ColorUtility
     {
+        public static Color Create(string code)
+        {
+            if (UnityEngine.ColorUtility.TryParseHtmlString(code, out Color color))
+            {
+                return color;
+            }
+
+            return Color.white;
+        }
+
+        public static Color Create(string code, float alpha)
+        {
+            Color color = Create(code);
+            color.a = alpha;
+            return color;
+        }
+
+        public static Color Create(int r, int g, int b, int a = 255)
+        {
+            return new Color(
+                Mathf.Clamp01(r / 255f),
+                Mathf.Clamp01(g / 255f),
+                Mathf.Clamp01(b / 255f),
+                Mathf.Clamp01(a / 255f));
+        }
+
         public static Color GetDifficultyColor(MusicDifficulty difficulty)
         {
             switch (difficulty)
@@ -34,6 +60,30 @@ namespace Sekai
             }
 
             return Color.white;
+        }
+
+        public static Color GetScoreRankColor(ScoreRank rank)
+        {
+            return GetScoreRankColor((int)rank);
+        }
+
+        public static Color GetScoreRankColor(int index)
+        {
+            switch ((ScoreRank)index)
+            {
+                case ScoreRank.S:
+                    return Create("#FF8ec6");
+                case ScoreRank.A:
+                    return Create("#e18aff");
+                case ScoreRank.B:
+                    return Create("#78adff");
+                case ScoreRank.C:
+                    return Create("#55fdf7");
+                case ScoreRank.D:
+                    return Create("#73ffcc");
+                default:
+                    return Color.white;
+            }
         }
     }
 }

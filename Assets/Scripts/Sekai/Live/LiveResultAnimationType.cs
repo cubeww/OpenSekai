@@ -1,4 +1,4 @@
-namespace Sekai.Live
+namespace Sekai.Core.Live
 {
     public enum LiveResultAnimationType
     {

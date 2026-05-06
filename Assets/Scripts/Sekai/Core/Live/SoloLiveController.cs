@@ -41,7 +41,9 @@ namespace Sekai.Core.Live
         [SerializeField] private LiveBundleBuildData liveBundleBuildData;
 
         private Coroutine liveStartCoroutine;
+        private Coroutine resultCoroutine;
         private LiveLogic liveLogic;
+        private LiveResult result;
         private bool isRhythmGameRunning;
         private float fallbackMusicStartRealtime;
         private float currentMusicTime;
@@ -131,6 +133,10 @@ namespace Sekai.Core.Live
                 playLevel = previewPlayLevel,
                 totalNoteCount = previewTotalNoteCount
             };
+            if (previewTotalNoteCount > 0)
+            {
+                musicData.Score = CreatePreviewScore(previewPlayLevel, previewTotalNoteCount);
+            }
             musicData.Vocal = new MasterMusicVocal
             {
                 id = previewVocalId,
@@ -150,6 +156,21 @@ namespace Sekai.Core.Live
 
             bootData.MusicData = musicData;
             return bootData;
+        }
+
+        private static MasterPlayLevelScore CreatePreviewScore(int playLevel, int totalNoteCount)
+        {
+            int noteCount = Mathf.Max(1, totalNoteCount);
+            int targetScore = noteCount * 1000;
+            return new MasterPlayLevelScore
+            {
+                liveType = "free",
+                playLevel = playLevel,
+                s = Mathf.FloorToInt(targetScore * ScoreGaugeCalculator.RankRateS),
+                a = Mathf.FloorToInt(targetScore * ScoreGaugeCalculator.RankRateA),
+                b = Mathf.FloorToInt(targetScore * ScoreGaugeCalculator.RankRateB),
+                c = Mathf.FloorToInt(targetScore * ScoreGaugeCalculator.RankRateC)
+            };
         }
 
         private static string GetDifficultyName(MusicDifficulty difficulty)
@@ -183,6 +204,7 @@ namespace Sekai.Core.Live
         protected virtual void OnRhythmGameStart()
         {
             SetupLiveLogic();
+            result = LiveResult.None;
             isRhythmGameRunning = true;
 
             if (liveViews == null)
@@ -211,6 +233,11 @@ namespace Sekai.Core.Live
             currentMusicTime = GetCurrentMusicTime();
             float scoreInfoTime = currentMusicTime - GetMusicFillerSec();
             liveLogic?.OnUpdate(scoreInfoTime, Time.realtimeSinceStartup);
+            if (liveLogic != null && liveLogic.Result == LiveResult.Failure && liveLogic.IsNotesAllFinished)
+            {
+                OnFinished();
+            }
+
             if (BootData != null && BootData.IsAuto)
             {
                 liveLogic?.OnAutoInput();
@@ -242,6 +269,12 @@ namespace Sekai.Core.Live
 
             isRhythmGameRunning = false;
             StopMusic();
+            UnsubscribeLiveLogic();
+            if (resultCoroutine != null)
+            {
+                StopCoroutine(resultCoroutine);
+                resultCoroutine = null;
+            }
 
             if (BackgroundTexture != null)
             {
@@ -254,8 +287,11 @@ namespace Sekai.Core.Live
         {
             string scoreText = previewSusScore != null ? previewSusScore.text : null;
             MusicScore musicScore = MusicScoreFactory.Create(scoreText, liveBundleBuildData);
+            UnsubscribeLiveLogic();
             liveLogic = new LiveLogic(liveBundleBuildData);
             liveLogic.Setup(BootData, liveViews, musicScore);
+            liveLogic.OnFinished += OnFinished;
+            liveLogic.OnFailure += OnFailure;
         }
 
         private void SetupLiveViews()
@@ -294,6 +330,99 @@ namespace Sekai.Core.Live
 
             OnRhythmGameStart();
             liveStartCoroutine = null;
+        }
+
+        private void OnFailure()
+        {
+            currentMusicTime = GetCurrentMusicTime();
+        }
+
+        protected virtual void OnFinished()
+        {
+            float musicLength = previewMusicClip != null ? previewMusicClip.length : currentMusicTime;
+            float waitTime = Mathf.Max(musicLength - currentMusicTime - 1f, 4f);
+            PreExit(1f, waitTime);
+        }
+
+        protected virtual void PreExit(float delay = 0f, float waitTime = 4f)
+        {
+            if (result != LiveResult.None)
+            {
+                return;
+            }
+
+            isRhythmGameRunning = false;
+            result = liveLogic != null && liveLogic.Result == LiveResult.Failure ? LiveResult.Clear : liveLogic != null ? liveLogic.Result : LiveResult.None;
+            UnsubscribeLiveLogic();
+
+            if (resultCoroutine != null)
+            {
+                StopCoroutine(resultCoroutine);
+            }
+            resultCoroutine = StartCoroutine(PreExitCoroutine(delay, waitTime));
+        }
+
+        private IEnumerator PreExitCoroutine(float delay, float waitTime)
+        {
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+            yield return StartCoroutine(ResultAnim(waitTime));
+            resultCoroutine = null;
+        }
+
+        private IEnumerator ResultAnim(float waitTime = 4f)
+        {
+            liveViews.Result(GetLiveResultAnimationType());
+            yield return new WaitForSeconds(waitTime);
+            liveViews.Finish();
+            yield return new WaitForSeconds(2f);
+            Exit();
+        }
+
+        protected virtual void Exit()
+        {
+        }
+
+        private LiveResultAnimationType GetLiveResultAnimationType()
+        {
+            if (result < LiveResult.Failure)
+            {
+                return LiveResultAnimationType.None;
+            }
+            if (result == LiveResult.Failure)
+            {
+                return LiveResultAnimationType.Failure;
+            }
+            if (result == LiveResult.Clear)
+            {
+                if (liveLogic != null && liveLogic.IsAllPerfectCombo)
+                {
+                    return LiveResultAnimationType.AllPerfect;
+                }
+                if (liveLogic != null && liveLogic.IsPerfectCombo)
+                {
+                    return LiveResultAnimationType.FullCombo;
+                }
+
+                LiveScore score = liveLogic != null ? liveLogic.Score : default(LiveScore);
+                return score.life != 0 ? LiveResultAnimationType.Clear : LiveResultAnimationType.LifeZero;
+            }
+
+            Debug.LogErrorFormat(this, "Unknown LiveResult {0}", result);
+            return LiveResultAnimationType.None;
+        }
+
+        private void UnsubscribeLiveLogic()
+        {
+            if (liveLogic == null)
+            {
+                return;
+            }
+
+            liveLogic.OnFinished -= OnFinished;
+            liveLogic.OnFailure -= OnFailure;
         }
 
         private void EnsureBackgroundTexture()

@@ -8414,6 +8414,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   background: {fileID: 212829507331467374}
+  liveSoundPlayer: {fileID: 4565915413663537513}
+  failedPrefab: {fileID: 1709254077376921, guid: 415bd19acec5acc45b73b2d0055314a6, type: 3}
+  finishPrefab: {fileID: 1709254077376921, guid: 10600d1247b4bc243a5b1c451ad2f27b, type: 3}
+  clearPrefab: {fileID: 1709254077376921, guid: b15b8c10fdfaddb4c859b8d27b95e2ea, type: 3}
+  fullComboPrefab: {fileID: 1709254077376921, guid: 590c10b62d49ccf4d92edb845a292dcc, type: 3}
+  allPerfectPrefab: {fileID: 1709254077376921, guid: 5b5d47695495ef649b3eb2d93d69e9dd, type: 3}
 --- !u!1 &1243736805655561
 GameObject:
   m_ObjectHideFlags: 0
@@ -24100,7 +24106,7 @@ MonoBehaviour:
   tapSingleEffectPrefab: {fileID: 1709254077376921, guid: 0d77bc29e54e64a409264b8518d32978, type: 3}
   tapFlickEffectPrefab: {fileID: 1709254077376921, guid: c7f562e9f252c7f498f5c08f2dc996e7, type: 3}
   tapLoopEffectPrefab: {fileID: 1709254077376921, guid: bbcf2e02b8f0bfe4ebd780f0da0ffc5b, type: 3}
-  liveSoundPlayer: {fileID: 0}
+  liveSoundPlayer: {fileID: 4565915413663537513}
   tapEffectPrefabs:
   - name: fx_lane_tap
     prefab: {fileID: 1709254077376921, guid: eccb6286442fa324e86cba7d6fe89754, type: 3}
@@ -24311,7 +24317,25 @@ MonoBehaviour:
     clips: []
     volume: 1
   - cueName: se_live_trace_critical
-    clip: {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
+    clip: {fileID: 0}
+    clips:
+    - {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
+    - {fileID: 8300000, guid: 1f23de91b52e5dd469bc232006af1328, type: 3}
+    volume: 1
+  - cueName: se_live_clear
+    clip: {fileID: 8300000, guid: aaca796c420333d4991d4162ec19ef06, type: 3}
+    clips:
+    - {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
+    - {fileID: 8300000, guid: 1f23de91b52e5dd469bc232006af1328, type: 3}
+    volume: 1
+  - cueName: se_live_full_combo
+    clip: {fileID: 8300000, guid: 5cb087120edfe8b4499bc1774c8ad888, type: 3}
+    clips:
+    - {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
+    - {fileID: 8300000, guid: 1f23de91b52e5dd469bc232006af1328, type: 3}
+    volume: 1
+  - cueName: se_live_all_perfect
+    clip: {fileID: 8300000, guid: db39cd1a29a09984da704279463a21df, type: 3}
     clips:
     - {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
     - {fileID: 8300000, guid: 1f23de91b52e5dd469bc232006af1328, type: 3}
@@ -24675,7 +24699,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 1
-  m_Size: {x: 0.22222222, y: 0.14814815}
+  m_Size: {x: 4.9264245, y: 0.22341834}
   m_AdaptiveModeThreshold: 1
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1

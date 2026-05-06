@@ -22,6 +22,14 @@ namespace Sekai.Core.Live
         {
         }
 
+        public virtual void SetupScore(LiveScore score)
+        {
+        }
+
+        public virtual void ChangeScoreCalculator(ScoreGaugeCalculator scoreGaugeCalculator)
+        {
+        }
+
         public virtual void OnUpdate(float time)
         {
         }
@@ -50,6 +58,10 @@ namespace Sekai.Core.Live
         {
         }
 
+        public virtual void Result(LiveResultAnimationType animationType)
+        {
+        }
+
         public virtual void Finish()
         {
         }
@@ -67,6 +79,18 @@ namespace Sekai.Core.Live
         }
 
         public virtual void Unpicked(int lane, ref LiveTouch touch)
+        {
+        }
+
+        public virtual void UpdateScore(ref LiveScore score, int addScore)
+        {
+        }
+
+        public virtual void UpdateLife(int life)
+        {
+        }
+
+        public virtual void UpdateCombo(LiveScore score)
         {
         }
     }

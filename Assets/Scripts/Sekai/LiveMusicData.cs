@@ -10,6 +10,8 @@ namespace Sekai
 
         public MasterMusicCollaboration Collaboration { get; set; }
 
+        public MasterPlayLevelScore Score { get; set; }
+
         public bool IsCollaboration
         {
             get { return Collaboration != null; }

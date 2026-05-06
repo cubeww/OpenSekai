@@ -19,6 +19,8 @@ namespace Sekai.Core.Live
 
 		private NoteBase[] highSpeedNoteArray;
 
+		private ScoreLogic scoreLogic;
+
 		private int noteStartIndex;
 
 		private int highSpeedNoteStartIndex;
@@ -33,11 +35,65 @@ namespace Sekai.Core.Live
 
 		private Action<EventBase> noteEventResultCallback;
 
+		private LiveResult result;
+
 		public LiveLogic(LiveBundleBuildData data)
 		{
 			judgmentNoteList = new List<NoteBase>();
 			liveBundleBuildData = data;
 		}
+
+		public LiveScore Score
+		{
+			get { return scoreLogic != null ? scoreLogic.Score : default(LiveScore); }
+		}
+
+		public bool IsAllPerfectCombo
+		{
+			get { return scoreLogic != null && scoreLogic.IsAllPerfectCombo; }
+		}
+
+		public bool IsPerfectCombo
+		{
+			get { return scoreLogic != null && scoreLogic.IsPerfectCombo; }
+		}
+
+		public bool IsNotesAllFinished
+		{
+			get
+			{
+				int noteCount = noteArray != null ? noteArray.Length : 0;
+				int highSpeedNoteCount = highSpeedNoteArray != null ? highSpeedNoteArray.Length : 0;
+				return noteStartIndex >= noteCount && highSpeedNoteStartIndex >= highSpeedNoteCount;
+			}
+		}
+
+		public LiveResult Result
+		{
+			get { return result; }
+			private set
+			{
+				if (result == value)
+				{
+					return;
+				}
+
+				result = value;
+				if (value == LiveResult.Failure)
+				{
+					OnFailure?.Invoke();
+					value = result;
+				}
+				if (value >= LiveResult.Clear)
+				{
+					OnFinished?.Invoke();
+				}
+			}
+		}
+
+		public event Action OnFailure;
+
+		public event Action OnFinished;
 
 		public void Setup(LiveBootDataBase bootData, LiveViewBase[] liveViews, MusicScore musicScore)
 		{
@@ -73,6 +129,10 @@ namespace Sekai.Core.Live
 				note.OnSpawn = OnSpawnNote;
 				note.OnJudgment = OnJudgmentNote;
 				note.OnUnspawn = OnUnSpawnNote;
+				note.OnUpdateScore = OnUpdateScore;
+				note.OnUpdateCombo = OnUpdateCombo;
+				note.OnDamage = OnDamage;
+				note.OnUpdateResult = OnUpdateResult;
 				note.CalcTimeOffset = CalcTimeOffset;
 
 				for (int j = 0; note.NoteList != null && j < note.NoteList.Count; j++)
@@ -84,10 +144,23 @@ namespace Sekai.Core.Live
 			noteStartIndex = 0;
 			highSpeedNoteStartIndex = 0;
 			noteEventResultCallback = ExcuteEvent;
+			SetScoreLogic(new ScoreLogic(liveBundleBuildData));
+			Result = LiveResult.None;
+		}
+
+		public void SetScoreLogic(ScoreLogic scoreLogic)
+		{
+			this.scoreLogic = scoreLogic;
+			this.scoreLogic?.Setup(bootData, noteArray, eventArray, liveViews);
 		}
 
 		public void OnUpdate(float scoreInfoTime, double currentGameTime)
 		{
+			if (Result > LiveResult.Failure)
+			{
+				return;
+			}
+
 			if (musicScore == null)
 			{
 				return;
@@ -98,6 +171,15 @@ namespace Sekai.Core.Live
 			InitializeUpdate();
 			UpdateEvent();
 			UpdateNote();
+
+			if (Score.life == 0)
+			{
+				Result = LiveResult.Failure;
+			}
+			if (IsNotesAllFinished && Result == LiveResult.None)
+			{
+				Result = LiveResult.Clear;
+			}
 		}
 
 		private void InitializeUpdate()
@@ -287,7 +369,7 @@ namespace Sekai.Core.Live
 
 		private void OnJudgmentNote(NoteBase noteInfo)
 		{
-			ForEachLiveView(view => view.JudgmentNote(noteInfo));
+			scoreLogic?.UpdateNoteResult(noteInfo);
 		}
 
 		private void OnUnSpawnNote(NoteBase noteInfo)
@@ -297,6 +379,27 @@ namespace Sekai.Core.Live
 
 		private void ExcuteEvent(EventBase eventInfo)
 		{
+			scoreLogic?.ExcuteEvent(eventInfo);
+		}
+
+		private (NoteResult, NoteResultDescription) OnUpdateResult((NoteResult, NoteResultDescription) result)
+		{
+			return scoreLogic != null ? scoreLogic.UpdateResult(result) : result;
+		}
+
+		private void OnUpdateScore(NoteBase noteInfo)
+		{
+			scoreLogic?.CalculateScore(noteInfo, Score.life == 0);
+		}
+
+		private void OnUpdateCombo(NoteBase noteInfo)
+		{
+			scoreLogic?.UpdateCombo(noteInfo);
+		}
+
+		private void OnDamage(NoteBase noteInfo)
+		{
+			scoreLogic?.Damage(noteInfo);
 		}
 
 		public void OnAutoInput()

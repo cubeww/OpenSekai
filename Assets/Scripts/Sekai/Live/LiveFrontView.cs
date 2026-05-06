@@ -33,9 +33,9 @@ namespace Sekai.Live
         {
             base.Setup(baseController);
             this.baseController = baseController;
-            life = LiveConfig.Life;
+            life = GetLiveMaxLife();
 
-            lifeView?.Setup(OnPause);
+            lifeView?.Setup(OnPause, life);
             if (baseController != null)
             {
                 LiveBootDataBase bootData = baseController.BootData;
@@ -76,6 +76,20 @@ namespace Sekai.Live
             notesViewManager?.CreateNotePool(baseController, notePoolCount);
         }
 
+        public override void SetupScore(LiveScore score)
+        {
+            cutinManager?.SetupScore(score);
+            scoreView?.SetupScore(score);
+            lifeView?.Excute(score.life);
+            comboView?.Excute(score);
+            life = score.life;
+        }
+
+        public override void ChangeScoreCalculator(ScoreGaugeCalculator scoreGaugeCalculator)
+        {
+            scoreView?.ChangeScoreCalculator(scoreGaugeCalculator);
+        }
+
         public override void OnLoad()
         {
             SetupTapEffect();
@@ -111,9 +125,11 @@ namespace Sekai.Live
             longTapEffectView?.Clear();
             tapEffect?.Clear();
             comboView?.Clear();
+            scoreView?.Clear();
+            lifeView?.Clear();
             cutinManager?.Clear();
             skillView?.Clear();
-            life = LiveConfig.Life;
+            life = GetLiveMaxLife();
             if (autoLabel != null)
             {
                 autoLabel.SetActive(false);
@@ -126,6 +142,11 @@ namespace Sekai.Live
         public override void Finish()
         {
             FadeOut();
+        }
+
+        public override void Result(LiveResultAnimationType animationType)
+        {
+            liveResultView?.Execute(animationType);
         }
 
         private void SetupBackground()
@@ -330,6 +351,19 @@ namespace Sekai.Live
             return previewBrightness;
         }
 
+        private int GetLiveMaxLife()
+        {
+            LiveBundleBuildData data = baseController != null && baseController.BootData != null
+                ? baseController.BootData.BundleBuildData
+                : null;
+            if (data != null)
+            {
+                return data.Life;
+            }
+
+            return LiveConfig.Life;
+        }
+
         private void KillLiveTweens()
         {
             if (liveUiFadeTween != null)
@@ -420,6 +454,23 @@ namespace Sekai.Live
         public override void Unpicked(int lane, ref LiveTouch touch)
         {
             tapEffect?.Unpicked(lane, ref touch);
+        }
+
+        public override void UpdateScore(ref LiveScore score, int addScore)
+        {
+            scoreView?.UpdateScore(ref score, addScore);
+        }
+
+        public override void UpdateCombo(LiveScore score)
+        {
+            cutinManager?.PlayCombo(score);
+            comboView?.Excute(score);
+        }
+
+        public override void UpdateLife(int life)
+        {
+            lifeView?.Excute(life);
+            this.life = life;
         }
 
         private void EnsureBackgroundMesh()
