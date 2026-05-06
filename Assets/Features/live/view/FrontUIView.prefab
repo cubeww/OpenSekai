@@ -18531,7 +18531,7 @@ MonoBehaviour:
   numberSpacing: 0.2
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
   surplusColor: {r: 1, g: 1, b: 1, a: 0}
-  plusIconSprite: {fileID: 0}
+  plusIconSprite: {fileID: 21300000, guid: 6d6826b847303f4448f2a404ce60053c, type: 2}
   minusiconSprite: {fileID: 0}
   numberSprites:
   - {fileID: 21300000, guid: b8b8494ff58c6544d850c93c90e5da1e, type: 2}
@@ -23603,7 +23603,7 @@ MonoBehaviour:
   numberSpacing: 0.2
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
   surplusColor: {r: 1, g: 1, b: 1, a: 0}
-  plusIconSprite: {fileID: 0}
+  plusIconSprite: {fileID: 21300000, guid: 547d3a0631124c94bb2e7cca61f38541, type: 2}
   minusiconSprite: {fileID: 0}
   numberSprites:
   - {fileID: 21300000, guid: 62812dc6fa4411e42a8180a21a235a32, type: 2}
