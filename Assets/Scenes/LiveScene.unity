@@ -284,11 +284,11 @@ MonoBehaviour:
   previewTitle: Tell Your World
   previewLyricist: kz
   previewComposer: kz
-  previewArranger: kz
-  previewVocalCaption: "OpenSekai \u590D\u523B"
+  previewArranger: "\u521D\u97F3\u672A\u6765"
+  previewVocalCaption: 
   previewVocalType: sekai
   previewVocalAssetBundleName: 
-  previewMusicClip: {fileID: 8300000, guid: 984b1041e61db3f4aab070328062ee08, type: 3}
+  previewMusicClip: {fileID: 0}
   musicAudioSource: {fileID: 0}
   isAuto: 1
   canSkipDisplayMusicInfo: 0
@@ -298,7 +298,7 @@ MonoBehaviour:
   startOnAwake: 1
   musicStartOnAwake: 1
   liveStartWaitTime: 6
-  previewSusScore: {fileID: 4900000, guid: 150ea8c0f56e210468f148432c5c9d63, type: 3}
+  previewSusScore: {fileID: 0}
   liveBundleBuildData: {fileID: 0}
 --- !u!1001 &1943756284
 PrefabInstance:
