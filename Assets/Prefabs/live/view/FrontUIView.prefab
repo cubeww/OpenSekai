@@ -24034,6 +24034,7 @@ GameObject:
   - component: {fileID: 114294885792020211}
   - component: {fileID: 114271925019662038}
   - component: {fileID: 114499517081926786}
+  - component: {fileID: 4565915413663537513}
   m_Layer: 20
   m_Name: FrontUIView
   m_TagString: Untagged
@@ -24099,6 +24100,7 @@ MonoBehaviour:
   tapSingleEffectPrefab: {fileID: 1709254077376921, guid: 0d77bc29e54e64a409264b8518d32978, type: 3}
   tapFlickEffectPrefab: {fileID: 1709254077376921, guid: c7f562e9f252c7f498f5c08f2dc996e7, type: 3}
   tapLoopEffectPrefab: {fileID: 1709254077376921, guid: bbcf2e02b8f0bfe4ebd780f0da0ffc5b, type: 3}
+  liveSoundPlayer: {fileID: 0}
   tapEffectPrefabs:
   - name: fx_lane_tap
     prefab: {fileID: 1709254077376921, guid: eccb6286442fa324e86cba7d6fe89754, type: 3}
@@ -24246,6 +24248,76 @@ MonoBehaviour:
   pixelPerUnit: 108
   baseType: 0
   camera: {fileID: 20060176988151448}
+--- !u!114 &4565915413663537513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1709254077376921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13f6bb07087bfa345811668d2767c669, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Sekai.Live.LiveSoundPlayer
+  oneShotSource: {fileID: 0}
+  cueClips:
+  - cueName: se_live_tap
+    clip: {fileID: 8300000, guid: 12bae057be42bf541a440c177229d2bf, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_good
+    clip: {fileID: 8300000, guid: 348d01355048596489a282b8a2395c56, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_great
+    clip: {fileID: 8300000, guid: 7b6ac8c164f062d46b14f48800cb41a9, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_perfect
+    clip: {fileID: 8300000, guid: c62c581d5f3e0e440acc0b575fa07408, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_critical
+    clip: {fileID: 8300000, guid: 8e0efaa881c649f4d83802802b3e25ea, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_long
+    clip: {fileID: 8300000, guid: fff27727613a6f244bbe587741ff718b, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_long_critical
+    clip: {fileID: 8300000, guid: 50fc5f9ff8be92b459fcf32becdf5dce, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_connect
+    clip: {fileID: 8300000, guid: e0175fecc4b276e4b83e176bd67f68e5, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_connect_critical
+    clip: {fileID: 8300000, guid: 3b310ff7c48f4c84689396a7ae00e01b, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_flick
+    clip: {fileID: 8300000, guid: 2ac12288a79f1f548a1487178292a541, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_flick_critical
+    clip: {fileID: 8300000, guid: f430ea9aab296234dbf8f6aba6a97f88, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_trace
+    clip: {fileID: 8300000, guid: a5e1aa15a8252b44bb39a3c3ead754c7, type: 3}
+    clips: []
+    volume: 1
+  - cueName: se_live_trace_critical
+    clip: {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
+    clips:
+    - {fileID: 8300000, guid: b5040dade9c374146add45179029ab78, type: 3}
+    - {fileID: 8300000, guid: 1f23de91b52e5dd469bc232006af1328, type: 3}
+    volume: 1
+  masterVolume: 1
+  logMissingCue: 0
 --- !u!1 &1709867586078768
 GameObject:
   m_ObjectHideFlags: 0

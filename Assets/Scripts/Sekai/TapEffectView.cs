@@ -65,6 +65,10 @@ namespace Sekai
 
 		private Dictionary<int, EffectPool> genPoolDict;
 
+		private Dictionary<int, string> tapSEDict;
+
+		private Dictionary<int, string> pairNoteSeMap;
+
 		private Dictionary<NoteType, EffectPool> flashPoolDict;
 
 		private Dictionary<NoteType, EffectPool> connectionPoolDict;
@@ -79,12 +83,15 @@ namespace Sekai
 
 		private bool isEnableVibration;
 
+		private LiveSoundPlayer liveSoundPlayer;
+
 		public void Setup(
 			BaseLiveController liveBaseController,
 			EffectPrefab[] effectPrefabs = null,
 			GameObject fallbackSinglePrefab = null,
 			GameObject fallbackFlickPrefab = null,
-			GameObject fallbackLoopPrefab = null)
+			GameObject fallbackLoopPrefab = null,
+			LiveSoundPlayer liveSoundPlayer = null)
 		{
 			if (effectPrefabs != null)
 			{
@@ -107,14 +114,20 @@ namespace Sekai
 			poolDict = new Dictionary<string, EffectPool>();
 			auraPoolDict = new Dictionary<int, EffectPool>();
 			genPoolDict = new Dictionary<int, EffectPool>();
+			tapSEDict = new Dictionary<int, string>();
+			pairNoteSeMap = new Dictionary<int, string>();
 			flashPoolDict = new Dictionary<NoteType, EffectPool>();
 			connectionPoolDict = new Dictionary<NoteType, EffectPool>();
 			frictionPoolDict = new Dictionary<int, EffectPool>();
 			lastTapLanes = new int[LaneCount];
+			this.liveSoundPlayer = liveSoundPlayer != null
+				? liveSoundPlayer
+				: liveBaseController != null ? liveBaseController.GetComponentInChildren<LiveSoundPlayer>(true) : null;
 
 			SetupEffectPools();
 			SetupLaneEffects();
 			SetupNoteEffectMaps();
+			SetupSEDict();
 			isEnableVibration = false;
 		}
 
@@ -126,6 +139,7 @@ namespace Sekai
 			StopLaneEffects(flickLaneEffectList);
 			StopLaneEffects(criticalFlickLaneEffectList);
 			lastFrame = 0;
+			pairNoteSeMap?.Clear();
 			if (lastTapLanes != null)
 			{
 				Array.Clear(lastTapLanes, 0, lastTapLanes.Length);
@@ -186,6 +200,7 @@ namespace Sekai
 					break;
 			}
 
+			PlaySe();
 			PlayHaptic(checkPlayedHaptic);
 		}
 
@@ -328,6 +343,7 @@ namespace Sekai
 		private void PlayUnpickedEffect(int lane)
 		{
 			TapLane(Mathf.Clamp(lane, 0, LaneCount - 1));
+			PlayOneShot(LiveSoundDefine.SE_LIVE_TAP);
 		}
 
 		private void PlayLaneEffect()
@@ -554,6 +570,114 @@ namespace Sekai
 			return defaultLaneEffectList ?? tapLaneEffectList;
 		}
 
+		private void SetupSEDict()
+		{
+			tapSEDict[CreateSeKey(NoteCategory.Normal, NoteType.Default)] = LiveSoundDefine.SE_LIVE_PERFECT;
+			tapSEDict[CreateSeKey(NoteCategory.Normal, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_CRITICAL;
+			tapSEDict[CreateSeKey(NoteCategory.Flick, NoteType.Default)] = LiveSoundDefine.SE_LIVE_FLICK;
+			tapSEDict[CreateSeKey(NoteCategory.Flick, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_FLICK_CRITICAL;
+			tapSEDict[CreateSeKey(NoteCategory.Long, NoteType.Default)] = LiveSoundDefine.SE_LIVE_PERFECT;
+			tapSEDict[CreateSeKey(NoteCategory.Long, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_PERFECT;
+			tapSEDict[CreateSeKey(NoteCategory.Friction, NoteType.Default)] = LiveSoundDefine.SE_LIVE_FRICTION;
+			tapSEDict[CreateSeKey(NoteCategory.Friction, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_FRICTION_CRITICAL;
+			tapSEDict[CreateSeKey(NoteCategory.FrictionLong, NoteType.Default)] = LiveSoundDefine.SE_LIVE_FRICTION;
+			tapSEDict[CreateSeKey(NoteCategory.FrictionLong, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_FRICTION_CRITICAL;
+			tapSEDict[CreateSeKey(NoteCategory.FrictionFlick, NoteType.Default)] = LiveSoundDefine.SE_LIVE_FLICK;
+			tapSEDict[CreateSeKey(NoteCategory.FrictionFlick, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_FLICK_CRITICAL;
+			tapSEDict[CreateSeKey(NoteCategory.Connection, NoteType.Default)] = LiveSoundDefine.SE_LIVE_CONNECT;
+			tapSEDict[CreateSeKey(NoteCategory.Connection, NoteType.Critical)] = LiveSoundDefine.SE_LIVE_CONNECT_CRITICAL;
+		}
+
+		private void PlaySe()
+		{
+			if (tapSEDict == null || !tapSEDict.TryGetValue(CreateSeKey(noteInfo.category, noteInfo.type), out string seName))
+			{
+				return;
+			}
+
+			string seCategory = seName;
+			if (noteInfo.category == NoteCategory.Normal && noteInfo.type == NoteType.Default)
+			{
+				switch (noteInfo.result)
+				{
+					case NoteResult.Auto:
+					case NoteResult.Perfect:
+					case NoteResult.JustPerfect:
+						seName = LiveSoundDefine.SE_LIVE_PERFECT;
+						seCategory = "tap1";
+						break;
+					case NoteResult.Good:
+						seName = LiveSoundDefine.SE_LIVE_GOOD;
+						seCategory = "tap2";
+						break;
+					case NoteResult.Great:
+						seName = LiveSoundDefine.SE_LIVE_GREAT;
+						seCategory = "tap1";
+						break;
+					default:
+						return;
+				}
+			}
+
+			PlaySE(seName, seCategory, noteInfo.noteId, noteInfo.pairNote);
+		}
+
+		private void PlaySE(string seName, string category, int myNoteId, INote pairNote)
+		{
+			if (string.IsNullOrEmpty(seName))
+			{
+				return;
+			}
+
+			if (pairNote == null)
+			{
+				PlayOneShot(seName);
+				return;
+			}
+
+			int pairNoteId = pairNote.Id;
+			if (pairNoteSeMap != null && pairNoteSeMap.TryGetValue(pairNoteId, out string pairCategory))
+			{
+				if (pairCategory != category)
+				{
+					PlayOneShot(seName);
+				}
+				pairNoteSeMap.Remove(pairNoteId);
+				return;
+			}
+
+			if (pairNoteSeMap != null && pairNoteSeMap.TryGetValue(myNoteId, out string myCategory))
+			{
+				if (myCategory != category)
+				{
+					PlayOneShot(seName);
+				}
+				pairNoteSeMap.Remove(myNoteId);
+				return;
+			}
+
+			if (pairNoteSeMap != null)
+			{
+				pairNoteSeMap[myNoteId] = category;
+			}
+			PlayOneShot(seName);
+		}
+
+		private void PlayOneShot(string seName)
+		{
+			if (liveSoundPlayer == null && liveBaseController != null)
+			{
+				liveSoundPlayer = liveBaseController.GetComponentInChildren<LiveSoundPlayer>(true);
+			}
+
+			float seVolume = MusicScore.CurrentFrameInfo.seVolume;
+			if (seVolume <= 0f)
+			{
+				seVolume = 1f;
+			}
+			liveSoundPlayer?.PlayIngameSEOneShot(seName, seVolume);
+		}
+
 		private Vector3 GetNoteCenterGroundPosition()
 		{
 			float lane = (noteInfo.laneStart + noteInfo.laneEnd) * 0.5f;
@@ -568,6 +692,11 @@ namespace Sekai
 		private static int CreateEffectKey(NoteCategory category, NoteType type, NoteResult result)
 		{
 			return ((int)category * 100) + ((int)type * 10) + (int)result;
+		}
+
+		private static int CreateSeKey(NoteCategory category, NoteType type)
+		{
+			return (int)category + (int)type * 10;
 		}
 
 		private Transform CreateChild(string objectName)

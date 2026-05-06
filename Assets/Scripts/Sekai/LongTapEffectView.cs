@@ -17,8 +17,11 @@ namespace Sekai
 
 			public bool IsUsed;
 
-			public EffectPair(GameObject genPrefab, GameObject auraPrefab, Transform parent, BaseLiveController liveController)
+			private readonly LiveSoundPlayer liveSoundPlayer;
+
+			public EffectPair(GameObject genPrefab, GameObject auraPrefab, Transform parent, BaseLiveController liveController, LiveSoundPlayer liveSoundPlayer)
 			{
+				this.liveSoundPlayer = liveSoundPlayer;
 				Gen = CreateEffect(genPrefab, parent, liveController);
 				Aura = CreateEffect(auraPrefab, parent, liveController);
 				Stop();
@@ -28,6 +31,7 @@ namespace Sekai
 			{
 				IsUsed = true;
 				SetTransform(note);
+				bool shouldStart = (Aura != null && !Aura.IsPlaying) || (Gen != null && !Gen.IsPlaying);
 				if (Aura != null && !Aura.IsPlaying)
 				{
 					Aura.Play();
@@ -35,6 +39,10 @@ namespace Sekai
 				if (Gen != null && !Gen.IsPlaying)
 				{
 					Gen.Play();
+				}
+				if (shouldStart)
+				{
+					PlaySE(note);
 				}
 			}
 
@@ -58,6 +66,29 @@ namespace Sekai
 				IsUsed = false;
 				Aura?.Stop();
 				Gen?.Stop();
+				if (PlaybackId != 0)
+				{
+					liveSoundPlayer?.StopSE(PlaybackId);
+					PlaybackId = 0;
+				}
+			}
+
+			private void PlaySE(INote note)
+			{
+				if (note == null || liveSoundPlayer == null)
+				{
+					return;
+				}
+
+				string cueName = note.Type == NoteType.Critical
+					? LiveSoundDefine.SE_LIVE_LONG_CRITICAL
+					: LiveSoundDefine.SE_LIVE_LONG;
+				float seVolume = MusicScore.CurrentFrameInfo.seVolume;
+				if (seVolume <= 0f)
+				{
+					seVolume = 1f;
+				}
+				PlaybackId = liveSoundPlayer.PlayIngameSE(cueName, seVolume);
 			}
 
 			private static ParticleSystemController CreateEffect(GameObject prefab, Transform parent, BaseLiveController liveController)
@@ -91,7 +122,9 @@ namespace Sekai
 
 		private Dictionary<INote, EffectPair> longNotes;
 
-		public void Setup(GameObject holdAuraPrefab = null, GameObject holdGenPrefab = null, GameObject criticalHoldAuraPrefab = null, GameObject criticalHoldGenPrefab = null, int poolCount = 16, BaseLiveController liveController = null)
+		private LiveSoundPlayer liveSoundPlayer;
+
+		public void Setup(GameObject holdAuraPrefab = null, GameObject holdGenPrefab = null, GameObject criticalHoldAuraPrefab = null, GameObject criticalHoldGenPrefab = null, int poolCount = 16, BaseLiveController liveController = null, LiveSoundPlayer liveSoundPlayer = null)
 		{
 			if (holdAuraPrefab != null)
 			{
@@ -110,6 +143,9 @@ namespace Sekai
 				this.criticalHoldGenPrefab = criticalHoldGenPrefab;
 			}
 			this.poolCount = Mathf.Max(1, poolCount);
+			this.liveSoundPlayer = liveSoundPlayer != null
+				? liveSoundPlayer
+				: liveController != null ? liveController.GetComponentInChildren<LiveSoundPlayer>(true) : null;
 
 			longNotes = new Dictionary<INote, EffectPair>();
 			tapKeeps = CreatePairs("LongTapKeep", this.holdGenPrefab, this.holdAuraPrefab, this.poolCount, liveController);
@@ -206,7 +242,7 @@ namespace Sekai
 			EffectPair[] pairs = new EffectPair[count];
 			for (int i = 0; i < pairs.Length; i++)
 			{
-				pairs[i] = new EffectPair(genPrefab, auraPrefab, root, liveController);
+				pairs[i] = new EffectPair(genPrefab, auraPrefab, root, liveController, liveSoundPlayer);
 			}
 			return pairs;
 		}

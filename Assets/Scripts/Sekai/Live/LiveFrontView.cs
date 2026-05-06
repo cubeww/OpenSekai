@@ -180,7 +180,7 @@ namespace Sekai.Live
             {
                 tapEffect = effectRoot.gameObject.AddComponent<TapEffectView>();
             }
-            tapEffect.Setup(baseController, tapEffectPrefabs, tapSingleEffectPrefab, tapFlickEffectPrefab, tapLoopEffectPrefab);
+            tapEffect.Setup(baseController, tapEffectPrefabs, tapSingleEffectPrefab, tapFlickEffectPrefab, tapLoopEffectPrefab, liveSoundPlayer);
 
             Transform longTapEffectTransform = effectRoot.Find("LongTapEffect");
             if (longTapEffectTransform != null)
@@ -197,7 +197,7 @@ namespace Sekai.Live
                 longTapEffectView = longTapEffectObject.AddComponent<LongTapEffectView>();
                 longTapEffectView.transform.SetParent(effectRoot, false);
             }
-            longTapEffectView.Setup(longHoldAuraPrefab, longHoldGenPrefab, criticalLongHoldAuraPrefab, criticalLongHoldGenPrefab, longTapEffectPoolCount, baseController);
+            longTapEffectView.Setup(longHoldAuraPrefab, longHoldGenPrefab, criticalLongHoldAuraPrefab, criticalLongHoldGenPrefab, longTapEffectPoolCount, baseController, liveSoundPlayer);
 
             effectRoot.position = transform.position;
             if (effectCamera != null)

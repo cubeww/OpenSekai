@@ -24,6 +24,7 @@ namespace Sekai.Live
         [SerializeField] private GameObject tapSingleEffectPrefab;
         [SerializeField] private GameObject tapFlickEffectPrefab;
         [SerializeField] private GameObject tapLoopEffectPrefab;
+        [SerializeField] private LiveSoundPlayer liveSoundPlayer;
         [SerializeField] private TapEffectView.EffectPrefab[] tapEffectPrefabs;
         [SerializeField] private GameObject longHoldAuraPrefab;
         [SerializeField] private GameObject longHoldGenPrefab;
