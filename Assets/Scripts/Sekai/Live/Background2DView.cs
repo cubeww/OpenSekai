@@ -93,12 +93,13 @@ namespace Sekai.Live
                 backgroundRenderer.sprite = defaultBackgroundSprite;
             }
 
+            Texture2D jacketTexture = GetJacketTexture();
             Sprite jacketSprite = null;
-            if (defaultJacketTexture != null)
+            if (jacketTexture != null)
             {
                 jacketSprite = Sprite.Create(
-                    defaultJacketTexture,
-                    new Rect(0f, 0f, defaultJacketTexture.width, defaultJacketTexture.height),
+                    jacketTexture,
+                    new Rect(0f, 0f, jacketTexture.width, jacketTexture.height),
                     new Vector2(0.5f, 0.5f));
             }
 
@@ -231,6 +232,12 @@ namespace Sekai.Live
         private LiveMusicData GetMusicData()
         {
             return baseController != null && baseController.BootData != null ? baseController.BootData.MusicData : null;
+        }
+
+        private Texture2D GetJacketTexture()
+        {
+            LiveMusicData musicData = GetMusicData();
+            return musicData != null && musicData.JacketTexture != null ? musicData.JacketTexture : defaultJacketTexture;
         }
 
         private static string Get2DModeSekaiMVAssetBundleNameByMusicData(LiveMusicData musicData)

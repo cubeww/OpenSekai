@@ -21814,7 +21814,7 @@ MonoBehaviour:
   - {fileID: 225824711297872077}
   mask: {fileID: 224288309231489556}
   jacket: {fileID: 114536873717977885}
-  jacketTexture: {fileID: 2800000, guid: 50273a20e4b967249ae29bcef03f6d55, type: 3}
+  jacketTexture: {fileID: 0}
   difficultyJacket: {fileID: 114809288501262078}
   difficultyJacketText: {fileID: 114610208554618962}
   titleLabel: {fileID: 114942066236133985}

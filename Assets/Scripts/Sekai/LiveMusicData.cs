@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Sekai
 {
     public class LiveMusicData
@@ -11,6 +13,8 @@ namespace Sekai
         public MasterMusicCollaboration Collaboration { get; set; }
 
         public MasterPlayLevelScore Score { get; set; }
+
+        public Texture2D JacketTexture { get; set; }
 
         public bool IsCollaboration
         {

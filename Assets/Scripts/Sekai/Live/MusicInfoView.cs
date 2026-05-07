@@ -43,9 +43,12 @@ namespace Sekai.Live
             MasterMusic music = musicData != null ? musicData.Music : null;
             MasterMusicDifficulty difficulty = musicData != null ? musicData.Difficulty : null;
 
-            if (jacket != null && jacketTexture != null)
+            Texture2D displayJacketTexture = musicData != null && musicData.JacketTexture != null
+                ? musicData.JacketTexture
+                : jacketTexture;
+            if (jacket != null && displayJacketTexture != null)
             {
-                jacket.texture = jacketTexture;
+                jacket.texture = displayJacketTexture;
             }
 
             if (difficultyJacket != null)

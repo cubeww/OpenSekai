@@ -30,6 +30,7 @@ namespace Sekai.Core.Live
         [SerializeField] private string previewVocalCaption = "Miku";
         [SerializeField] private string previewVocalType = "sekai";
         [SerializeField] private string previewVocalAssetBundleName;
+        [SerializeField] private Texture2D previewJacket;
         [SerializeField] private AudioClip previewMusicClip;
         [SerializeField] private AudioSource musicAudioSource;
         [SerializeField] private bool isAuto;
@@ -165,6 +166,7 @@ namespace Sekai.Core.Live
                     label = collaborationLabel
                 }
                 : null;
+            musicData.JacketTexture = previewJacket;
 
             bootData.MusicData = musicData;
             return bootData;
