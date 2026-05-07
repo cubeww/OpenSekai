@@ -4126,27 +4126,27 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 1dc4856f4f519504cbfeae03202a3640, type: 2}
   - {fileID: 21300000, guid: c1b625cc73a04254392b25842aaa6d1e, type: 2}
   allPerfectNumberSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 21300000, guid: 11676eaaa3e04614685a063349cbc311, type: 2}
+  - {fileID: 21300000, guid: 179c9f4a5b4a3bf4eaba4650a5adddde, type: 2}
+  - {fileID: 21300000, guid: 0a76714c8dce0684bba9027a573f092d, type: 2}
+  - {fileID: 21300000, guid: a7aa5050674ed184fad33cb41d3dde9f, type: 2}
+  - {fileID: 21300000, guid: 1de61f37c24380b4fb22bd6be5629740, type: 2}
+  - {fileID: 21300000, guid: 07828f7c2ebe2ab40af2572f3a343fba, type: 2}
+  - {fileID: 21300000, guid: d33250fecd825304cbb3acef013b8d50, type: 2}
+  - {fileID: 21300000, guid: 593cec6d60f2491408510c4392da73ed, type: 2}
+  - {fileID: 21300000, guid: 7183f24dcab1e9e4e9944a1b3d45ee41, type: 2}
+  - {fileID: 21300000, guid: 4cac1ac777d3f104d8762bfd8695bb6b, type: 2}
   allPerfectEffectSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 21300000, guid: c4778d8c38ea0ac4b94e187c7b9e9275, type: 2}
+  - {fileID: 21300000, guid: aa0df7bfb6c09104db8f996fc15dd239, type: 2}
+  - {fileID: 21300000, guid: e69cba15abb4417449fb98a2a7ad0396, type: 2}
+  - {fileID: 21300000, guid: 273bad8fcbbcb734da65e3b5ee630ea7, type: 2}
+  - {fileID: 21300000, guid: 5fddcd903911420489e7871339021431, type: 2}
+  - {fileID: 21300000, guid: 7a4f9a97a61e67046a5d5f18638a4d75, type: 2}
+  - {fileID: 21300000, guid: 99c741b3981ce564b8798022d4385f7a, type: 2}
+  - {fileID: 21300000, guid: 5fb60cdc645b27f4eb1a24d618c9d900, type: 2}
+  - {fileID: 21300000, guid: 0759d27138ee31449af9144c94f2cd0c, type: 2}
+  - {fileID: 21300000, guid: b64ee96f5d1535b43bc77f730b4345c2, type: 2}
   comboSpriteRenderer: {fileID: 212095816830470745}
   apEffectComboRenderer: {fileID: 212321827775029018}
   comboTextSprite: {fileID: 21300000, guid: 7f0799d362e96f347a31ddf8e1a1fb64, type: 2}

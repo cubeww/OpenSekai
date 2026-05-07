@@ -110,10 +110,8 @@ namespace Sekai
             isAllPerfect = useAllPerfectEffect && isApScore;
             if (isAllPerfect)
             {
-                sprites = allPerfectNumberSprites != null && allPerfectNumberSprites.Length > 0
-                    ? allPerfectNumberSprites
-                    : numberSprites;
-                comboSprite = allPerfectComboTextSprite != null ? allPerfectComboTextSprite : comboTextSprite;
+                sprites = allPerfectNumberSprites;
+                comboSprite = allPerfectComboTextSprite;
             }
 
             if (allPerfectEffectRoot != null)
