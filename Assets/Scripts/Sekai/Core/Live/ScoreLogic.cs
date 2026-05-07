@@ -166,7 +166,7 @@ namespace Sekai.Core.Live
 
         public virtual void UpdateCombo(NoteBase note)
         {
-            if (note.Result == NoteResult.None || note.Result == NoteResult.Pass)
+            if (note.Result == NoteResult.None)
             {
                 return;
             }
@@ -219,7 +219,7 @@ namespace Sekai.Core.Live
             return noteBases
                 .Where(note => note != null)
                 .SelectMany(note => note.NoteList ?? Enumerable.Empty<NoteBase>())
-                .Count(note => note != null && note.HasJudgment && note.Category != NoteCategory.Hidden && note.Category != NoteCategory.Skip);
+                .Count(note => note != null);
         }
 
         private static MasterPlayLevelScore EnsureScoreInfo(LiveBootDataBase bootData, NoteBase[] noteBases)

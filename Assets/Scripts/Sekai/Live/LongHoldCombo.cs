@@ -78,6 +78,10 @@ namespace Sekai.Live
 
 		protected override void OnUnSpawnNote()
 		{
+			onJudgment?.Invoke(this);
+			onUpdateScore?.Invoke(this);
+			onUpdateCombo?.Invoke(this);
+			onDamage?.Invoke(this);
 		}
 
 		public override bool AutoJudgment(MusicScoreInfo currentFrameInfo)

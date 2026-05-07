@@ -277,22 +277,22 @@ MonoBehaviour:
   musicCategory: 2
   livePlayMode: 0
   previewVocalId: 1
-  previewDifficulty: 5
+  previewDifficulty: 4
   previewPlayLevel: 1
   previewTotalNoteCount: 0
-  previewTimingAdjustData: 0
+  previewTimingAdjustData: -3
   previewFillerSec: 9
-  previewTitle: Tell Your World
-  previewLyricist: kz
-  previewComposer: kz
-  previewArranger: kz
-  previewVocalCaption: "\u521D\u97F3\u672A\u6765"
+  previewTitle: "\u5186\u5C3E\u5742\u306E\u4ED5\u7ACB\u5C4B"
+  previewLyricist: mothy
+  previewComposer: mothy
+  previewArranger: mothy
+  previewVocalCaption: "\u5DE1\u97F3\u30EB\u30AB"
   previewVocalType: sekai
   previewVocalAssetBundleName: 
-  previewJacket: {fileID: 2800000, guid: 50273a20e4b967249ae29bcef03f6d55, type: 3}
-  previewMusicClip: {fileID: 8300000, guid: 3988458401273684f86f56acfc4cd193, type: 3}
+  previewJacket: {fileID: 2800000, guid: 4caf30249decc2b418d239f0659b9c7f, type: 3}
+  previewMusicClip: {fileID: 8300000, guid: 07400e8fd8ebc6147be4302480f5f000, type: 3}
   musicAudioSource: {fileID: 0}
-  isAuto: 1
+  isAuto: 0
   canSkipDisplayMusicInfo: 0
   isCollaboration: 0
   collaborationId: 0
@@ -300,7 +300,7 @@ MonoBehaviour:
   startOnAwake: 1
   musicStartOnAwake: 1
   liveStartWaitTime: 6
-  previewSusScore: {fileID: 4900000, guid: 83b30db0ca58a974bbe09b3d8089f9e1, type: 3}
+  previewSusScore: {fileID: 4900000, guid: b4152e5eb46d6324bb85f02907b2a45d, type: 3}
   liveBundleBuildData: {fileID: 0}
 --- !u!1001 &1943756284
 PrefabInstance:
