@@ -276,6 +276,7 @@ namespace Sekai.Live
                 liveUiFadeTween = null;
             }
 
+            UpdateSpriteAlpha(0f);
             liveUiFadeTween = DOVirtual.Float(0f, 1f, 2f, UpdateSpriteAlpha)
                 .SetEase(Ease.InOutQuad)
                 .SetTarget(this)
