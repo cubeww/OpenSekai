@@ -522,6 +522,32 @@ namespace Sekai.Core.Live
 			for (int i = 0; i < touches.Length; i++)
 			{
 				InputTouch touch = touches[i];
+				if (lastTouches.TryGetValue(touch.touchId, out (double, InputTouchPhase) lastTouch) &&
+					IsEndedOrCanceled(lastTouch.Item2))
+				{
+					if (touch.phase == InputTouchPhase.Began && touch.time > lastTouch.Item1)
+					{
+						lastTouches.Remove(touch.touchId);
+						touchPositionList.Remove(touch.touchId);
+						InputedNormalNoteTouch.Remove(touch.touchId);
+					}
+					else
+					{
+						continue;
+					}
+				}
+
+				if (!IsValidScreenPosition(touch.screenPosition))
+				{
+					if (IsEndedOrCanceled(touch.phase))
+					{
+						lastTouches[touch.touchId] = (touch.time, touch.phase);
+						touchPositionList.Remove(touch.touchId);
+						InputedNormalNoteTouch.Remove(touch.touchId);
+					}
+					continue;
+				}
+
 				if (!lastTouches.ContainsKey(touch.touchId))
 				{
 					TouchExecution(ref touch, ref activeInputCount);
@@ -530,7 +556,7 @@ namespace Sekai.Core.Live
 				}
 
 				(double lastTime, InputTouchPhase lastPhase) = lastTouches[touch.touchId];
-				if (touch.time >= lastTime && lastPhase != InputTouchPhase.Ended)
+				if (touch.time >= lastTime && !IsEndedOrCanceled(lastPhase))
 				{
 					TouchExecution(ref touch, ref activeInputCount);
 					lastTouches[touch.touchId] = (touch.time, touch.phase);
@@ -540,6 +566,16 @@ namespace Sekai.Core.Live
 			for (int i = 0; i < touches.Length; i++)
 			{
 				InputTouch touch = touches[i];
+				Vector2 screenPosition = touch.screenPosition;
+				if (!IsValidScreenPosition(screenPosition))
+				{
+					if (IsEndedOrCanceled(touch.phase))
+					{
+						touchPositionList.Remove(touch.touchId);
+					}
+					continue;
+				}
+
 				if (touchPositionList.ContainsKey(touch.touchId))
 				{
 					if (IsEndedOrCanceled(touch.phase))
@@ -548,12 +584,12 @@ namespace Sekai.Core.Live
 					}
 					else if (touch.time > touchPositionList[touch.touchId].Item1)
 					{
-						touchPositionList[touch.touchId] = (touch.time, touch.screenPosition);
+						touchPositionList[touch.touchId] = (touch.time, screenPosition);
 					}
 				}
 				else
 				{
-					touchPositionList.Add(touch.touchId, (touch.time, touch.screenPosition));
+					touchPositionList.Add(touch.touchId, (touch.time, screenPosition));
 				}
 			}
 
@@ -929,6 +965,16 @@ namespace Sekai.Core.Live
 		private static bool IsEndedOrCanceled(InputTouchPhase phase)
 		{
 			return phase == InputTouchPhase.Ended || phase == InputTouchPhase.Canceled;
+		}
+
+		private static bool IsValidScreenPosition(Vector2 screenPosition)
+		{
+			return IsFinite(screenPosition.x) && IsFinite(screenPosition.y);
+		}
+
+		private static bool IsFinite(float value)
+		{
+			return !float.IsNaN(value) && !float.IsInfinity(value);
 		}
 
 		private static NoteBase SelectComparableNote(NoteBase note, InputTmp input)
