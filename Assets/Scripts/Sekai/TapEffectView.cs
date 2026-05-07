@@ -148,12 +148,31 @@ namespace Sekai
 
 		public void Unpicked(int lane, ref LiveTouch touch)
 		{
-			if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began)
+			if (touch.phase == UnityEngine.InputSystem.TouchPhase.Began)
+			{
+				PlayUnpickedEffect(lane);
+				lastFrame = Time.frameCount;
+				if (lastTapLanes != null && touch.fingerId >= 0 && touch.fingerId < lastTapLanes.Length)
+				{
+					lastTapLanes[touch.fingerId] = lane;
+				}
+				return;
+			}
+
+			if (lastFrame < Time.frameCount - 1)
 			{
 				return;
 			}
 
-			PlayUnpickedEffect(lane);
+			if (lastTapLanes != null &&
+				touch.fingerId >= 0 &&
+				touch.fingerId < lastTapLanes.Length &&
+				lastTapLanes[touch.fingerId] != lane)
+			{
+				PlayUnpickedEffect(lane);
+				lastTapLanes[touch.fingerId] = lane;
+			}
+			lastFrame = Time.frameCount;
 		}
 
 		public void Excute(INote note, Func<bool> checkPlayedHaptic)
