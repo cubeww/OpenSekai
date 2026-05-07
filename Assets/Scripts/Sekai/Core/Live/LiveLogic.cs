@@ -4,7 +4,6 @@ using System.Linq;
 using Sekai;
 using Sekai.Live;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using InputTouch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using InputTouchPhase = UnityEngine.InputSystem.TouchPhase;
 
@@ -40,8 +39,6 @@ namespace Sekai.Core.Live
 		private const int InputTmpCount = 128;
 
 		private const int MaxFingerCount = 10;
-
-		private const int PcMouseTouchId = -100;
 
 		private LiveBootDataBase bootData;
 
@@ -560,117 +557,7 @@ namespace Sekai.Core.Live
 				}
 			}
 
-			if (touches.Length == 0)
-			{
-				ProcessMouseInput(ref activeInputCount);
-			}
-
 			Judgment();
-		}
-
-		private void ProcessMouseInput(ref int activeInputCount)
-		{
-			Mouse mouse = Mouse.current;
-			if (mouse == null)
-			{
-				return;
-			}
-
-			bool pressed = mouse.leftButton.isPressed;
-			bool began = mouse.leftButton.wasPressedThisFrame;
-			bool ended = mouse.leftButton.wasReleasedThisFrame;
-			if (!pressed && !began && !ended && !lastTouches.ContainsKey(PcMouseTouchId))
-			{
-				return;
-			}
-
-			double time = Time.realtimeSinceStartupAsDouble;
-			InputTouchPhase phase = GetMouseTouchPhase(mouse, pressed, began, ended);
-			if (lastTouches.TryGetValue(PcMouseTouchId, out var lastMouseTouch) &&
-				IsEndedOrCanceled(lastMouseTouch.Item2))
-			{
-				lastTouches.Remove(PcMouseTouchId);
-				touchPositionList.Remove(PcMouseTouchId);
-				if (!pressed && !began)
-				{
-					return;
-				}
-			}
-
-			if (!lastTouches.ContainsKey(PcMouseTouchId))
-			{
-				CreateMouseLiveTouch(time, phase, out LiveTouch liveTouch);
-				OnProcessTouch(ref liveTouch, ref activeInputCount);
-				lastTouches.Add(PcMouseTouchId, (time, phase));
-			}
-			else
-			{
-				(double lastTime, InputTouchPhase lastPhase) = lastTouches[PcMouseTouchId];
-				if (time >= lastTime && !IsEndedOrCanceled(lastPhase))
-				{
-					CreateMouseLiveTouch(time, phase, out LiveTouch liveTouch);
-					OnProcessTouch(ref liveTouch, ref activeInputCount);
-					lastTouches[PcMouseTouchId] = (time, phase);
-				}
-			}
-
-			if (IsEndedOrCanceled(phase))
-			{
-				touchPositionList.Remove(PcMouseTouchId);
-			}
-			else
-			{
-				Vector2 mousePosition = mouse.position.ReadValue();
-				if (IsValidScreenPosition(mousePosition))
-				{
-					touchPositionList[PcMouseTouchId] = (time, mousePosition);
-				}
-			}
-		}
-
-		private InputTouchPhase GetMouseTouchPhase(Mouse mouse, bool pressed, bool began, bool ended)
-		{
-			if (began)
-			{
-				return InputTouchPhase.Began;
-			}
-			if (ended)
-			{
-				return InputTouchPhase.Ended;
-			}
-			if (!pressed)
-			{
-				return InputTouchPhase.Canceled;
-			}
-
-			return mouse.delta.ReadValue() == Vector2.zero ? InputTouchPhase.Stationary : InputTouchPhase.Moved;
-		}
-
-		private void CreateMouseLiveTouch(double time, InputTouchPhase phase, out LiveTouch liveTouch)
-		{
-			Vector2 screenPosition = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
-			if (!IsValidScreenPosition(screenPosition))
-			{
-				screenPosition = Vector2.zero;
-			}
-			Camera camera = calcCamera != null ? calcCamera : Camera.main;
-			Vector3 worldPosition = camera != null
-				? camera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, 0f))
-				: Vector3.zero;
-			Vector2 delta = LiveUtility.Vector2Zero;
-			if (touchPositionList.ContainsKey(PcMouseTouchId) && time >= touchPositionList[PcMouseTouchId].Item1)
-			{
-				delta = screenPosition - touchPositionList[PcMouseTouchId].Item2;
-			}
-
-			float musicTime = (float)((time - currentGameTime) * LiveUtility.OneFrameTime + currentFrameInfo.time);
-			liveTouch = default;
-			liveTouch.fingerId = 0;
-			liveTouch.touchId = PcMouseTouchId;
-			liveTouch.delta = delta;
-			liveTouch.worldPosition = worldPosition;
-			liveTouch.phase = phase;
-			liveTouch.musicTime = musicTime;
 		}
 
 		private void TouchExecution(ref InputTouch touch, ref int activeInputCount)
@@ -726,16 +613,6 @@ namespace Sekai.Core.Live
 			liveTouch.worldPosition = worldPosition;
 			liveTouch.phase = phase;
 			liveTouch.musicTime = musicTime;
-		}
-
-		private static bool IsValidScreenPosition(Vector2 screenPosition)
-		{
-			return IsFinite(screenPosition.x) && IsFinite(screenPosition.y);
-		}
-
-		private static bool IsFinite(float value)
-		{
-			return !float.IsNaN(value) && !float.IsInfinity(value);
 		}
 
 		private void OnProcessTouch(ref LiveTouch processTouch, ref int activeInputCount)

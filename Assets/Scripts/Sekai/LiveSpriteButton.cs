@@ -1,231 +1,144 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
 
 namespace Sekai
 {
     public class LiveSpriteButton : MonoBehaviour
     {
-        [SerializeField] private SpriteRenderer spriteRenderer;
-        [SerializeField] private float pressScale = 0.95f;
-        [SerializeField] private float raycastPadding = 24f;
-
-        private Action callback;
-        private Camera targetCamera;
-        private Bounds worldBounds;
-        private Vector3 defaultScale;
-        private bool isPressed;
-        private int pressedPointerId = -1;
-
-        public void Setup(Action callback, Camera camera = null)
+        private struct ButtonBounds
         {
-            this.callback = callback;
-            targetCamera = camera;
-            defaultScale = transform.localScale;
-            if (spriteRenderer == null)
-            {
-                spriteRenderer = GetComponent<SpriteRenderer>();
-            }
-            CalculateBounds(camera);
+            public float left;
+            public float bottom;
+            public float right;
+            public float top;
+        }
+
+        private static readonly int DisableId = int.MinValue;
+
+        [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] protected float pressScale = 0.95f;
+        [SerializeField] protected float raycastPadding = 24f;
+
+        private float scaleTime = 0.125f;
+        private Action onClick;
+        private bool isEnable;
+        private int touchId;
+        private ButtonBounds bounds;
+        private Vector3 baseScale;
+        private Tweener pressTween;
+
+        public void Setup(Action onClick)
+        {
+            this.onClick = onClick;
+            touchId = DisableId;
+            baseScale = transform.localScale;
         }
 
         public void CalculateBounds(Camera camera)
         {
-            if (camera != null)
+            isEnable = true;
+            if (spriteRenderer == null)
             {
-                targetCamera = camera;
+                spriteRenderer = GetComponent<SpriteRenderer>();
             }
-            if (spriteRenderer != null)
-            {
-                worldBounds = spriteRenderer.bounds;
-                float padding = GetWorldPadding();
-                worldBounds.Expand(new Vector3(padding, padding, 0f));
-            }
-        }
-
-        private void Update()
-        {
-            if (callback == null || spriteRenderer == null)
+            if (spriteRenderer == null || camera == null)
             {
                 return;
             }
 
-            if (!ProcessTouchInput())
-            {
-                ProcessMouseInput();
-            }
+            Bounds rendererBounds = spriteRenderer.bounds;
+            Vector3 min = camera.WorldToScreenPoint(rendererBounds.min);
+            Vector3 max = camera.WorldToScreenPoint(rendererBounds.max);
+            bounds.left = min.x - raycastPadding;
+            bounds.bottom = min.y - raycastPadding;
+            bounds.right = max.x + raycastPadding;
+            bounds.top = max.y + raycastPadding;
         }
 
-        private void ProcessMouseInput()
+        private void UpdateTouches()
         {
-            Mouse mouse = Mouse.current;
-            if (mouse == null)
+            if (!isEnable || NativeInput.GetTouchCount() < 1)
             {
                 return;
             }
 
-            Vector2 screenPosition = mouse.position.ReadValue();
-            if (!IsValidScreenPosition(screenPosition))
+            for (int i = 0; i < NativeInput.GetTouchCount(); i++)
             {
-                return;
-            }
-            if (mouse.leftButton.wasPressedThisFrame)
-            {
-                Press(-1, screenPosition);
-            }
-            else if (mouse.leftButton.wasReleasedThisFrame)
-            {
-                Release(-1, screenPosition);
-            }
-        }
-
-        private bool ProcessTouchInput()
-        {
-            Touchscreen touchscreen = Touchscreen.current;
-            if (touchscreen == null)
-            {
-                return false;
-            }
-
-            bool handled = false;
-            foreach (TouchControl touch in touchscreen.touches)
-            {
-                bool pressedThisFrame = touch.press.wasPressedThisFrame;
-                bool releasedThisFrame = touch.press.wasReleasedThisFrame;
-                if (!pressedThisFrame && !releasedThisFrame)
+                Touch touch = NativeInput.GetTouch(i);
+                Vector2 position = touch.position;
+                if (!IsValidScreenPosition(position))
                 {
                     continue;
                 }
 
-                Vector2 screenPosition = touch.position.ReadValue();
-                if (!IsValidScreenPosition(screenPosition))
+                if (touch.phase == TouchPhase.Began)
                 {
-                    continue;
+                    if (touchId == DisableId && Contains(position))
+                    {
+                        ScaleDown();
+                        touchId = touch.fingerId;
+                        return;
+                    }
                 }
-
-                if (pressedThisFrame)
+                else if (touch.phase == TouchPhase.Ended && touchId == touch.fingerId)
                 {
-                    Press(touch.touchId.ReadValue(), screenPosition);
-                    handled = true;
+                    if (Contains(position))
+                    {
+                        OnClick();
+                        ScaleUp();
+                    }
+                    touchId = DisableId;
                 }
-                else if (releasedThisFrame)
-                {
-                    Release(touch.touchId.ReadValue(), screenPosition);
-                    handled = true;
-                }
-            }
-            return handled;
-        }
-
-        private void Press(int pointerId, Vector3 screenPosition)
-        {
-            if (isPressed)
-            {
-                return;
-            }
-
-            bool contains = Contains(screenPosition);
-            if (contains)
-            {
-                isPressed = true;
-                pressedPointerId = pointerId;
-                transform.localScale = defaultScale * pressScale;
             }
         }
 
-        private void Release(int pointerId, Vector3 screenPosition)
+        private void ScaleDown()
         {
-            if (!isPressed || pressedPointerId != pointerId)
-            {
-                return;
-            }
+            KillPressTween();
+            pressTween = transform.DOScale(baseScale * pressScale, scaleTime);
+        }
 
-            bool execute = isPressed && Contains(screenPosition);
-            isPressed = false;
-            pressedPointerId = -1;
-            transform.localScale = defaultScale;
-            if (execute)
+        private void ScaleUp()
+        {
+            KillPressTween();
+            pressTween = transform.DOScale(baseScale, scaleTime);
+        }
+
+        private void KillPressTween()
+        {
+            if (pressTween != null && pressTween.active)
             {
-                callback();
+                pressTween.Kill();
             }
         }
 
-        private bool Contains(Vector3 screenPosition)
+        private void LateUpdate()
         {
-            Camera camera = targetCamera != null ? targetCamera : Camera.main;
-            if (camera == null || !IsValidScreenPosition(screenPosition))
-            {
-                return false;
-            }
-
-            if (!TryScreenToWorldPosition(camera, screenPosition, out Vector3 worldPosition))
-            {
-                return false;
-            }
-
-            worldPosition.z = worldBounds.center.z;
-            return worldBounds.Contains(worldPosition);
+            UpdateTouches();
         }
 
-        private bool TryScreenToWorldPosition(Camera camera, Vector3 screenPosition, out Vector3 worldPosition)
+        public void OnClick()
         {
-            worldPosition = default;
-            if (camera == null ||
-                camera.pixelWidth <= 0 ||
-                camera.pixelHeight <= 0 ||
-                !IsValidScreenPosition(screenPosition))
-            {
-                return false;
-            }
-
-            // Unity Simulator can leave inactive virtual touches with invalid screen points.
-            // Ray-plane hit testing avoids ScreenToWorldPoint throwing on those frames.
-            Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, worldBounds.center.z));
-            Ray ray = camera.ScreenPointToRay(new Vector3(screenPosition.x, screenPosition.y, 0f));
-            if (!IsValidWorldPosition(ray.origin) ||
-                !IsValidWorldPosition(ray.direction) ||
-                !plane.Raycast(ray, out float enter) ||
-                !IsFinite(enter))
-            {
-                return false;
-            }
-
-            worldPosition = ray.GetPoint(enter);
-            return IsValidWorldPosition(worldPosition);
+            onClick?.Invoke();
         }
 
-        private static bool IsValidScreenPosition(Vector3 screenPosition)
+        private bool Contains(Vector2 position)
         {
-            return IsFinite(screenPosition.x) &&
-                IsFinite(screenPosition.y) &&
-                IsFinite(screenPosition.z);
+            return bounds.left <= position.x &&
+                bounds.right >= position.x &&
+                bounds.bottom <= position.y &&
+                bounds.top >= position.y;
         }
 
-        private static bool IsValidWorldPosition(Vector3 worldPosition)
+        private static bool IsValidScreenPosition(Vector2 position)
         {
-            return IsFinite(worldPosition.x) &&
-                IsFinite(worldPosition.y) &&
-                IsFinite(worldPosition.z);
+            return IsFinite(position.x) && IsFinite(position.y);
         }
 
         private static bool IsFinite(float value)
         {
             return !float.IsNaN(value) && !float.IsInfinity(value);
         }
-
-        private float GetWorldPadding()
-        {
-            Camera camera = targetCamera != null ? targetCamera : Camera.main;
-            if (camera == null || camera.pixelHeight <= 0)
-            {
-                return 0f;
-            }
-
-            return camera.orthographic
-                ? raycastPadding * camera.orthographicSize * 2f / camera.pixelHeight
-                : 0f;
-        }
-
     }
 }
