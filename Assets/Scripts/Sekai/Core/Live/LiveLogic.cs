@@ -708,8 +708,15 @@ namespace Sekai.Core.Live
 					else if (judgmentNote.NoteList.Count > 0)
 					{
 						NoteBase firstNote = judgmentNote.NoteList[0];
-						if ((firstNote is FrictionLongNote || firstNote is FrictionHideLongNote || firstNote is LongNote) &&
+						if ((firstNote is FrictionLongNote || firstNote is FrictionHideLongNote) &&
 							firstNote.IsJudgment(ref activeInput.Touch, ConvertLaneBy(ref firstNote, ref activeInput)))
+						{
+							isConnection = true;
+							isJudged = true;
+						}
+
+						if (firstNote is LongNote firstLongNote &&
+							firstLongNote.IsJudgmentChild(ref activeInput.Touch, ConvertLaneBy(ref firstNote, ref activeInput)))
 						{
 							isConnection = true;
 							isJudged = true;
@@ -870,11 +877,14 @@ namespace Sekai.Core.Live
 
 			if (isInputedNormalNote)
 			{
-				if (isNoteJudgment &&
-					(note.CalcNoteResult(activeInput.Touch.musicTime) > NoteResult.Great ||
-					 activeInput.Touch.musicTime - InputedNormalNoteTouch[touchId] > LiveUtility.NoteEndIgnoreFrameTime))
+				if (isNoteJudgment)
 				{
-					activeInput.CandidateNotes.Add(judgmentNote);
+					isConnection = false;
+					if (note.CalcNoteResult(activeInput.Touch.musicTime) > NoteResult.Great ||
+						activeInput.Touch.musicTime - InputedNormalNoteTouch[touchId] > LiveUtility.NoteEndIgnoreFrameTime)
+					{
+						activeInput.CandidateNotes.Add(judgmentNote);
+					}
 				}
 				return;
 			}
@@ -887,8 +897,23 @@ namespace Sekai.Core.Live
 			}
 
 			note = judgmentNote.NoteList[0];
-			if ((note is FrictionLongNote || note is FrictionHideLongNote || note is LongNote) &&
-				note.IsJudgment(ref activeInput.Touch, ConvertLaneBy(ref note, ref activeInput)))
+			float firstNoteLane = ConvertLaneBy(ref note, ref activeInput);
+			if ((note is FrictionLongNote || note is FrictionHideLongNote) &&
+				note.IsJudgment(ref activeInput.Touch, firstNoteLane))
+			{
+				isConnection = true;
+				isJudged = true;
+				return;
+			}
+
+			if (note.Result == NoteResult.None && note.IsJudgment(ref activeInput.Touch, firstNoteLane))
+			{
+				activeInput.CandidateNotes.Add(judgmentNote);
+				isConnection = false;
+				return;
+			}
+
+			if (note is LongNote longNote && longNote.IsJudgmentChild(ref activeInput.Touch, firstNoteLane))
 			{
 				isConnection = true;
 				isJudged = true;
