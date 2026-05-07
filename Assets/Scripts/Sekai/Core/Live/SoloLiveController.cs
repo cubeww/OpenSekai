@@ -9,6 +9,7 @@ namespace Sekai.Core.Live
     public class SoloLiveController : BaseLiveController
     {
         private const float BaseGameStartWaitTime = 6f;
+        private const float TimingAdjustFrameTime = 0.016667f;
 
         [SerializeField] private LiveViewBase[] liveViews;
         [SerializeField] private int renderTextureWidth = 1920;
@@ -20,6 +21,7 @@ namespace Sekai.Core.Live
         [SerializeField] private MusicDifficulty previewDifficulty = MusicDifficulty.Easy;
         [SerializeField] private int previewPlayLevel = 1;
         [SerializeField] private int previewTotalNoteCount;
+        [SerializeField] private float previewTimingAdjustData;
         [SerializeField] private float previewFillerSec = 9f;
         [SerializeField] private string previewTitle = "Tell Your World";
         [SerializeField] private string previewLyricist = "kz";
@@ -49,6 +51,7 @@ namespace Sekai.Core.Live
         private bool isRhythmGameRunning;
         private bool isPaused;
         private float currentMusicTime;
+        private float adjustedMusicTime;
         private AudioSourceSyncedUnityTimer musicTimer;
 
         protected virtual void Awake()
@@ -118,7 +121,10 @@ namespace Sekai.Core.Live
 
             bootData.IsAuto = isAuto;
             bootData.canSkipDisplayMusicInfo = canSkipDisplayMusicInfo;
-            bootData.LiveSettingData = new LiveSettingData();
+            bootData.LiveSettingData = new LiveSettingData
+            {
+                TimingAdjustData = previewTimingAdjustData
+            };
             bootData.BundleBuildData = liveBundleBuildData;
 
             LiveMusicData musicData = bootData.MusicData ?? new LiveMusicData();
@@ -202,7 +208,7 @@ namespace Sekai.Core.Live
             {
                 if (liveViews[i] != null)
                 {
-                    liveViews[i].MusicStart(currentMusicTime);
+                    liveViews[i].MusicStart(GetAdjustedMusicTime(currentMusicTime));
                 }
             }
         }
@@ -240,7 +246,8 @@ namespace Sekai.Core.Live
             }
 
             currentMusicTime = GetCurrentMusicTime();
-            float scoreInfoTime = currentMusicTime - GetMusicFillerSec();
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
+            float scoreInfoTime = adjustedMusicTime - GetMusicFillerSec();
             liveLogic?.OnUpdate(scoreInfoTime, Time.realtimeSinceStartupAsDouble);
             if (liveLogic != null && liveLogic.Result == LiveResult.Failure && liveLogic.IsNotesAllFinished)
             {
@@ -263,7 +270,7 @@ namespace Sekai.Core.Live
 
             for (int i = 0; i < liveViews.Length; i++)
             {
-                liveViews[i]?.OnUpdate(currentMusicTime);
+                liveViews[i]?.OnUpdate(adjustedMusicTime);
             }
         }
 
@@ -318,11 +325,12 @@ namespace Sekai.Core.Live
             }
             isPaused = true;
             currentMusicTime = GetCurrentMusicTime();
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
             if (musicAudioSource != null)
             {
                 musicAudioSource.Pause();
             }
-            NotifyPause(currentMusicTime);
+            NotifyPause(adjustedMusicTime);
         }
 
         public override void Resume()
@@ -367,8 +375,9 @@ namespace Sekai.Core.Live
             isRhythmGameRunning = true;
             liveLogic.Continue(time);
             currentMusicTime = time;
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
             musicTimer?.Reset(Mathf.FloorToInt(time * 1000f), Time.time);
-            NotifyResume(currentMusicTime);
+            NotifyResume(adjustedMusicTime);
         }
 
         private IEnumerator ResumeCoroutine()
@@ -393,8 +402,9 @@ namespace Sekai.Core.Live
             }
 
             musicTimer?.Reset(Mathf.FloorToInt(currentMusicTime * 1000f), Time.time);
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
             liveLogic?.RefreshInput();
-            NotifyResume(currentMusicTime);
+            NotifyResume(adjustedMusicTime);
         }
 
         private void SetupLiveLogic()
@@ -449,6 +459,7 @@ namespace Sekai.Core.Live
         private void OnFailure()
         {
             currentMusicTime = GetCurrentMusicTime();
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
         }
 
         protected virtual void OnFinished()
@@ -580,6 +591,7 @@ namespace Sekai.Core.Live
         private void PlayMusic()
         {
             currentMusicTime = 0f;
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
 
             if (previewMusicClip == null)
             {
@@ -673,6 +685,13 @@ namespace Sekai.Core.Live
                    BootData.MusicData.Music != null
                 ? BootData.MusicData.Music.fillerSec
                 : 0f;
+        }
+
+        private float GetAdjustedMusicTime(float time)
+        {
+            LiveSettingData settings = Settings;
+            float timingAdjust = settings != null ? settings.TimingAdjustData * TimingAdjustFrameTime : 0f;
+            return Mathf.Max(time + timingAdjust, 0f);
         }
 
         private void CheckBackKey()

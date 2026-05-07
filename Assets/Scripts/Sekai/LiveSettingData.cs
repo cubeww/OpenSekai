@@ -14,6 +14,8 @@ namespace Sekai
 
         public float NoteSpeed { get; set; } = 10f;
 
+        public float TimingAdjustData { get; set; }
+
         public float Brightness { get; set; } = 1f;
     }
 }
