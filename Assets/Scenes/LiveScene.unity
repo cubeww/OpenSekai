@@ -133,11 +133,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4177930474251431, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 98.86255
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4177930474251431, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.27219
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4177930474251431, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -165,11 +165,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4177930474251431, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4177930474251431, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114161523128174384, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_Material
@@ -284,13 +284,13 @@ MonoBehaviour:
   previewTitle: Tell Your World
   previewLyricist: kz
   previewComposer: kz
-  previewArranger: "\u521D\u97F3\u672A\u6765"
-  previewVocalCaption: 
+  previewArranger: kz
+  previewVocalCaption: "\u521D\u97F3\u672A\u6765"
   previewVocalType: sekai
   previewVocalAssetBundleName: 
-  previewMusicClip: {fileID: 0}
+  previewMusicClip: {fileID: 8300000, guid: 984b1041e61db3f4aab070328062ee08, type: 3}
   musicAudioSource: {fileID: 0}
-  isAuto: 1
+  isAuto: 0
   canSkipDisplayMusicInfo: 0
   isCollaboration: 0
   collaborationId: 0
@@ -298,8 +298,10 @@ MonoBehaviour:
   startOnAwake: 1
   musicStartOnAwake: 1
   liveStartWaitTime: 6
-  previewSusScore: {fileID: 0}
+  previewSusScore: {fileID: 4900000, guid: 82880b665545b744bb614dce64517e80, type: 3}
   liveBundleBuildData: {fileID: 0}
+  debugInput: 1
+  debugInputStateLogInterval: 1
 --- !u!1001 &1943756284
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -314,11 +316,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4320256170494724, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 98.86255
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4320256170494724, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.27219
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4320256170494724, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
       propertyPath: m_LocalPosition.z
@@ -346,11 +348,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4320256170494724, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4320256170494724, guid: 1027ce0b7f448914da856df625e14f51, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

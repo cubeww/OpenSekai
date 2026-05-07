@@ -215,7 +215,8 @@ namespace Sekai.Live
 			{
 				if (Result == NoteResult.None)
 				{
-					JudgeInfo = (NoteResult.JustPerfect, NoteResultDescription.None);
+					(NoteResult, NoteResultDescription) result = LiveConfig.CalculateLongStartNoteResult(this, touch.musicTime);
+					JudgeInfo = onUpdateResult != null ? onUpdateResult(result) : result;
 				}
 				State = NoteState.InputBegan;
 			}
@@ -283,7 +284,8 @@ namespace Sekai.Live
 				return false;
 			}
 
-			return IsJudgmentTime() && (State != NoteState.Playing && State != NoteState.Last || touch.phase == TouchPhase.Began);
+			return LiveUtility.IsJudgmentTiming(LiveUtility.GetINoteToJudgeFrameType(this), OffsetJudgeTime) &&
+				(State != NoteState.Playing && State != NoteState.Last || touch.phase == UnityEngine.InputSystem.TouchPhase.Began);
 		}
 
 		public virtual bool IsJudgmentChild(ref LiveTouch touch, float lane)
@@ -381,6 +383,11 @@ namespace Sekai.Live
 		{
 			INote child = ChildNote;
 			return child != null && (child.Result > NoteResult.Pass || child.State == NoteState.Input);
+		}
+
+		public override NoteResult CalcNoteResult(float musicTime)
+		{
+			return LiveConfig.CalculateLongStartNoteResult(this, musicTime).Item1;
 		}
 
 		private void ForEachSubNote(Action<NoteBase> action)

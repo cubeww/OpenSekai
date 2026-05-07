@@ -2,6 +2,7 @@ using System.Collections;
 using Sekai;
 using Sekai.Live;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Sekai.Core.Live
 {
@@ -41,15 +42,20 @@ namespace Sekai.Core.Live
         [SerializeField] private LiveBundleBuildData liveBundleBuildData;
 
         private Coroutine liveStartCoroutine;
+        private Coroutine resumeCoroutine;
         private Coroutine resultCoroutine;
         private LiveLogic liveLogic;
         private LiveResult result;
         private bool isRhythmGameRunning;
+        private bool isPaused;
         private float fallbackMusicStartRealtime;
+        private float pauseRealtime;
         private float currentMusicTime;
 
         protected virtual void Awake()
         {
+            NativeInput.Enable();
+
             if (startOnAwake)
             {
                 Setup();
@@ -204,8 +210,10 @@ namespace Sekai.Core.Live
         protected virtual void OnRhythmGameStart()
         {
             SetupLiveLogic();
+            liveLogic?.RefreshInput();
             result = LiveResult.None;
             isRhythmGameRunning = true;
+            isPaused = false;
 
             if (liveViews == null)
             {
@@ -224,15 +232,16 @@ namespace Sekai.Core.Live
         protected virtual void Update()
         {
             base.OnUpdate();
+            CheckBackKey();
 
-            if (!isRhythmGameRunning)
+            if (!isRhythmGameRunning || isPaused)
             {
                 return;
             }
 
             currentMusicTime = GetCurrentMusicTime();
             float scoreInfoTime = currentMusicTime - GetMusicFillerSec();
-            liveLogic?.OnUpdate(scoreInfoTime, Time.realtimeSinceStartup);
+            liveLogic?.OnUpdate(scoreInfoTime, Time.realtimeSinceStartupAsDouble);
             if (liveLogic != null && liveLogic.Result == LiveResult.Failure && liveLogic.IsNotesAllFinished)
             {
                 OnFinished();
@@ -241,6 +250,10 @@ namespace Sekai.Core.Live
             if (BootData != null && BootData.IsAuto)
             {
                 liveLogic?.OnAutoInput();
+            }
+            else
+            {
+                liveLogic?.OnInput();
             }
 
             if (liveViews == null)
@@ -268,6 +281,11 @@ namespace Sekai.Core.Live
             }
 
             isRhythmGameRunning = false;
+            if (resumeCoroutine != null)
+            {
+                StopCoroutine(resumeCoroutine);
+                resumeCoroutine = null;
+            }
             StopMusic();
             UnsubscribeLiveLogic();
             if (resultCoroutine != null)
@@ -281,6 +299,105 @@ namespace Sekai.Core.Live
                 BackgroundTexture.Release();
                 BackgroundTexture = null;
             }
+
+            NativeInput.Disable();
+        }
+
+        public override void Pause()
+        {
+            if (!isRhythmGameRunning || isPaused || result != LiveResult.None)
+            {
+                return;
+            }
+
+            if (resumeCoroutine != null)
+            {
+                StopCoroutine(resumeCoroutine);
+                resumeCoroutine = null;
+            }
+            isPaused = true;
+            currentMusicTime = GetCurrentMusicTime();
+            pauseRealtime = Time.realtimeSinceStartup;
+            if (musicAudioSource != null)
+            {
+                musicAudioSource.Pause();
+            }
+            NotifyPause(currentMusicTime);
+        }
+
+        public override void Resume()
+        {
+            if (!isRhythmGameRunning || !isPaused || result != LiveResult.None)
+            {
+                return;
+            }
+
+            NotifyCountdown();
+            if (resumeCoroutine != null)
+            {
+                StopCoroutine(resumeCoroutine);
+            }
+            resumeCoroutine = StartCoroutine(ResumeCoroutine());
+        }
+
+        public void ResumeNoCountDown()
+        {
+            if (!isRhythmGameRunning || !isPaused || result != LiveResult.None)
+            {
+                return;
+            }
+
+            if (resumeCoroutine != null)
+            {
+                StopCoroutine(resumeCoroutine);
+                resumeCoroutine = null;
+            }
+            ResumeLiveNow();
+        }
+
+        public override void Continue(float time)
+        {
+            if (liveLogic == null)
+            {
+                return;
+            }
+
+            result = LiveResult.None;
+            isPaused = false;
+            isRhythmGameRunning = true;
+            liveLogic.Continue(time);
+            currentMusicTime = time;
+            fallbackMusicStartRealtime = Time.realtimeSinceStartup - time;
+            NotifyResume(currentMusicTime);
+        }
+
+        private IEnumerator ResumeCoroutine()
+        {
+            liveLogic?.RefreshInput();
+            yield return new WaitForSeconds(3f);
+            ResumeLiveNow();
+            resumeCoroutine = null;
+        }
+
+        private void ResumeLiveNow()
+        {
+            if (!isRhythmGameRunning || result != LiveResult.None)
+            {
+                return;
+            }
+
+            isPaused = false;
+            if (musicAudioSource != null && musicAudioSource.clip != null)
+            {
+                musicAudioSource.UnPause();
+            }
+            else
+            {
+                fallbackMusicStartRealtime += Time.realtimeSinceStartup - pauseRealtime;
+            }
+
+            liveLogic?.RefreshInput();
+            NotifyResume(currentMusicTime);
         }
 
         private void SetupLiveLogic()
@@ -289,7 +406,7 @@ namespace Sekai.Core.Live
             MusicScore musicScore = MusicScoreFactory.Create(scoreText, liveBundleBuildData);
             UnsubscribeLiveLogic();
             liveLogic = new LiveLogic(liveBundleBuildData);
-            liveLogic.Setup(BootData, liveViews, musicScore);
+            liveLogic.Setup(BootData, liveViews, musicScore, BaseCamera);
             liveLogic.OnFinished += OnFinished;
             liveLogic.OnFailure += OnFailure;
         }
@@ -352,6 +469,12 @@ namespace Sekai.Core.Live
             }
 
             isRhythmGameRunning = false;
+            isPaused = false;
+            if (resumeCoroutine != null)
+            {
+                StopCoroutine(resumeCoroutine);
+                resumeCoroutine = null;
+            }
             result = liveLogic != null && liveLogic.Result == LiveResult.Failure ? LiveResult.Clear : liveLogic != null ? liveLogic.Result : LiveResult.None;
             UnsubscribeLiveLogic();
 
@@ -492,6 +615,45 @@ namespace Sekai.Core.Live
             }
         }
 
+        private void NotifyPause(float time)
+        {
+            if (liveViews == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < liveViews.Length; i++)
+            {
+                liveViews[i]?.Pause(time);
+            }
+        }
+
+        private void NotifyCountdown()
+        {
+            if (liveViews == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < liveViews.Length; i++)
+            {
+                liveViews[i]?.Countdown();
+            }
+        }
+
+        private void NotifyResume(float time)
+        {
+            if (liveViews == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < liveViews.Length; i++)
+            {
+                liveViews[i]?.Resume(time);
+            }
+        }
+
         private float GetCurrentMusicTime()
         {
             if (musicAudioSource != null && musicAudioSource.clip != null)
@@ -512,5 +674,24 @@ namespace Sekai.Core.Live
                 ? BootData.MusicData.Music.fillerSec
                 : 0f;
         }
+
+        private void CheckBackKey()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null || !keyboard.escapeKey.wasPressedThisFrame)
+            {
+                return;
+            }
+
+            if (isPaused)
+            {
+                Resume();
+            }
+            else if (isRhythmGameRunning)
+            {
+                Pause();
+            }
+        }
+
     }
 }

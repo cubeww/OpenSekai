@@ -388,15 +388,33 @@ namespace Sekai.Live
         private void OnPause()
         {
             countdownView?.StopCountdown();
+            baseController?.Pause();
+        }
+
+        public override void Resume(float time)
+        {
+        }
+
+        public override void Countdown()
+        {
+            countdownView?.StartCountdown();
         }
 
         private void OnConsecutiveAutoLivePause()
         {
             consecutiveAutoLiveView?.Pause();
+            baseController?.Pause();
         }
 
         private void OnConsecutiveAutoLiveResume()
         {
+            if (baseController is SoloLiveController soloLiveController)
+            {
+                soloLiveController.ResumeNoCountDown();
+                return;
+            }
+
+            baseController?.Resume();
         }
 
         private void OnConsecutiveAutoLiveFinish()

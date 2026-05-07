@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using InputTouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 namespace Sekai.Live
 {
@@ -14,11 +15,11 @@ namespace Sekai.Live
 
 		public Vector3 worldPosition;
 
-		public TouchPhase phase;
+		public InputTouchPhase phase;
 
 		public float musicTime;
 
-		public LiveTouch(int fingerId, int touchId, Vector2 delta, Vector3 worldPosition, TouchPhase phase, float musicTime)
+		public LiveTouch(int fingerId, int touchId, Vector2 delta, Vector3 worldPosition, InputTouchPhase phase, float musicTime)
 		{
 			this.fingerId = fingerId;
 			this.touchId = touchId;

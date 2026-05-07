@@ -72,7 +72,7 @@ namespace Sekai.Live
 			return State != NoteState.Done &&
 				JudgeLaneStart <= lane &&
 				JudgeLaneEnd >= lane &&
-				LiveConfig.IsLongEndJudgeTime(MusicScoreInfo.time - touch.musicTime);
+				LiveUtility.IsJudgmentTiming(LiveUtility.GetINoteToJudgeFrameType(this), MusicScoreInfo.time - touch.musicTime);
 		}
 
 		public override bool Judgment(ref LiveTouch touch, float lane)

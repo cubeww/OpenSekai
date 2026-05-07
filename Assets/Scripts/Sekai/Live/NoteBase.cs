@@ -78,6 +78,11 @@ namespace Sekai.Live
 
 		public virtual float JudgeLaneEnd { get; set; }
 
+		public virtual bool FinishFirstAction
+		{
+			get { return true; }
+		}
+
 		public MusicScoreInfo MusicScoreInfo { get; protected set; }
 
 		public float OffsetJudgeTime { get; set; }

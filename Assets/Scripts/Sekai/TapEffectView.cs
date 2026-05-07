@@ -148,7 +148,7 @@ namespace Sekai
 
 		public void Unpicked(int lane, ref LiveTouch touch)
 		{
-			if (touch.phase != TouchPhase.Began)
+			if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began)
 			{
 				return;
 			}

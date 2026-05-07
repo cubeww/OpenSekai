@@ -1,21 +1,22 @@
 namespace Sekai.Live
 {
-	public class FrictionNote : NoteBase
+	public class FrictionNote : ConnectionNote
 	{
-		private readonly NoteLineType lineType;
-
 		protected bool isTouched;
 
-		public override NoteLineType LineType
+		public FrictionNote(MusicScoreInfo info, int id, int laneStart, int laneEnd, NoteCategory category, LiveBundleBuildData bundleBuildData, NoteType type, float speedRatio, NoteLineType lineType = NoteLineType.Linear)
+			: base(info, id, laneStart, laneEnd, category, bundleBuildData, type, speedRatio, lineType)
 		{
-			get { return lineType; }
+			isTouched = false;
 		}
 
-		public FrictionNote(MusicScoreInfo info, int id, int laneStart, int laneEnd, NoteCategory category, LiveBundleBuildData bundleBuildData, NoteType type, float speedRatio, NoteLineType lineType = NoteLineType.Linear)
-			: base(info, id, laneStart, laneEnd, category, bundleBuildData, speedRatio, type)
+		protected override void OnUnSpawnNote()
 		{
-			this.lineType = lineType;
-			isTouched = false;
+			onJudgment?.Invoke(this);
+			onUpdateCombo?.Invoke(this);
+			onUpdateScore?.Invoke(this);
+			onDamage?.Invoke(this);
+			onUnspawn?.Invoke(this);
 		}
 
 		public override NoteState State
@@ -91,7 +92,7 @@ namespace Sekai.Live
 			return State != NoteState.Done &&
 				JudgeLaneStart <= lane &&
 				JudgeLaneEnd >= lane &&
-				IsJudgmentTime();
+				LiveUtility.IsJudgmentTiming(LiveUtility.GetINoteToJudgeFrameType(this), OffsetJudgeTime);
 		}
 
 		public override bool Judgment(ref LiveTouch touch, float lane)

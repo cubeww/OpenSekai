@@ -4,11 +4,13 @@ namespace Sekai.Live
 {
 	public class LiveBundleBuildData : ScriptableObject
 	{
+		public const float DefaultFlickDistance = 0.083333f;
+
 		[SerializeField]
 		private float judgmentOffsetX = 1.8f;
 
 		[SerializeField]
-		private float judgmentOffsetY = 3.5f;
+		private float judgmentOffsetY = 2.5f;
 
 		[SerializeField]
 		private int longNoteComboBeat = 8;
@@ -35,7 +37,7 @@ namespace Sekai.Live
 		private float longNoteOffsetX = 1.5f;
 
 		[SerializeField]
-		private float flickDistance = 0.083333f;
+		private float flickDistance = DefaultFlickDistance;
 
 		private readonly float initLaneOffsetX = 1.25f;
 

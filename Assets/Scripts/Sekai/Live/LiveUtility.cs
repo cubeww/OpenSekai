@@ -8,7 +8,11 @@ namespace Sekai.Live
 	{
 		public const float NoteEndIgnoreFrameTime = 1f / 6f;
 
+		public const int LaneCount = 11;
+
 		public const float OneFrameTime = 1f / 60f;
+
+		public const float HalfFrameTime = 1f / 120f;
 
 		public static readonly Vector2 Vector2Zero = Vector2.zero;
 
@@ -77,6 +81,67 @@ namespace Sekai.Live
 			float dpi = Screen.dpi;
 			float pixelPerCentimeter = dpi == 0f ? 118.11f : dpi / 2.54f;
 			return pixelPerCentimeter * distance;
+		}
+
+		public static JudgeFrameType GetINoteToJudgeFrameType(INote note)
+		{
+			bool isCritical = note.Type != NoteType.Default;
+			bool isLongEnd = note.ParentNote != null;
+			switch (note.Category)
+			{
+				case NoteCategory.Normal:
+					if (isLongEnd)
+					{
+						return isCritical ? JudgeFrameType.Long_End_Critical : JudgeFrameType.Long_End;
+					}
+					return isCritical ? JudgeFrameType.Normal_Critical : JudgeFrameType.Normal;
+				case NoteCategory.Long:
+					if (isLongEnd)
+					{
+						return isCritical ? JudgeFrameType.Long_End_Critical : JudgeFrameType.Long_End;
+					}
+					return isCritical ? JudgeFrameType.Long_Critical : JudgeFrameType.Long;
+				case NoteCategory.Flick:
+					if (isLongEnd)
+					{
+						return isCritical ? JudgeFrameType.Long_End_Flick_Critical : JudgeFrameType.Long_End_Flick;
+					}
+					return isCritical ? JudgeFrameType.Flick_Critical : JudgeFrameType.Flick;
+				case NoteCategory.Friction:
+				case NoteCategory.FrictionHide:
+					if (isLongEnd)
+					{
+						return isCritical ? JudgeFrameType.Friction_Long_End_Critical : JudgeFrameType.Friction_Long_End;
+					}
+					return isCritical ? JudgeFrameType.Friction_Critical : JudgeFrameType.Friction;
+				case NoteCategory.FrictionLong:
+				case NoteCategory.FrictionHideLong:
+					if (isLongEnd)
+					{
+						return isCritical ? JudgeFrameType.Friction_Long_End_Critical : JudgeFrameType.Friction_Long_End;
+					}
+					return isCritical ? JudgeFrameType.Friction_Long_Critical : JudgeFrameType.Friction_Long;
+				case NoteCategory.FrictionFlick:
+					if (isLongEnd)
+					{
+						return isCritical ? JudgeFrameType.Long_End_Flick_Critical : JudgeFrameType.Long_End_Flick;
+					}
+					return isCritical ? JudgeFrameType.Friction_Flick_Critical : JudgeFrameType.Friction_Flick;
+				default:
+					return JudgeFrameType.Normal;
+			}
+		}
+
+		public static bool IsJudgmentTiming(JudgeFrameType frameType, float offsetJudgeTime)
+		{
+			if (LiveConfig.LiveMasterData.JudgeFrames == null ||
+				!LiveConfig.LiveMasterData.JudgeFrames.TryGetValue(frameType, out MasterIngameJudgeFrame judgeFrame))
+			{
+				LiveConfig.GetPreviewJudgeResult(0f);
+				judgeFrame = LiveConfig.LiveMasterData.JudgeFrames[frameType];
+			}
+
+			return judgeFrame.BadAfterJudgeTime > offsetJudgeTime && -judgeFrame.BadBeforeJudgeTime < offsetJudgeTime;
 		}
 
 		public static Vector2 EarlyVec2Lerp(Vector2 a, Vector2 b, float t)

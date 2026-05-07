@@ -54,6 +54,10 @@ namespace Sekai.Core.Live
         {
         }
 
+        public virtual void Countdown()
+        {
+        }
+
         public virtual void OnFailure(float time)
         {
         }

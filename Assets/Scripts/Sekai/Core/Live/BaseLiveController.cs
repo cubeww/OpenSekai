@@ -55,6 +55,18 @@ namespace Sekai.Core.Live
             ParticleSystemControllers.Remove(controller);
         }
 
+        public virtual void Pause()
+        {
+        }
+
+        public virtual void Resume()
+        {
+        }
+
+        public virtual void Continue(float time)
+        {
+        }
+
         protected virtual void OnUpdate()
         {
             if (Time.frameCount % 5 != 0)

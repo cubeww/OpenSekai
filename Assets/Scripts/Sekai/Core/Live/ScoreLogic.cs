@@ -16,6 +16,7 @@ namespace Sekai.Core.Live
         private MasterPlayLevelScore scoreInfo;
         private float totalScoreF;
         private float baseNoteScore;
+        private float? continueTime;
 
         public LiveScore Score
         {
@@ -59,9 +60,17 @@ namespace Sekai.Core.Live
             };
             BaseNoteScore = score.baseTotalScore / totalNoteFactor;
             totalScoreF = 0f;
+            continueTime = null;
 
             liveViews.ChangeScoreCalculator(ScoreGaugeCalculator.Create(scoreInfo));
             liveViews.SetupScore(score);
+            liveViews.UpdateLife(score.life);
+        }
+
+        public virtual void Continue(float time)
+        {
+            continueTime = time;
+            score.life = liveBundleBuildData != null ? liveBundleBuildData.Life : LiveConfig.Life;
             liveViews.UpdateLife(score.life);
         }
 
@@ -184,7 +193,14 @@ namespace Sekai.Core.Live
         public virtual void Damage(INote noteInfo)
         {
             int damage = GetDamage(noteInfo);
-            if (damage < 1)
+            if (!continueTime.HasValue)
+            {
+                if (damage < 1)
+                {
+                    return;
+                }
+            }
+            else if (damage < 1 || noteInfo.MusicScoreInfo.time + noteInfo.OffsetJudgeTime < continueTime.Value + LiveConfig.ContinueNoDamageTime)
             {
                 return;
             }

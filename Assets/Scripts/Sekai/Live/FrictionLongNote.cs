@@ -59,7 +59,7 @@ namespace Sekai.Live
 
 			float laneStart = Result != NoteResult.None || Description != NoteResultDescription.None ? JudgedLaneStart : JudgeLaneStart;
 			float laneEnd = Result != NoteResult.None || Description != NoteResultDescription.None ? JudgedLaneEnd : JudgeLaneEnd;
-			return laneStart <= lane && laneEnd >= lane && IsJudgmentTime();
+			return laneStart <= lane && laneEnd >= lane && LiveUtility.IsJudgmentTiming(LiveUtility.GetINoteToJudgeFrameType(this), OffsetJudgeTime);
 		}
 
 		public override bool Judgment(ref LiveTouch touch, float lane)

@@ -42,7 +42,7 @@ namespace Sekai.Live
 			noteRoot = noteRootObject.transform;
 			if (liveRoot != null)
 			{
-				noteRoot.SetParent(liveRoot, false);
+				noteRoot.SetParent(liveRoot);
 			}
 		}
 
@@ -226,7 +226,7 @@ namespace Sekai.Live
 			NotePool notePool = poolObject.AddComponent<NotePool>();
 			if (noteRoot != null)
 			{
-				notePool.transform.SetParent(noteRoot, false);
+				notePool.transform.SetParent(noteRoot);
 			}
 
 			if (notePrefab != null)
@@ -268,7 +268,7 @@ namespace Sekai.Live
 			T lineView = lineObject.AddComponent<T>();
 			if (noteRoot != null)
 			{
-				lineView.transform.SetParent(noteRoot, false);
+				lineView.transform.SetParent(noteRoot);
 			}
 			return lineView;
 		}

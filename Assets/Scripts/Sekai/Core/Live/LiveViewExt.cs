@@ -19,6 +19,19 @@ namespace Sekai.Core.Live
             ForEach(liveViews, view => view.JudgmentNote(note));
         }
 
+        public static void Unpicked(this LiveViewBase[] liveViews, int lane, ref LiveTouch touch)
+        {
+            if (liveViews == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < liveViews.Length; i++)
+            {
+                liveViews[i]?.Unpicked(lane, ref touch);
+            }
+        }
+
         public static void UpdateScore(this LiveViewBase[] liveViews, ref LiveScore score, int addScore)
         {
             if (liveViews == null)
