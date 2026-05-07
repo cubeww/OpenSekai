@@ -65,6 +65,7 @@ namespace Sekai.Core.Live
         public virtual void Setup()
         {
             EnsureBootData();
+            ApplyLiveFrameRateSettings();
             EnsureBackgroundTexture();
             SetupLiveViews();
 
@@ -267,7 +268,7 @@ namespace Sekai.Core.Live
             }
         }
 
-        protected virtual void OnDestroy()
+        protected override void OnDestroy()
         {
             if (liveViews != null)
             {
@@ -301,6 +302,7 @@ namespace Sekai.Core.Live
             }
 
             NativeInput.Disable();
+            base.OnDestroy();
         }
 
         public override void Pause()

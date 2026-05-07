@@ -10,6 +10,8 @@ namespace Sekai.Core.Live
         [SerializeField] private Camera baseCamera;
 
         public readonly List<ParticleSystemController> ParticleSystemControllers = new List<ParticleSystemController>();
+        private int previousVsyncCount;
+        private bool hasPreviousVsyncCount;
 
         public RenderTexture BackgroundTexture
         {
@@ -33,6 +35,25 @@ namespace Sekai.Core.Live
         public void SetupBootDataForPreview(LiveBootDataBase bootData)
         {
             BootData = bootData;
+        }
+
+        protected void ApplyLiveFrameRateSettings()
+        {
+            LiveSettingData settings = Settings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            Application.targetFrameRate = settings.Use120FPS ? 120 : 60;
+            if (!hasPreviousVsyncCount)
+            {
+                previousVsyncCount = QualitySettings.vSyncCount;
+                hasPreviousVsyncCount = true;
+            }
+
+            QualitySettings.vSyncCount = settings.UseVSync.GetValueOrDefault() ? 1 : 0;
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
         }
 
         public void RegisterParticleSystemController(ParticleSystemController controller)
@@ -85,6 +106,17 @@ namespace Sekai.Core.Live
 
                 controller.OnUpdate();
             }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            if (hasPreviousVsyncCount)
+            {
+                QualitySettings.vSyncCount = previousVsyncCount;
+                hasPreviousVsyncCount = false;
+            }
+
+            Screen.sleepTimeout = SleepTimeout.SystemSetting;
         }
     }
 }

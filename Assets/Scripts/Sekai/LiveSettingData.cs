@@ -8,6 +8,10 @@ namespace Sekai
 
         public bool UseSimultaneousPushingLine { get; set; } = true;
 
+        public bool Use120FPS { get; set; } = true;
+
+        public bool? UseVSync { get; set; } = true;
+
         public float NoteSpeed { get; set; } = 10f;
 
         public float Brightness { get; set; } = 1f;
