@@ -48,9 +48,8 @@ namespace Sekai.Core.Live
         private LiveResult result;
         private bool isRhythmGameRunning;
         private bool isPaused;
-        private float fallbackMusicStartRealtime;
-        private float pauseRealtime;
         private float currentMusicTime;
+        private AudioSourceSyncedUnityTimer musicTimer;
 
         protected virtual void Awake()
         {
@@ -319,7 +318,6 @@ namespace Sekai.Core.Live
             }
             isPaused = true;
             currentMusicTime = GetCurrentMusicTime();
-            pauseRealtime = Time.realtimeSinceStartup;
             if (musicAudioSource != null)
             {
                 musicAudioSource.Pause();
@@ -369,7 +367,7 @@ namespace Sekai.Core.Live
             isRhythmGameRunning = true;
             liveLogic.Continue(time);
             currentMusicTime = time;
-            fallbackMusicStartRealtime = Time.realtimeSinceStartup - time;
+            musicTimer?.Reset(Mathf.FloorToInt(time * 1000f), Time.time);
             NotifyResume(currentMusicTime);
         }
 
@@ -393,11 +391,8 @@ namespace Sekai.Core.Live
             {
                 musicAudioSource.UnPause();
             }
-            else
-            {
-                fallbackMusicStartRealtime += Time.realtimeSinceStartup - pauseRealtime;
-            }
 
+            musicTimer?.Reset(Mathf.FloorToInt(currentMusicTime * 1000f), Time.time);
             liveLogic?.RefreshInput();
             NotifyResume(currentMusicTime);
         }
@@ -585,10 +580,10 @@ namespace Sekai.Core.Live
         private void PlayMusic()
         {
             currentMusicTime = 0f;
-            fallbackMusicStartRealtime = Time.realtimeSinceStartup;
 
             if (previewMusicClip == null)
             {
+                musicTimer = null;
                 return;
             }
 
@@ -607,6 +602,8 @@ namespace Sekai.Core.Live
             musicAudioSource.spatialBlend = 0f;
             musicAudioSource.time = 0f;
             musicAudioSource.Play();
+            musicTimer = new AudioSourceSyncedUnityTimer(musicAudioSource);
+            musicTimer.Reset(0, Time.time);
         }
 
         private void StopMusic()
@@ -615,6 +612,8 @@ namespace Sekai.Core.Live
             {
                 musicAudioSource.Stop();
             }
+
+            musicTimer = null;
         }
 
         private void NotifyPause(float time)
@@ -658,14 +657,13 @@ namespace Sekai.Core.Live
 
         private float GetCurrentMusicTime()
         {
-            if (musicAudioSource != null && musicAudioSource.clip != null)
+            if (musicTimer != null)
             {
-                return musicAudioSource.timeSamples > 0
-                    ? (float)musicAudioSource.timeSamples / musicAudioSource.clip.frequency
-                    : musicAudioSource.time;
+                musicTimer.Execute(Time.time);
+                return Mathf.Max((float)musicTimer.PlaybackTime / 1000f, 0f);
             }
 
-            return Mathf.Max(0f, Time.realtimeSinceStartup - fallbackMusicStartRealtime);
+            return currentMusicTime;
         }
 
         private float GetMusicFillerSec()
