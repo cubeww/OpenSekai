@@ -630,16 +630,23 @@ namespace Sekai.Core.Live
 			Vector3 worldPosition = camera != null
 				? camera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, 0f))
 				: Vector3.zero;
-			Vector2 delta = LiveUtility.Vector2Zero;
+			Vector2 delta = screenPosition;
 
-			if (touchPositionList.ContainsKey(touchId) && processTouch.time >= touchPositionList[touchId].Item1)
+			if (touchPositionList.ContainsKey(touchId) && processTouch.time < touchPositionList[touchId].Item1)
 			{
-				delta = screenPosition - touchPositionList[touchId].Item2;
+				delta = LiveUtility.Vector2Zero;
 			}
-
-			if (processTouch.phase == InputTouchPhase.Began)
+			else
 			{
-				touchPositionList[touchId] = (processTouch.time, screenPosition);
+				if (processTouch.phase == InputTouchPhase.Began)
+				{
+					touchPositionList[touchId] = (processTouch.time, screenPosition);
+				}
+
+				if (touchPositionList.ContainsKey(touchId))
+				{
+					delta = screenPosition - touchPositionList[touchId].Item2;
+				}
 			}
 
 			liveTouch = default;

@@ -289,19 +289,7 @@ namespace Sekai
 		private void TapLane(int lane)
 		{
 			ParticleSystemController[] effects = GetLaneEffects();
-			if (effects == null || lane < 0 || lane >= effects.Length)
-			{
-				return;
-			}
-
-			ParticleSystemController effect = effects[lane];
-			if (effect == null)
-			{
-				return;
-			}
-
-			effect.transform.localPosition = GetLaneGroundPosition(lane);
-			effect.Play();
+			PlayLaneEffectAt(effects, lane);
 		}
 
 		private void TapAura()
@@ -361,7 +349,7 @@ namespace Sekai
 
 		private void PlayUnpickedEffect(int lane)
 		{
-			TapLane(Mathf.Clamp(lane, 0, LaneCount - 1));
+			PlayLaneEffectAt(tapLaneEffectList, Mathf.Clamp(lane, 0, LaneCount - 1));
 			PlayOneShot(LiveSoundDefine.SE_LIVE_TAP);
 		}
 
@@ -373,6 +361,23 @@ namespace Sekai
 			{
 				TapLane(lane);
 			}
+		}
+
+		private void PlayLaneEffectAt(ParticleSystemController[] effects, int lane)
+		{
+			if (effects == null || lane < 0 || lane >= effects.Length)
+			{
+				return;
+			}
+
+			ParticleSystemController effect = effects[lane];
+			if (effect == null)
+			{
+				return;
+			}
+
+			effect.transform.localPosition = GetLaneGroundPosition(lane);
+			effect.Play();
 		}
 
 		private void Connection()
