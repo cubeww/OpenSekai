@@ -523,7 +523,7 @@ namespace Sekai.Core.Live
 			{
 				InputTouch touch = touches[i];
 				if (lastTouches.TryGetValue(touch.touchId, out (double, InputTouchPhase) lastTouch) &&
-					IsEndedOrCanceled(lastTouch.Item2))
+					lastTouch.Item2 == InputTouchPhase.Ended)
 				{
 					if (touch.phase == InputTouchPhase.Began && touch.time > lastTouch.Item1)
 					{
@@ -556,7 +556,7 @@ namespace Sekai.Core.Live
 				}
 
 				(double lastTime, InputTouchPhase lastPhase) = lastTouches[touch.touchId];
-				if (touch.time >= lastTime && !IsEndedOrCanceled(lastPhase))
+				if (touch.time >= lastTime && lastPhase != InputTouchPhase.Ended)
 				{
 					TouchExecution(ref touch, ref activeInputCount);
 					lastTouches[touch.touchId] = (touch.time, touch.phase);
@@ -891,7 +891,7 @@ namespace Sekai.Core.Live
 						NoteBase note = input.CandidateNotes[j];
 						float lane = ConvertLaneBy(ref note, ref input);
 						note.Judgment(ref input.Touch, lane);
-						if (note.Result == NoteResult.None || note.State == NoteState.Input)
+						if (note.Result == NoteResult.None || note.Result == NoteResult.Bad)
 						{
 							InputedNormalNoteTouch[input.Touch.touchId] = input.Touch.musicTime;
 						}
@@ -940,12 +940,11 @@ namespace Sekai.Core.Live
 						activeInput.Touch.musicTime - InputedNormalNoteTouch[touchId] > LiveUtility.NoteEndIgnoreFrameTime)
 					{
 						activeInput.CandidateNotes.Add(judgmentNote);
+						return;
 					}
 				}
-				return;
 			}
-
-			if (isNoteJudgment)
+			else if (isNoteJudgment)
 			{
 				activeInput.CandidateNotes.Add(judgmentNote);
 				isConnection = false;
