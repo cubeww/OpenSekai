@@ -128,7 +128,9 @@ namespace Sekai
 			SetupLaneEffects();
 			SetupNoteEffectMaps();
 			SetupSEDict();
-			isEnableVibration = false;
+			isEnableVibration = liveBaseController != null &&
+				liveBaseController.Settings != null &&
+				liveBaseController.Settings.UseVibration;
 		}
 
 		public void Clear()
@@ -408,7 +410,7 @@ namespace Sekai
 
 		private void PlayHaptic(Func<bool> checkPlayedHaptic)
 		{
-			if (!isEnableVibration || checkPlayedHaptic == null || checkPlayedHaptic())
+			if (checkPlayedHaptic == null || checkPlayedHaptic() || !isEnableVibration || noteInfo.result == NoteResult.Auto)
 			{
 				return;
 			}
@@ -715,7 +717,7 @@ namespace Sekai
 
 		private static int CreateEffectKey(NoteCategory category, NoteType type, NoteResult result)
 		{
-			return ((int)category * 100) + ((int)type * 10) + (int)result;
+			return (int)category + ((int)type * 10) + ((int)result * 100);
 		}
 
 		private static int CreateSeKey(NoteCategory category, NoteType type)

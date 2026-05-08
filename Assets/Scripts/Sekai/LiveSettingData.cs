@@ -8,6 +8,8 @@ namespace Sekai
 
         public bool UseSimultaneousPushingLine { get; set; } = true;
 
+        public bool UseVibration { get; set; } = false;
+
         public bool Use120FPS { get; set; } = true;
 
         public bool? UseVSync { get; set; } = true;

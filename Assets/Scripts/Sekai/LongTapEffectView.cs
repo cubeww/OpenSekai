@@ -32,16 +32,10 @@ namespace Sekai
 				IsUsed = true;
 				SetTransform(note);
 				bool shouldStart = (Aura != null && !Aura.IsPlaying) || (Gen != null && !Gen.IsPlaying);
-				if (Aura != null && !Aura.IsPlaying)
-				{
-					Aura.Play();
-				}
-				if (Gen != null && !Gen.IsPlaying)
-				{
-					Gen.Play();
-				}
 				if (shouldStart)
 				{
+					Aura?.Play();
+					Gen?.Play();
 					PlaySE(note);
 				}
 			}
@@ -52,7 +46,7 @@ namespace Sekai
 				if (Aura != null)
 				{
 					Aura.transform.localPosition = position;
-					float width = Mathf.Max(1f, note.LaneEndF + 1f - note.LaneStartF);
+					float width = note.LaneEndF + 1f - note.LaneStartF;
 					Aura.transform.localScale = new Vector3(width, 1f, 1f);
 				}
 				if (Gen != null)
@@ -64,6 +58,11 @@ namespace Sekai
 			public void Stop()
 			{
 				IsUsed = false;
+				StopPlayback();
+			}
+
+			public void StopPlayback()
+			{
 				Aura?.Stop();
 				Gen?.Stop();
 				if (PlaybackId != 0)
@@ -154,7 +153,7 @@ namespace Sekai
 
 		public void Add(INote note)
 		{
-			if (note == null || longNotes == null || longNotes.ContainsKey(note))
+			if (note == null || note.ParentNote != null || longNotes == null || longNotes.ContainsKey(note))
 			{
 				return;
 			}
@@ -210,7 +209,7 @@ namespace Sekai
 			{
 				INote note = pair.Key;
 				EffectPair effect = pair.Value;
-				if (note == null || effect == null || note.State == NoteState.Done || note.State == NoteState.Release || note.State == NoteState.Last)
+				if (note == null || effect == null)
 				{
 					if (removeList == null)
 					{
@@ -224,9 +223,9 @@ namespace Sekai
 				{
 					effect.Play(note);
 				}
-				else
+				else if (note.State == NoteState.Release)
 				{
-					effect.SetTransform(note);
+					effect.StopPlayback();
 				}
 			}
 
