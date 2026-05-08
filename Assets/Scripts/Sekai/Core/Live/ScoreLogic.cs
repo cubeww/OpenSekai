@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Sekai.Live;
 using UnityEngine;
@@ -50,15 +51,16 @@ namespace Sekai.Core.Live
             this.liveViews = liveViews;
             scoreInfo = EnsureScoreInfo(bootData, noteBases);
 
-            int totalNoteFactor = Mathf.Max(1, CountScoreNotes(noteBases));
+            int totalComboCount = CountComboNotes(noteBases);
+            float totalNoteScoreFactor = Mathf.Max(1f, SumNoteScoreFactors(noteBases));
             score = new LiveScore
             {
                 life = liveBundleBuildData != null ? liveBundleBuildData.Life : LiveConfig.Life,
                 rank = ScoreRank.D,
-                totalComboCount = totalNoteFactor,
-                baseTotalScore = GetBaseTotalScore(scoreInfo, totalNoteFactor)
+                totalComboCount = totalComboCount,
+                baseTotalScore = GetBaseTotalScore(scoreInfo, totalNoteScoreFactor)
             };
-            BaseNoteScore = score.baseTotalScore / totalNoteFactor;
+            BaseNoteScore = score.baseTotalScore / totalNoteScoreFactor;
             totalScoreF = 0f;
             continueTime = null;
 
@@ -209,17 +211,38 @@ namespace Sekai.Core.Live
             liveViews.UpdateLife(score.life);
         }
 
-        private static int CountScoreNotes(NoteBase[] noteBases)
+        private static IEnumerable<NoteBase> EnumerateJudgmentNotes(NoteBase[] noteBases)
         {
-            if (noteBases == null || noteBases.Length == 0)
+            if (noteBases == null)
             {
-                return 1;
+                yield break;
             }
 
-            return noteBases
-                .Where(note => note != null)
-                .SelectMany(note => note.NoteList ?? Enumerable.Empty<NoteBase>())
-                .Count(note => note != null);
+            foreach (NoteBase rootNote in noteBases)
+            {
+                if (rootNote == null || rootNote.NoteList == null)
+                {
+                    continue;
+                }
+
+                foreach (NoteBase note in rootNote.NoteList)
+                {
+                    if (note != null && note.HasJudgment)
+                    {
+                        yield return note;
+                    }
+                }
+            }
+        }
+
+        private static int CountComboNotes(NoteBase[] noteBases)
+        {
+            return EnumerateJudgmentNotes(noteBases).Count();
+        }
+
+        private static float SumNoteScoreFactors(NoteBase[] noteBases)
+        {
+            return EnumerateJudgmentNotes(noteBases).Sum(note => GetNoteScoreFactor(note));
         }
 
         private static MasterPlayLevelScore EnsureScoreInfo(LiveBootDataBase bootData, NoteBase[] noteBases)
@@ -232,8 +255,8 @@ namespace Sekai.Core.Live
                 return musicData.Score;
             }
 
-            int noteCount = CountScoreNotes(noteBases);
-            int targetScore = Mathf.Max(1, noteCount * DefaultTargetScorePerNote);
+            float totalNoteScoreFactor = Mathf.Max(1f, SumNoteScoreFactors(noteBases));
+            int targetScore = Mathf.Max(1, Mathf.FloorToInt(totalNoteScoreFactor * DefaultTargetScorePerNote));
             int playLevel = musicData != null && musicData.Difficulty != null ? musicData.Difficulty.playLevel : 0;
             MasterPlayLevelScore score = new MasterPlayLevelScore
             {
@@ -251,14 +274,14 @@ namespace Sekai.Core.Live
             return score;
         }
 
-        private static float GetBaseTotalScore(MasterPlayLevelScore scoreInfo, int totalNoteFactor)
+        private static float GetBaseTotalScore(MasterPlayLevelScore scoreInfo, float totalNoteScoreFactor)
         {
             if (scoreInfo != null && scoreInfo.s > 0)
             {
                 return Mathf.Max(1, scoreInfo.s / ScoreGaugeCalculator.RankRateS);
             }
 
-            return Mathf.Max(1, totalNoteFactor * DefaultTargetScorePerNote);
+            return Mathf.Max(1f, totalNoteScoreFactor * DefaultTargetScorePerNote);
         }
 
         private static float GetResultScoreFactor(NoteResult result)

@@ -743,24 +743,65 @@ namespace Sekai.Core.Live
 			for (int i = activeInputList.Count - 1; i >= 0; i--)
 			{
 				InputTmp input = activeInputList[i];
-				for (int j = input.CandidateNotes.Count - 1; j >= 0; j--)
+				for (int k = activeInputList.Count - 1; k >= 0; k--)
 				{
-					NoteBase note = input.CandidateNotes[j];
-					for (int k = activeInputList.Count - 1; k >= 0; k--)
+					if (i == k)
 					{
-						if (i == k)
-						{
-							continue;
-						}
+						continue;
+					}
 
-						InputTmp other = activeInputList[k];
+					InputTmp other = activeInputList[k];
+					if (input.CandidateNotes.Count == 2 &&
+						other.CandidateNotes.Count == 2 &&
+						HasSameCandidatePair(input.CandidateNotes, other.CandidateNotes))
+					{
+						NoteBase first = input.CandidateNotes[0];
+						float inputDistance = first.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref first, ref input));
+						float otherDistance = first.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref first, ref other));
+						if (inputDistance <= otherDistance)
+						{
+							other.CandidateNotes.Remove(input.CandidateNotes[1]);
+							input.CandidateNotes.Remove(first);
+						}
+						else
+						{
+							other.CandidateNotes.Remove(first);
+							input.CandidateNotes.Remove(input.CandidateNotes[1]);
+						}
+						continue;
+					}
+
+					for (int j = input.CandidateNotes.Count - 1; j >= 0; j--)
+					{
+						NoteBase note = input.CandidateNotes[j];
 						if (!other.CandidateNotes.Contains(note))
 						{
 							continue;
 						}
 
-						float inputDistance = note.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref note, ref input));
-						float otherDistance = note.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref note, ref other));
+						if (input.CandidateNotes.Count >= 2 && other.CandidateNotes.Count == 1)
+						{
+							input.CandidateNotes.Remove(note);
+							continue;
+						}
+						if (input.CandidateNotes.Count == 1 && other.CandidateNotes.Count >= 2)
+						{
+							other.CandidateNotes.Remove(note);
+							continue;
+						}
+						if (input.CandidateNotes.Count < 2 && other.CandidateNotes.Count < 2)
+						{
+							continue;
+						}
+
+						NoteBase comparableNote = SelectOverlapComparableNote(note, input);
+						if (comparableNote == null)
+						{
+							continue;
+						}
+
+						float inputDistance = comparableNote.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref comparableNote, ref input));
+						float otherDistance = comparableNote.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref comparableNote, ref other));
 						if (inputDistance <= otherDistance)
 						{
 							other.CandidateNotes.Remove(note);
@@ -768,7 +809,6 @@ namespace Sekai.Core.Live
 						else
 						{
 							input.CandidateNotes.Remove(note);
-							break;
 						}
 					}
 				}
@@ -954,7 +994,7 @@ namespace Sekai.Core.Live
 			{
 				return input.Lane;
 			}
-			return GetJudgmentLane(input.Touch.worldPosition, true);
+			return GetJudgmentLane(input.Touch.worldPosition, !note.FinishFirstAction);
 		}
 
 		private float GetJudgmentLane(Vector3 touchPosition, bool checkJudgmentY)
@@ -1020,6 +1060,31 @@ namespace Sekai.Core.Live
 				return note.NoteList[0];
 			}
 			return note.NoteList[note.NoteList.Count - 1];
+		}
+
+		private static bool HasSameCandidatePair(List<NoteBase> left, List<NoteBase> right)
+		{
+			return (ReferenceEquals(left[0], right[0]) && ReferenceEquals(left[1], right[1])) ||
+				(ReferenceEquals(left[0], right[1]) && ReferenceEquals(left[1], right[0]));
+		}
+
+		private NoteBase SelectOverlapComparableNote(NoteBase note, InputTmp input)
+		{
+			if (note.NoteList.Count == 1)
+			{
+				return note;
+			}
+
+			NoteBase first = note.NoteList[0];
+			float firstLane = ConvertLaneBy(ref first, ref input);
+			if (first.IsJudgment(ref input.Touch, firstLane))
+			{
+				return first;
+			}
+
+			NoteBase last = note.NoteList[note.NoteList.Count - 1];
+			float lastLane = ConvertLaneBy(ref last, ref input);
+			return last.IsJudgment(ref input.Touch, lastLane) ? last : null;
 		}
 
 		private void ForEachLiveView(Action<LiveViewBase> action)
