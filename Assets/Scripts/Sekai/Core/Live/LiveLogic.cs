@@ -820,32 +820,41 @@ namespace Sekai.Core.Live
 			for (int i = activeInputList.Count - 1; i >= 0; i--)
 			{
 				InputTmp input = activeInputList[i];
-				while (input.CandidateNotes.Count >= 2)
+				for (int j = input.CandidateNotes.Count - 1; j >= 0; j--)
 				{
-					NoteBase first = SelectComparableNote(input.CandidateNotes[0], input);
-					NoteBase last = SelectComparableNote(input.CandidateNotes[input.CandidateNotes.Count - 1], input);
-					bool removeLast;
+					if (input.CandidateNotes.Count < 2)
+					{
+						continue;
+					}
 
-					if (first.MusicScoreInfo.time.Equals(last.MusicScoreInfo.time))
+					NoteBase firstCandidate = input.CandidateNotes[0];
+					NoteBase first = SelectLeaveComparableNote(firstCandidate, input, firstCandidate);
+					NoteBase candidate = input.CandidateNotes[j];
+					NoteBase comparable = SelectLeaveComparableNote(candidate, input, firstCandidate);
+					bool removeCandidate;
+
+					if (first.MusicScoreInfo.time.Equals(comparable.MusicScoreInfo.time))
 					{
 						float firstDistance = first.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref first, ref input));
-						float lastDistance = last.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref last, ref input));
-						removeLast = firstDistance < lastDistance;
+						float comparableDistance = comparable.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref comparable, ref input));
+						removeCandidate = firstDistance < comparableDistance;
 					}
 					else
 					{
-						NoteResult lastResult = last.CalcNoteResult(input.Touch.musicTime);
 						NoteResult firstResult = first.CalcNoteResult(input.Touch.musicTime);
-						removeLast = lastResult < NoteResult.Great || firstResult >= NoteResult.Great || first.MusicScoreInfo.time < last.MusicScoreInfo.time;
+						NoteResult comparableResult = comparable.CalcNoteResult(input.Touch.musicTime);
+						removeCandidate = first.MusicScoreInfo.time < comparable.MusicScoreInfo.time &&
+							(comparableResult < NoteResult.Great || firstResult >= NoteResult.Great);
 					}
 
-					if (removeLast)
+					if (removeCandidate)
 					{
-						input.CandidateNotes.RemoveAt(input.CandidateNotes.Count - 1);
+						input.CandidateNotes.Remove(candidate);
 					}
 					else
 					{
-						input.CandidateNotes.RemoveAt(0);
+						input.CandidateNotes.Remove(firstCandidate);
+						j = input.CandidateNotes.Count;
 					}
 				}
 			}
@@ -1049,17 +1058,25 @@ namespace Sekai.Core.Live
 			return !float.IsNaN(value) && !float.IsInfinity(value);
 		}
 
-		private static NoteBase SelectComparableNote(NoteBase note, InputTmp input)
+		private NoteBase SelectLeaveComparableNote(NoteBase note, InputTmp input, NoteBase fallbackNote)
 		{
 			if (note.NoteList.Count == 1)
 			{
 				return note;
 			}
+
+			NoteBase comparable;
 			if (note.Result == NoteResult.None && input.Touch.phase == InputTouchPhase.Began)
 			{
-				return note.NoteList[0];
+				comparable = note.NoteList[0];
 			}
-			return note.NoteList[note.NoteList.Count - 1];
+			else
+			{
+				comparable = note.NoteList[note.NoteList.Count - 1];
+			}
+
+			float lane = ConvertLaneBy(ref comparable, ref input);
+			return comparable.IsJudgment(ref input.Touch, lane) ? comparable : fallbackNote;
 		}
 
 		private static bool HasSameCandidatePair(List<NoteBase> left, List<NoteBase> right)
