@@ -302,6 +302,10 @@ MonoBehaviour:
   liveStartWaitTime: 6
   previewSusScore: {fileID: 4900000, guid: b4152e5eb46d6324bb85f02907b2a45d, type: 3}
   liveBundleBuildData: {fileID: 0}
+  livePauseDialogPrefab: {fileID: 114900271049623953, guid: b7a79569dd40a4c45a56c01760d0c6a8, type: 3}
+  common2ButtonDialogPrefab: {fileID: 114733206282342372, guid: c8555d3677919044fbb09aaafb16b8a7, type: 3}
+  consecutiveAutoLivePauseDialogPrefab: {fileID: 114060945828524476, guid: 388017729f1440d4bbcaadcf5b00aaee, type: 3}
+  dialogRoot: {fileID: 0}
 --- !u!1001 &1943756284
 PrefabInstance:
   m_ObjectHideFlags: 0

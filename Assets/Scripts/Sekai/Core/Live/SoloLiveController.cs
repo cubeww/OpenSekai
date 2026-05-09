@@ -1,8 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using Sekai;
 using Sekai.Live;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 
 namespace Sekai.Core.Live
 {
@@ -43,6 +47,10 @@ namespace Sekai.Core.Live
         [SerializeField] private float liveStartWaitTime = BaseGameStartWaitTime;
         [SerializeField] private TextAsset previewSusScore;
         [SerializeField] private LiveBundleBuildData liveBundleBuildData;
+        [SerializeField] private LivePauseDialog livePauseDialogPrefab;
+        [SerializeField] private Common2ButtonDialog common2ButtonDialogPrefab;
+        [SerializeField] private ConsecutiveAutoLivePauseDialog consecutiveAutoLivePauseDialogPrefab;
+        [SerializeField] private Transform dialogRoot;
 
         private Coroutine liveStartCoroutine;
         private Coroutine resumeCoroutine;
@@ -51,6 +59,7 @@ namespace Sekai.Core.Live
         private LiveResult result;
         private bool isRhythmGameRunning;
         private bool isPaused;
+        private DialogBase activePauseDialog;
         private float currentMusicTime;
         private float adjustedMusicTime;
         private AudioSourceSyncedUnityTimer musicTimer;
@@ -333,6 +342,7 @@ namespace Sekai.Core.Live
                 musicAudioSource.Pause();
             }
             NotifyPause(adjustedMusicTime);
+            ShowPauseDialog();
         }
 
         public override void Resume()
@@ -347,6 +357,7 @@ namespace Sekai.Core.Live
             {
                 StopCoroutine(resumeCoroutine);
             }
+            DestroyActivePauseDialog();
             resumeCoroutine = StartCoroutine(ResumeCoroutine());
         }
 
@@ -362,6 +373,7 @@ namespace Sekai.Core.Live
                 StopCoroutine(resumeCoroutine);
                 resumeCoroutine = null;
             }
+            DestroyActivePauseDialog();
             ResumeLiveNow();
         }
 
@@ -473,11 +485,12 @@ namespace Sekai.Core.Live
 
         protected virtual void PreExit(float delay = 0f, float waitTime = 4f)
         {
-            if (result != LiveResult.None)
+            if (result != LiveResult.None && result != LiveResult.Retire)
             {
                 return;
             }
 
+            LiveResult requestedResult = result;
             isRhythmGameRunning = false;
             isPaused = false;
             if (resumeCoroutine != null)
@@ -485,7 +498,10 @@ namespace Sekai.Core.Live
                 StopCoroutine(resumeCoroutine);
                 resumeCoroutine = null;
             }
-            result = liveLogic != null && liveLogic.Result == LiveResult.Failure ? LiveResult.Clear : liveLogic != null ? liveLogic.Result : LiveResult.None;
+            DestroyActivePauseDialog();
+            result = requestedResult != LiveResult.None
+                ? requestedResult
+                : liveLogic != null && liveLogic.Result == LiveResult.Failure ? LiveResult.Clear : liveLogic != null ? liveLogic.Result : LiveResult.None;
             UnsubscribeLiveLogic();
 
             if (resultCoroutine != null)
@@ -516,6 +532,29 @@ namespace Sekai.Core.Live
 
         protected virtual void Exit()
         {
+        }
+
+        protected virtual void Retry()
+        {
+            DestroyActivePauseDialog();
+            ResumeNoCountDown();
+
+            if (liveViews == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < liveViews.Length; i++)
+            {
+                liveViews[i]?.Retry();
+            }
+        }
+
+        protected virtual void Retire()
+        {
+            DestroyActivePauseDialog();
+            result = LiveResult.Retire;
+            PreExit();
         }
 
         private LiveResultAnimationType GetLiveResultAnimationType()
@@ -704,6 +743,12 @@ namespace Sekai.Core.Live
                 return;
             }
 
+            if (activePauseDialog != null)
+            {
+                activePauseDialog.ExecuteBackKeyProcess();
+                return;
+            }
+
             if (isPaused)
             {
                 Resume();
@@ -711,6 +756,179 @@ namespace Sekai.Core.Live
             else if (isRhythmGameRunning)
             {
                 Pause();
+            }
+        }
+
+        private void ShowPauseDialog()
+        {
+            DestroyActivePauseDialog();
+
+            if (AutoLiveUtility.IsRunningConsecutiveAutoLive() && consecutiveAutoLivePauseDialogPrefab != null)
+            {
+                ConsecutiveAutoLivePauseDialog dialog = InstantiateDialog(consecutiveAutoLivePauseDialogPrefab);
+                activePauseDialog = dialog;
+                dialog.Initialize(
+                    string.Empty,
+                    "Resume",
+                    "Cancel",
+                    Resume,
+                    ShowConsecutiveAutoLiveRetireDialog,
+                    DialogSize.Small,
+                    true);
+                dialog.Setup();
+                return;
+            }
+
+            if (livePauseDialogPrefab == null)
+            {
+                return;
+            }
+
+            LivePauseDialog pauseDialog = InstantiateDialog(livePauseDialogPrefab);
+            activePauseDialog = pauseDialog;
+            Dictionary<string, System.Action> actions = new Dictionary<string, System.Action>
+            {
+                { "Cancel", OnRetireConfirm },
+                { "Retry", OnRetryConfirm },
+                { "Resume", Resume }
+            };
+            pauseDialog.Initialize(actions, DialogSize.Small, false);
+        }
+
+        private void OnRetireConfirm()
+        {
+            ShowConfirmRetireDialog();
+        }
+
+        private void OnRetryConfirm()
+        {
+            ShowConfirmRetryDialog();
+        }
+
+        private void OnConfirmCancel()
+        {
+            ShowPauseDialog();
+        }
+
+        private void ShowConfirmRetireDialog()
+        {
+            if (common2ButtonDialogPrefab == null)
+            {
+                OnConfirmCancel();
+                return;
+            }
+
+            Common2ButtonDialog dialog = InstantiateDialog(common2ButtonDialogPrefab);
+            activePauseDialog = dialog;
+            dialog.Initialize(
+                "MSG_PAUSE_LIVE_ABORT",
+                "WORD_ABORT",
+                "WORD_CANCEL",
+                Retire,
+                OnConfirmCancel,
+                DialogSize.Small,
+                true);
+        }
+
+        private void ShowConfirmRetryDialog()
+        {
+            if (common2ButtonDialogPrefab == null)
+            {
+                OnConfirmCancel();
+                return;
+            }
+
+            Common2ButtonDialog dialog = InstantiateDialog(common2ButtonDialogPrefab);
+            activePauseDialog = dialog;
+            dialog.Initialize(
+                "MSG_PAUSE_LIVE_RETRY",
+                "WORD_RETRY",
+                "WORD_CANCEL",
+                Retry,
+                OnConfirmCancel,
+                DialogSize.Small,
+                true);
+        }
+
+        private void ShowConsecutiveAutoLiveRetireDialog()
+        {
+            if (common2ButtonDialogPrefab == null)
+            {
+                OnConfirmCancel();
+                return;
+            }
+
+            Common2ButtonDialog dialog = InstantiateDialog(common2ButtonDialogPrefab);
+            activePauseDialog = dialog;
+            dialog.Initialize(
+                "MSG_PAUSE_LIVE_ABORT",
+                "WORD_ABORT",
+                "WORD_CANCEL",
+                Retire,
+                Resume,
+                DialogSize.Small,
+                true);
+        }
+
+        private T InstantiateDialog<T>(T prefab) where T : DialogBase
+        {
+            Transform parent = EnsureDialogRoot();
+            T dialog = Instantiate(prefab, parent, false);
+            RectTransform rectTransform = dialog.transform as RectTransform;
+            if (rectTransform != null)
+            {
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                rectTransform.localScale = Vector3.one;
+            }
+
+            return dialog;
+        }
+
+        private Transform EnsureDialogRoot()
+        {
+            if (dialogRoot != null)
+            {
+                return dialogRoot;
+            }
+
+            Canvas canvas = FindAnyObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                GameObject canvasObject = new GameObject("DialogCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                canvas = canvasObject.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+                CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                scaler.matchWidthOrHeight = 0.5f;
+            }
+
+            if (FindAnyObjectByType<EventSystem>() == null)
+            {
+                new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            }
+
+            dialogRoot = canvas.transform;
+            return dialogRoot;
+        }
+
+        private void DestroyActivePauseDialog()
+        {
+            if (activePauseDialog == null)
+            {
+                return;
+            }
+
+            DialogBase dialog = activePauseDialog;
+            activePauseDialog = null;
+
+            if (dialog != null)
+            {
+                Destroy(dialog.gameObject);
             }
         }
 

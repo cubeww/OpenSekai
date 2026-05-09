@@ -1,13 +1,12 @@
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Sekai.UI
 {
-    public class CustomTextMesh : TextMeshProUGUI, ICustomText
+    public class CustomText : Text, ICustomText
     {
         [SerializeField] private bool useWordingKey;
         [SerializeField] protected string wordingKey;
-        [SerializeField] protected uint maxValueUpToAutoSize;
 
         public string Text => text;
         public RectTransform RectTransform => rectTransform;
@@ -16,7 +15,7 @@ namespace Sekai.UI
         public float FontSize
         {
             get { return fontSize; }
-            set { fontSize = value; }
+            set { fontSize = (int)value; }
         }
 
         public string WordingKey
@@ -62,9 +61,6 @@ namespace Sekai.UI
             text = args == null || args.Length == 0 ? value : string.Format(value, args);
         }
 
-        public void SetDefaultFontDB() { }
-        public void SetDefaultFontEB() { }
-
         public void SetText(string value, bool breakSpace = false)
         {
             text = value;
@@ -74,8 +70,5 @@ namespace Sekai.UI
         {
             gameObject.SetActive(value);
         }
-
-        public void SetMaterialOutlineColor(Color newColor) { }
-        public void UpdateMaxValueUpToAutoSize() { }
     }
 }
