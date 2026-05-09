@@ -7,6 +7,7 @@ namespace Sekai
     {
         private GameObject[] countdownParticleArray;
         private IEnumerator coroutine;
+        private static readonly int DefaultStateHash = Animator.StringToHash("clip_live_countdown_1");
 
         public void Setup()
         {
@@ -42,7 +43,7 @@ namespace Sekai
             {
                 if (countdownParticleArray != null && i < countdownParticleArray.Length && countdownParticleArray[i] != null)
                 {
-                    countdownParticleArray[i].SetActive(true);
+                    PlayCountdownObject(countdownParticleArray[i]);
                 }
                 yield return new WaitForSeconds(1f);
             }
@@ -64,6 +65,39 @@ namespace Sekai
                 {
                     countdownParticleArray[i].SetActive(false);
                 }
+            }
+        }
+
+        private static void PlayCountdownObject(GameObject countdownObject)
+        {
+            countdownObject.SetActive(true);
+
+            Animator[] animators = countdownObject.GetComponentsInChildren<Animator>(true);
+            for (int i = 0; i < animators.Length; i++)
+            {
+                Animator animator = animators[i];
+                if (animator == null || animator.runtimeAnimatorController == null)
+                {
+                    continue;
+                }
+
+                animator.enabled = true;
+                animator.Rebind();
+                animator.Update(0f);
+                animator.Play(DefaultStateHash, 0, 0f);
+            }
+
+            ParticleSystem[] particles = countdownObject.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < particles.Length; i++)
+            {
+                ParticleSystem particle = particles[i];
+                if (particle == null)
+                {
+                    continue;
+                }
+
+                particle.Clear(true);
+                particle.Play(true);
             }
         }
     }
