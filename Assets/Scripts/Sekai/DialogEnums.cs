@@ -25,4 +25,12 @@ namespace Sekai
         LivePauseDialog = 18,
         ConsecutiveAutoLivePauseDialog = 179
     }
+
+    public enum ScreenLayerType
+    {
+        Back = 0,
+        Main = 1,
+        Front = 2,
+        Dialog = 4
+    }
 }

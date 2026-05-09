@@ -65,6 +65,11 @@ namespace Sekai.Core.Live
             ForEach(liveViews, view => view.Finish());
         }
 
+        public static void OnScreenSizeChanged(this LiveViewBase[] liveViews)
+        {
+            ForEach(liveViews, view => view.OnScreenSizeChanged());
+        }
+
         private static void ForEach(LiveViewBase[] liveViews, System.Action<LiveViewBase> action)
         {
             if (liveViews == null || action == null)

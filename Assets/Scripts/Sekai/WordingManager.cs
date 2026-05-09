@@ -12,6 +12,8 @@ namespace Sekai
             { "WORD_CANCEL", "Cancel" },
             { "WORD_ABORT", "Abort" },
             { "WORD_RETRY", "Retry" },
+            { "WORD_HOME_BACK", "Back to Home" },
+            { "WORD_RETURN_LIVE", "Return to Live" },
             { "MSG_PAUSE_LIVE_ABORT", "Abort live?" },
             { "MSG_PAUSE_LIVE_RETRY", "Retry live?" },
             { "MSG_CONSECUTIVE_AUTO_LIVE_UNTILE_NOT_ENOUGH", "Continue Auto Live until resources run out." },

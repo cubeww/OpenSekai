@@ -42,6 +42,10 @@ namespace Sekai.Core.Live
         {
         }
 
+        public virtual void OnScreenSizeChanged()
+        {
+        }
+
         public virtual void Pause(float time)
         {
         }

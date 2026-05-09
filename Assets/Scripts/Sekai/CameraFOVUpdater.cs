@@ -49,6 +49,11 @@ namespace Sekai
             }
         }
 
+        public void ForceUpdate()
+        {
+            UpdateFOVSize();
+        }
+
         private void UpdateFOVSize()
         {
             if (camera == null)

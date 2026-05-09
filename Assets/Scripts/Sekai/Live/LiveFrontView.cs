@@ -1,4 +1,5 @@
 using DG.Tweening;
+using Sekai.Core;
 using Sekai.Core.Live;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace Sekai.Live
         [SerializeField] private Renderer backgroundRenderer;
         [SerializeField] private SpriteRenderer deadMask;
         [SerializeField] protected CameraSizeUpdater cameraSizeUpdater;
+        [SerializeField] private CameraFOVUpdater cameraFOVUpdater;
         [SerializeField] private Camera frontViewCamera;
         [SerializeField] private float previewBrightness = 1f;
 
@@ -22,12 +24,18 @@ namespace Sekai.Live
         private Tween backgroundBrightnessTween;
         private bool isAuto;
         private bool isPlayedHaptic;
+        private bool hasEffectCameraBaseFov;
+        private float effectCameraBaseFov;
+        private int lastTapEffectMatrixScreenWidth = -1;
+        private int lastTapEffectMatrixScreenHeight = -1;
+        private int pendingTapEffectMatrixRefreshFrames;
         private int life;
         private NotesViewManager notesViewManager;
         private TapEffectView tapEffect;
         private LongTapEffectView longTapEffectView;
         // Original prefab keeps this at 0; URP 2D sorting draws it over negative-order lanes in this project.
         private const int BackgroundSortingOrder = -200;
+        private const int TapEffectMatrixDeferredRefreshFrames = 2;
 
         public override void Setup(BaseLiveController baseController)
         {
@@ -114,9 +122,14 @@ namespace Sekai.Live
 
         public override void RhythmGameStart()
         {
-            lifeView?.CalculateButtonBounds(frontViewCamera);
-            consecutiveAutoLiveView?.CalculateButtonBounds(frontViewCamera);
+            RefreshScreenDependentLayout();
             FadeIn();
+        }
+
+        public override void OnScreenSizeChanged()
+        {
+            RefreshScreenDependentLayout();
+            QueueTapEffectMatrixRefresh();
         }
 
         public override void Retry()
@@ -221,12 +234,72 @@ namespace Sekai.Live
             longTapEffectView.Setup(longHoldAuraPrefab, longHoldGenPrefab, criticalLongHoldAuraPrefab, criticalLongHoldGenPrefab, longTapEffectPoolCount, baseController, liveSoundPlayer);
 
             effectRoot.position = transform.position;
-            if (effectCamera != null)
+            RefreshTapEffectCameraMatrices();
+        }
+
+        private void RefreshTapEffectCameraMatrices()
+        {
+            if (effectCamera == null)
             {
-                Shader.SetGlobalMatrix(ShaderPropertyID.TAP_EFFECT_VIEW_MATRIX_ID, effectCamera.worldToCameraMatrix);
-                Shader.SetGlobalMatrix(ShaderPropertyID.TAP_EFFECT_PROJECTION_MATRIX_ID, GL.GetGPUProjectionMatrix(effectCamera.projectionMatrix, false));
-                effectCamera.enabled = false;
+                CacheTapEffectMatrixScreenSize();
+                return;
             }
+
+            if (!hasEffectCameraBaseFov)
+            {
+                effectCameraBaseFov = effectCamera.fieldOfView;
+                hasEffectCameraBaseFov = true;
+            }
+
+            if (effectRoot != null)
+            {
+                effectRoot.position = transform.position;
+            }
+
+            effectCamera.rect = frontViewCamera != null ? frontViewCamera.rect : new Rect(0f, 0f, 1f, 1f);
+            effectCamera.aspect = GetTapEffectCameraAspect();
+            effectCamera.fieldOfView = SekaiCameraAspect.CalculateVerticalFov(effectCameraBaseFov);
+            effectCamera.ResetProjectionMatrix();
+
+            Shader.SetGlobalMatrix(ShaderPropertyID.TAP_EFFECT_VIEW_MATRIX_ID, effectCamera.worldToCameraMatrix);
+            Shader.SetGlobalMatrix(ShaderPropertyID.TAP_EFFECT_PROJECTION_MATRIX_ID, GL.GetGPUProjectionMatrix(effectCamera.projectionMatrix, false));
+            effectCamera.enabled = false;
+            CacheTapEffectMatrixScreenSize();
+        }
+
+        private float GetTapEffectCameraAspect()
+        {
+            Rect rect = frontViewCamera != null ? frontViewCamera.rect : new Rect(0f, 0f, 1f, 1f);
+            float width = Screen.width * Mathf.Max(rect.width, 0.0001f);
+            float height = Screen.height * Mathf.Max(rect.height, 0.0001f);
+            return height > 0f ? width / height : SekaiCameraAspect.TargetAspect;
+        }
+
+        private void QueueTapEffectMatrixRefresh()
+        {
+            pendingTapEffectMatrixRefreshFrames = TapEffectMatrixDeferredRefreshFrames;
+        }
+
+        private void RefreshTapEffectCameraMatricesIfNeeded()
+        {
+            if (lastTapEffectMatrixScreenWidth == Screen.width &&
+                lastTapEffectMatrixScreenHeight == Screen.height &&
+                pendingTapEffectMatrixRefreshFrames <= 0)
+            {
+                return;
+            }
+
+            RefreshTapEffectCameraMatrices();
+            if (pendingTapEffectMatrixRefreshFrames > 0)
+            {
+                pendingTapEffectMatrixRefreshFrames--;
+            }
+        }
+
+        private void CacheTapEffectMatrixScreenSize()
+        {
+            lastTapEffectMatrixScreenWidth = Screen.width;
+            lastTapEffectMatrixScreenHeight = Screen.height;
         }
 
         private void CacheSpriteRendererAlphas()
@@ -423,6 +496,32 @@ namespace Sekai.Live
             consecutiveAutoLiveView?.Hide();
         }
 
+        private void RefreshScreenDependentLayout()
+        {
+            cameraSizeUpdater?.ForceUpdate();
+            cameraFOVUpdater?.ForceUpdate();
+            UpdateBackgroundSize();
+            RefreshTapEffectCameraMatrices();
+            lifeView?.CalculateButtonBounds(frontViewCamera);
+            consecutiveAutoLiveView?.CalculateButtonBounds(frontViewCamera);
+        }
+
+        private void UpdateBackgroundSize()
+        {
+            float height = cameraSizeUpdater != null && cameraSizeUpdater.OrthographicSize > 0f ? cameraSizeUpdater.OrthographicSize * 2f : 10f;
+            float aspect = Screen.height == 0 ? 1f : (float)Screen.width / Screen.height;
+
+            if (backgroundRenderer != null)
+            {
+                backgroundRenderer.transform.localScale = new Vector3(height * aspect, height, 1f);
+            }
+
+            if (deadMask != null)
+            {
+                deadMask.size = new Vector2(height * aspect, height);
+            }
+        }
+
         public override void OnUpdate(float time)
         {
             isPlayedHaptic = false;
@@ -559,6 +658,7 @@ namespace Sekai.Live
 
         private void LateUpdate()
         {
+            RefreshTapEffectCameraMatricesIfNeeded();
             if (deadMask == null)
             {
                 return;

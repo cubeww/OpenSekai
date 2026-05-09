@@ -1,12 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using Sekai;
 using Sekai.Live;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
-using UnityEngine.UI;
 
 namespace Sekai.Core.Live
 {
@@ -47,10 +43,7 @@ namespace Sekai.Core.Live
         [SerializeField] private float liveStartWaitTime = BaseGameStartWaitTime;
         [SerializeField] private TextAsset previewSusScore;
         [SerializeField] private LiveBundleBuildData liveBundleBuildData;
-        [SerializeField] private LivePauseDialog livePauseDialogPrefab;
-        [SerializeField] private Common2ButtonDialog common2ButtonDialogPrefab;
-        [SerializeField] private ConsecutiveAutoLivePauseDialog consecutiveAutoLivePauseDialogPrefab;
-        [SerializeField] private Transform dialogRoot;
+        [SerializeField] private LiveOutUIController liveOutUIController;
 
         private Coroutine liveStartCoroutine;
         private Coroutine resumeCoroutine;
@@ -59,10 +52,11 @@ namespace Sekai.Core.Live
         private LiveResult result;
         private bool isRhythmGameRunning;
         private bool isPaused;
-        private DialogBase activePauseDialog;
         private float currentMusicTime;
         private float adjustedMusicTime;
         private AudioSourceSyncedUnityTimer musicTimer;
+        private int currentScreenWidth;
+        private int currentScreenHeight;
 
         protected virtual void Awake()
         {
@@ -80,6 +74,8 @@ namespace Sekai.Core.Live
             ApplyLiveFrameRateSettings();
             EnsureBackgroundTexture();
             SetupLiveViews();
+            SetupLiveOutUIController();
+            CacheScreenSize();
 
             if (!musicStartOnAwake)
             {
@@ -250,6 +246,7 @@ namespace Sekai.Core.Live
         {
             base.OnUpdate();
             CheckBackKey();
+            CheckScreenSizeChanged();
 
             if (!isRhythmGameRunning || isPaused)
             {
@@ -430,6 +427,24 @@ namespace Sekai.Core.Live
             liveLogic.Setup(BootData, liveViews, musicScore, BaseCamera);
             liveLogic.OnFinished += OnFinished;
             liveLogic.OnFailure += OnFailure;
+        }
+
+        private void CacheScreenSize()
+        {
+            currentScreenWidth = Screen.width;
+            currentScreenHeight = Screen.height;
+        }
+
+        private void CheckScreenSizeChanged()
+        {
+            if (currentScreenWidth == Screen.width && currentScreenHeight == Screen.height)
+            {
+                return;
+            }
+
+            CacheScreenSize();
+            liveViews.OnScreenSizeChanged();
+            liveLogic?.RefreshInput();
         }
 
         private void SetupLiveViews()
@@ -743,9 +758,9 @@ namespace Sekai.Core.Live
                 return;
             }
 
-            if (activePauseDialog != null)
+            if (liveOutUIController != null && liveOutUIController.ActiveDialog != null)
             {
-                activePauseDialog.ExecuteBackKeyProcess();
+                liveOutUIController.ExecuteBackKeyProcess();
                 return;
             }
 
@@ -762,37 +777,39 @@ namespace Sekai.Core.Live
         private void ShowPauseDialog()
         {
             DestroyActivePauseDialog();
+            ShowPauseDialogInternal();
+        }
 
-            if (AutoLiveUtility.IsRunningConsecutiveAutoLive() && consecutiveAutoLivePauseDialogPrefab != null)
-            {
-                ConsecutiveAutoLivePauseDialog dialog = InstantiateDialog(consecutiveAutoLivePauseDialogPrefab);
-                activePauseDialog = dialog;
-                dialog.Initialize(
-                    string.Empty,
-                    "Resume",
-                    "Cancel",
-                    Resume,
-                    ShowConsecutiveAutoLiveRetireDialog,
-                    DialogSize.Small,
-                    true);
-                dialog.Setup();
-                return;
-            }
-
-            if (livePauseDialogPrefab == null)
+        private void ShowPauseDialogInternal()
+        {
+            if (liveOutUIController == null)
             {
                 return;
             }
 
-            LivePauseDialog pauseDialog = InstantiateDialog(livePauseDialogPrefab);
-            activePauseDialog = pauseDialog;
-            Dictionary<string, System.Action> actions = new Dictionary<string, System.Action>
+            if (AutoLiveUtility.IsRunningConsecutiveAutoLive())
             {
-                { "Cancel", OnRetireConfirm },
-                { "Retry", OnRetryConfirm },
-                { "Resume", Resume }
-            };
-            pauseDialog.Initialize(actions, DialogSize.Small, false);
+                liveOutUIController.ShowConsecutiveAutoLivePauseDialog(Resume, ShowConsecutiveAutoLiveRetireDialog);
+                return;
+            }
+
+            liveOutUIController.ShowPauseDialog(Resume, OnRetireConfirm, OnRetryConfirm);
+        }
+
+        private void SetupLiveOutUIController()
+        {
+            if (liveOutUIController == null)
+            {
+                liveOutUIController = GetComponent<LiveOutUIController>();
+            }
+
+            if (liveOutUIController == null)
+            {
+                return;
+            }
+
+            LivePlayMode currentPlayMode = BootData != null ? BootData.LivePlayMode : livePlayMode;
+            liveOutUIController.Initialize(currentPlayMode, BaseCamera);
         }
 
         private void OnRetireConfirm()
@@ -807,129 +824,45 @@ namespace Sekai.Core.Live
 
         private void OnConfirmCancel()
         {
-            ShowPauseDialog();
+            ShowPauseDialogInternal();
         }
 
         private void ShowConfirmRetireDialog()
         {
-            if (common2ButtonDialogPrefab == null)
+            if (liveOutUIController == null)
             {
                 OnConfirmCancel();
                 return;
             }
 
-            Common2ButtonDialog dialog = InstantiateDialog(common2ButtonDialogPrefab);
-            activePauseDialog = dialog;
-            dialog.Initialize(
-                "MSG_PAUSE_LIVE_ABORT",
-                "WORD_ABORT",
-                "WORD_CANCEL",
-                Retire,
-                OnConfirmCancel,
-                DialogSize.Small,
-                true);
+            liveOutUIController.ShowConfirmRetireDialog(Retire, OnConfirmCancel);
         }
 
         private void ShowConfirmRetryDialog()
         {
-            if (common2ButtonDialogPrefab == null)
+            if (liveOutUIController == null)
             {
                 OnConfirmCancel();
                 return;
             }
 
-            Common2ButtonDialog dialog = InstantiateDialog(common2ButtonDialogPrefab);
-            activePauseDialog = dialog;
-            dialog.Initialize(
-                "MSG_PAUSE_LIVE_RETRY",
-                "WORD_RETRY",
-                "WORD_CANCEL",
-                Retry,
-                OnConfirmCancel,
-                DialogSize.Small,
-                true);
+            liveOutUIController.ShowConfirmRetryDialog(Retry, OnConfirmCancel);
         }
 
         private void ShowConsecutiveAutoLiveRetireDialog()
         {
-            if (common2ButtonDialogPrefab == null)
+            if (liveOutUIController == null)
             {
-                OnConfirmCancel();
+                Resume();
                 return;
             }
 
-            Common2ButtonDialog dialog = InstantiateDialog(common2ButtonDialogPrefab);
-            activePauseDialog = dialog;
-            dialog.Initialize(
-                "MSG_PAUSE_LIVE_ABORT",
-                "WORD_ABORT",
-                "WORD_CANCEL",
-                Retire,
-                Resume,
-                DialogSize.Small,
-                true);
-        }
-
-        private T InstantiateDialog<T>(T prefab) where T : DialogBase
-        {
-            Transform parent = EnsureDialogRoot();
-            T dialog = Instantiate(prefab, parent, false);
-            RectTransform rectTransform = dialog.transform as RectTransform;
-            if (rectTransform != null)
-            {
-                rectTransform.anchorMin = Vector2.zero;
-                rectTransform.anchorMax = Vector2.one;
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-                rectTransform.localScale = Vector3.one;
-            }
-
-            return dialog;
-        }
-
-        private Transform EnsureDialogRoot()
-        {
-            if (dialogRoot != null)
-            {
-                return dialogRoot;
-            }
-
-            Canvas canvas = FindAnyObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasObject = new GameObject("DialogCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = canvasObject.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-                CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920f, 1080f);
-                scaler.matchWidthOrHeight = 0.5f;
-            }
-
-            if (FindAnyObjectByType<EventSystem>() == null)
-            {
-                new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            }
-
-            dialogRoot = canvas.transform;
-            return dialogRoot;
+            liveOutUIController.ShowConsecutiveAutoLiveConfirmRetireDialog(Retire, Resume);
         }
 
         private void DestroyActivePauseDialog()
         {
-            if (activePauseDialog == null)
-            {
-                return;
-            }
-
-            DialogBase dialog = activePauseDialog;
-            activePauseDialog = null;
-
-            if (dialog != null)
-            {
-                Destroy(dialog.gameObject);
-            }
+            liveOutUIController?.DestroyInstance();
         }
 
     }

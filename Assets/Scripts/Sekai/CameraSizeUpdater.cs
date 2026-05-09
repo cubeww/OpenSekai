@@ -56,6 +56,11 @@ namespace Sekai
             }
         }
 
+        public void ForceUpdate()
+        {
+            UpdateOrthographicSize();
+        }
+
         private void UpdateOrthographicSize()
         {
             if (camera == null || pixelPerUnit == 0f || baseWidth == 0f || Screen.width == 0)
