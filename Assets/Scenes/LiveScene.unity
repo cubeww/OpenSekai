@@ -175,10 +175,6 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114294885792020211, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
-      propertyPath: cameraFOVUpdater
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 224452237593846326, guid: 708fa57b941dcb54a88246cf4726d17e, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
