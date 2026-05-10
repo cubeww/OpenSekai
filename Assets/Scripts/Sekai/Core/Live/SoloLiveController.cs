@@ -321,7 +321,7 @@ namespace Sekai.Core.Live
 
         public override void Pause()
         {
-            if (!isRhythmGameRunning || isPaused || result != LiveResult.None)
+            if (!isRhythmGameRunning || result != LiveResult.None)
             {
                 return;
             }
@@ -331,6 +331,13 @@ namespace Sekai.Core.Live
                 StopCoroutine(resumeCoroutine);
                 resumeCoroutine = null;
             }
+
+            if (isPaused)
+            {
+                ShowPauseDialog();
+                return;
+            }
+
             isPaused = true;
             currentMusicTime = GetCurrentMusicTime();
             adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
@@ -552,10 +559,34 @@ namespace Sekai.Core.Live
         protected virtual void Retry()
         {
             DestroyActivePauseDialog();
-            ResumeNoCountDown();
+            if (liveStartCoroutine != null)
+            {
+                StopCoroutine(liveStartCoroutine);
+                liveStartCoroutine = null;
+            }
+            if (resumeCoroutine != null)
+            {
+                StopCoroutine(resumeCoroutine);
+                resumeCoroutine = null;
+            }
+            if (resultCoroutine != null)
+            {
+                StopCoroutine(resultCoroutine);
+                resultCoroutine = null;
+            }
+
+            StopMusic();
+            UnsubscribeLiveLogic();
+            liveLogic = null;
+            result = LiveResult.None;
+            isPaused = false;
+            isRhythmGameRunning = false;
+            currentMusicTime = 0f;
+            adjustedMusicTime = GetAdjustedMusicTime(currentMusicTime);
 
             if (liveViews == null)
             {
+                StartLive();
                 return;
             }
 
@@ -563,6 +594,8 @@ namespace Sekai.Core.Live
             {
                 liveViews[i]?.Retry();
             }
+
+            StartLive();
         }
 
         protected virtual void Retire()
