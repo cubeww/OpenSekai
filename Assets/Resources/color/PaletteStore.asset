@@ -1,0 +1,683 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0edd4d6dec9974f11ba4b078ca3a0e1e, type: 3}
+  m_Name: PaletteStore
+  m_EditorClassIdentifier:
+  _colorPalette:
+    _entries:
+      _keys:
+      - 52b8e92b-8f31-472f-90e4-e1d056d97f0a
+      - f6fcc356-bcab-4fe5-95a2-d51f0956c0e4
+      - b69386e6-4ab1-4822-9350-7a80ac69f66a
+      - d93e42ef-060c-4f1f-a45b-5a867bbcdb38
+      - 7e511786-e752-47a5-961d-5aa98ccd664c
+      - 97144667-3f76-4dda-aa37-56a4fef7235f
+      - 3a9ab456-bc05-4a6f-b1ee-eb1f087769fb
+      - 988af3b9-e0c0-4cc5-858f-fa3a0395c5c3
+      - 29188d96-b56e-4c7d-9956-7d73c835a01f
+      - 8802ff5d-6727-43a9-a678-ed89f63ac520
+      - 1b297916-c385-4f5e-bc7c-541e1a061841
+      - 9d6ef8d7-184c-4155-a936-9ffd40aee31a
+      - af0827a8-dde2-4ed2-9f64-42bd35370f4e
+      - 34d816e1-9d7d-4f80-909c-95a85dcdd2e3
+      - 1d5bda10-1140-46b3-b251-7aa0cbd0e9be
+      - 9bb70023-6d95-4b22-9c89-17f991399e90
+      - 0e47f5de-9c51-41e5-8171-f0e4dbba8b9b
+      - bfd9bf29-7d57-4faf-b078-9ab887988c2a
+      - a6c3755b-c415-42e1-ade8-11d5cad52a83
+      - 73536fb6-00f4-449b-8b59-fcce8ffbcee7
+      - 670cff8a-1cc9-44a9-a84f-d745f76b74d5
+      - 54e54e2b-9bb3-4e77-8f74-792c65a6c03a
+      - 5260b474-0fef-4044-a0ea-684bbf23762c
+      - 0f2c40af-5986-475f-a7d8-5b2b0cfc7402
+      - ca3f45c7-12ef-452b-9a00-d703049f5394
+      - 478803fb-87cf-4962-b0b2-baef962c567f
+      - a33d6ccd-2dad-45fe-9e48-132ebeb9ba61
+      - c5aecf95-a555-4f73-ad20-2fcd2c46ff31
+      - 678bd622-193c-4c45-a9b2-1f7ca9e8e14b
+      - 72bac268-e7b8-4edc-8d5f-e7ae4be4d83e
+      - ab6a1cbb-1281-4100-ba84-846ec488ec3b
+      - ce6baabd-063b-4295-b5ec-d99c87fd0d3c
+      - 8d98b646-8572-4cce-bc63-ac57f316db3e
+      - 6b4fa67c-d895-42bf-b19c-2a3db3e32002
+      - 92431d8d-b71e-4c7f-80f0-b39a5d5d1096
+      - 2761ddc7-0ffd-436f-b0af-1f78cf5259e8
+      - 54a15d67-c755-4cc2-8fed-f9f86511a39d
+      - dbd2484f-07b2-4c6f-9532-d898e1add02f
+      - 929dac2d-02e2-4194-8db7-c5e6e38e925a
+      - d05b1f44-15db-4f53-9555-5bb2bed8d7a2
+      - 766fe407-74e2-4a92-a997-a064c977e664
+      - 648e9298-670d-4f4e-adbb-18ecdf4cd69c
+      - 6f7aa696-50d7-4ba8-acfb-3fce879138d2
+      - ac6cec9d-1cc2-43b1-87d9-81cd31c387aa
+      - c7494b6b-6f94-4a5a-b5c3-ed169e39c4be
+      - d1b3a3b3-3655-4189-b339-ee2603d06c2b
+      - d42f9f2c-861d-4053-b122-7902e459d3d5
+      - 6fdd8cac-6ccb-4f7b-be9e-3d0d200a031d
+      - acc4715c-db0a-4bf7-9b70-8bc0c4a60a6b
+      - cd1f471c-0a9c-42de-a69a-c1eab9d43fd8
+      - f44225df-8d88-4afa-9ccd-0a166faba8ba
+      - 5cefd3c8-2f35-4b90-b7ed-5c949e627066
+      - a46537cf-68e5-4ee1-9721-ecc54b22b436
+      - 4b1119db-6a46-4441-9f2e-234383182cd3
+      - b3bb248a-5bfb-4201-9987-f50c492926f0
+      - f37268e8-aaa6-4674-b4ff-f38a6d7aab9a
+      - db89fd70-eccf-4921-8eeb-f36b539ec8c4
+      - 9548ce72-781f-4cf2-99af-5269185505bc
+      - 96f17cd6-d8da-4f17-84a9-203b91ecf4ce
+      - 42b93290-ed3e-4f69-972b-04b66b6be42b
+      _values:
+      - _id: 52b8e92b-8f31-472f-90e4-e1d056d97f0a
+        _name:
+          _value: base_dbl
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.26666668, g: 0.26666668, b: 0.4, a: 1}
+      - _id: f6fcc356-bcab-4fe5-95a2-d51f0956c0e4
+        _name:
+          _value: base_wh
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 1, a: 1}
+      - _id: b69386e6-4ab1-4822-9350-7a80ac69f66a
+        _name:
+          _value: base_gn
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.46666667, g: 0.93333334, b: 0.8666667, a: 1}
+      - _id: d93e42ef-060c-4f1f-a45b-5a867bbcdb38
+        _name:
+          _value: base_pk
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.46666667, b: 0.6666667, a: 1}
+      - _id: 7e511786-e752-47a5-961d-5aa98ccd664c
+        _name:
+          _value: base_rd
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.33333334, b: 0.53333336, a: 1}
+      - _id: 97144667-3f76-4dda-aa37-56a4fef7235f
+        _name:
+          _value: base_lgr
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.92156863, g: 0.92156863, b: 0.9490196, a: 1}
+      - _id: 3a9ab456-bc05-4a6f-b1ee-eb1f087769fb
+        _name:
+          _value: base_bgr
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.8745098, g: 0.8745098, b: 0.91764706, a: 1}
+      - _id: 988af3b9-e0c0-4cc5-858f-fa3a0395c5c3
+        _name:
+          _value: base_gr
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.7372549, g: 0.7372549, b: 0.8156863, a: 1}
+      - _id: 29188d96-b56e-4c7d-9956-7d73c835a01f
+        _name:
+          _value: base_dgr
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.654902, g: 0.654902, b: 0.7372549, a: 1}
+      - _id: 8802ff5d-6727-43a9-a678-ed89f63ac520
+        _name:
+          _value: base_lyw
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 0.93333334, a: 1}
+      - _id: 1b297916-c385-4f5e-bc7c-541e1a061841
+        _name:
+          _value: text_dbl
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.33333334, g: 0.33333334, b: 0.46666667, a: 1}
+      - _id: 9d6ef8d7-184c-4155-a936-9ffd40aee31a
+        _name:
+          _value: text_gn
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0, g: 0.8, b: 0.73333335, a: 1}
+      - _id: af0827a8-dde2-4ed2-9f64-42bd35370f4e
+        _name:
+          _value: text_pk
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.33333334, b: 0.6, a: 1}
+      - _id: 34d816e1-9d7d-4f80-909c-95a85dcdd2e3
+        _name:
+          _value: text_rd
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.2, b: 0.4, a: 1}
+      - _id: 1d5bda10-1140-46b3-b251-7aa0cbd0e9be
+        _name:
+          _value: gauge_gn
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.13333334, g: 0.8666667, b: 0.8, a: 1}
+      - _id: 9bb70023-6d95-4b22-9c89-17f991399e90
+        _name:
+          _value: player_1
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.33333334, b: 0.46666667, a: 1}
+      - _id: 0e47f5de-9c51-41e5-8171-f0e4dbba8b9b
+        _name:
+          _value: player_2
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.73333335, b: 0.2, a: 1}
+      - _id: bfd9bf29-7d57-4faf-b078-9ab887988c2a
+        _name:
+          _value: player_3
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.06666667, g: 0.8, b: 0.8, a: 1}
+      - _id: a6c3755b-c415-42e1-ade8-11d5cad52a83
+        _name:
+          _value: player_4
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.06666667, g: 0.6666667, b: 1, a: 1}
+      - _id: 73536fb6-00f4-449b-8b59-fcce8ffbcee7
+        _name:
+          _value: player_5
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.46666667, g: 0.4, b: 0.8666667, a: 1}
+      - _id: 670cff8a-1cc9-44a9-a84f-d745f76b74d5
+        _name:
+          _value: difficulty_easy
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.06666667, g: 0.8666667, b: 0.46666667, a: 1}
+      - _id: 54e54e2b-9bb3-4e77-8f74-792c65a6c03a
+        _name:
+          _value: difficulty_normal
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.2, g: 0.8, b: 1, a: 1}
+      - _id: 5260b474-0fef-4044-a0ea-684bbf23762c
+        _name:
+          _value: difficulty_hard
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.8, b: 0, a: 1}
+      - _id: 0f2c40af-5986-475f-a7d8-5b2b0cfc7402
+        _name:
+          _value: difficulty_expert
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.26666668, b: 0.46666667, a: 1}
+      - _id: ca3f45c7-12ef-452b-9a00-d703049f5394
+        _name:
+          _value: difficulty_master
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.8, g: 0.2, b: 1, a: 1}
+      - _id: 478803fb-87cf-4962-b0b2-baef962c567f
+        _name:
+          _value: live_rankmatch
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.8666667, g: 0.6, b: 1, a: 1}
+      - _id: a33d6ccd-2dad-45fe-9e48-132ebeb9ba61
+        _name:
+          _value: live_rival
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.2, g: 0.73333335, b: 1, a: 1}
+      - _id: c5aecf95-a555-4f73-ad20-2fcd2c46ff31
+        _name:
+          _value: live_you
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.6, b: 0.33333334, a: 1}
+      - _id: 678bd622-193c-4c45-a9b2-1f7ca9e8e14b
+        _name:
+          _value: rank_chr
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.2, g: 0.8666667, b: 1, a: 1}
+      - _id: 72bac268-e7b8-4edc-8d5f-e7ae4be4d83e
+        _name:
+          _value: rank_kizuna
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.18039216, g: 0.8980392, b: 0.8980392, a: 1}
+      - _id: ab6a1cbb-1281-4100-ba84-846ec488ec3b
+        _name:
+          _value: player_none
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.5686275, g: 0.63529414, b: 0.6862745, a: 1}
+      - _id: ce6baabd-063b-4295-b5ec-d99c87fd0d3c
+        _name:
+          _value: text_wh
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 1, a: 1}
+      - _id: 8d98b646-8572-4cce-bc63-ac57f316db3e
+        _name:
+          _value: text_lbl
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.33333334, g: 0.6627451, b: 1, a: 1}
+      - _id: 6b4fa67c-d895-42bf-b19c-2a3db3e32002
+        _name:
+          _value: difficulty_none
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.53333336, g: 0.53333336, b: 0.6666667, a: 1}
+      - _id: 92431d8d-b71e-4c7f-80f0-b39a5d5d1096
+        _name:
+          _value: base_dsb_a50
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0, g: 0, b: 0.13333334, a: 0.5019608}
+      - _id: 2761ddc7-0ffd-436f-b0af-1f78cf5259e8
+        _name:
+          _value: base_empty1
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.6901961, g: 0.7411765, b: 0.78431374, a: 1}
+      - _id: 54a15d67-c755-4cc2-8fed-f9f86511a39d
+        _name:
+          _value: base_empty2
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.5686275, g: 0.63529414, b: 0.6862745, a: 1}
+      - _id: dbd2484f-07b2-4c6f-9532-d898e1add02f
+        _name:
+          _value: base_dbl_a50
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.26666668, g: 0.26666668, b: 0.4, a: 0.5019608}
+      - _id: 929dac2d-02e2-4194-8db7-c5e6e38e925a
+        _name:
+          _value: challengeStage_2
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.06666667, g: 0.6666667, b: 1, a: 1}
+      - _id: d05b1f44-15db-4f53-9555-5bb2bed8d7a2
+        _name:
+          _value: challengeStage_1
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.06666667, g: 0.8, b: 0.8, a: 1}
+      - _id: 766fe407-74e2-4a92-a997-a064c977e664
+        _name:
+          _value: challengeStage_3
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.73333335, b: 0.2, a: 1}
+      - _id: 648e9298-670d-4f4e-adbb-18ecdf4cd69c
+        _name:
+          _value: challengeStage_4
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.33333334, b: 0.46666667, a: 1}
+      - _id: 6f7aa696-50d7-4ba8-acfb-3fce879138d2
+        _name:
+          _value: challengeStage_5
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.46666667, g: 0.4, b: 0.8666667, a: 1}
+      - _id: ac6cec9d-1cc2-43b1-87d9-81cd31c387aa
+        _name:
+          _value: tap_wh_1
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 1, a: 0.29803923}
+      - _id: c7494b6b-6f94-4a5a-b5c3-ed169e39c4be
+        _name:
+          _value: tap_gn_1
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.6313726, g: 0.95686275, b: 0.92156863, a: 1}
+      - _id: d1b3a3b3-3655-4189-b339-ee2603d06c2b
+        _name:
+          _value: tap_gn_2
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.89411765, g: 0.9882353, b: 0.972549, a: 1}
+      - _id: d42f9f2c-861d-4053-b122-7902e459d3d5
+        _name:
+          _value: tap_gn_3
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.73333335, g: 1, b: 1, a: 0.5019608}
+      - _id: 6fdd8cac-6ccb-4f7b-be9e-3d0d200a031d
+        _name:
+          _value: tap_gn_4
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.26666668, g: 0.9137255, b: 0.84313726, a: 0.5019608}
+      - _id: acc4715c-db0a-4bf7-9b70-8bc0c4a60a6b
+        _name:
+          _value: base_dbl_a30
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.26666668, g: 0.26666668, b: 0.4, a: 0.29803923}
+      - _id: cd1f471c-0a9c-42de-a69a-c1eab9d43fd8
+        _name:
+          _value: disable_a50
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0, g: 0, b: 0.13333334, a: 0.5019608}
+      - _id: f44225df-8d88-4afa-9ccd-0a166faba8ba
+        _name:
+          _value: base_wh_a0
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 1, a: 0}
+      - _id: 5cefd3c8-2f35-4b90-b7ed-5c949e627066
+        _name:
+          _value: text_dgr_a50
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.654902, g: 0.654902, b: 0.7372549, a: 0.5019608}
+      - _id: a46537cf-68e5-4ee1-9721-ecc54b22b436
+        _name:
+          _value: text_wh_a30
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 1, a: 0.29803923}
+      - _id: 4b1119db-6a46-4441-9f2e-234383182cd3
+        _name:
+          _value: base_lgr_a80
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.92156863, g: 0.92156863, b: 0.9490196, a: 0.8}
+      - _id: b3bb248a-5bfb-4201-9987-f50c492926f0
+        _name:
+          _value: difficulty_append
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.49019608, b: 0.7882353, a: 1}
+      - _id: f37268e8-aaa6-4674-b4ff-f38a6d7aab9a
+        _name:
+          _value: normal_stamina
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 0.4, g: 0.93333334, b: 1, a: 1}
+      - _id: db89fd70-eccf-4921-8eeb-f36b539ec8c4
+        _name:
+          _value: decrease_stamina
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.33333334, b: 0.53333336, a: 1}
+      - _id: 9548ce72-781f-4cf2-99af-5269185505bc
+        _name:
+          _value: challengeStage_6
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.33333334, b: 0.73333335, a: 0.69803923}
+      - _id: 96f17cd6-d8da-4f17-84a9-203b91ecf4ce
+        _name:
+          _value: base_wh_a20
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 1, b: 1, a: 0.2}
+      - _id: 42b93290-ed3e-4f69-972b-04b66b6be42b
+        _name:
+          _value: tap_pk_1
+        _values:
+          _keys:
+          - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+          _values:
+          - _value: {r: 1, g: 0.6862745, b: 0.8039216, a: 0.6}
+    _themes:
+      _keys:
+      - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+      _values:
+      - _id: 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+        _name:
+          _value: sekai_v2
+    _entryOrders:
+      _ids:
+      - 52b8e92b-8f31-472f-90e4-e1d056d97f0a
+      - dbd2484f-07b2-4c6f-9532-d898e1add02f
+      - f6fcc356-bcab-4fe5-95a2-d51f0956c0e4
+      - b69386e6-4ab1-4822-9350-7a80ac69f66a
+      - d93e42ef-060c-4f1f-a45b-5a867bbcdb38
+      - 7e511786-e752-47a5-961d-5aa98ccd664c
+      - 97144667-3f76-4dda-aa37-56a4fef7235f
+      - 3a9ab456-bc05-4a6f-b1ee-eb1f087769fb
+      - 988af3b9-e0c0-4cc5-858f-fa3a0395c5c3
+      - 29188d96-b56e-4c7d-9956-7d73c835a01f
+      - 8802ff5d-6727-43a9-a678-ed89f63ac520
+      - 2761ddc7-0ffd-436f-b0af-1f78cf5259e8
+      - 54a15d67-c755-4cc2-8fed-f9f86511a39d
+      - 92431d8d-b71e-4c7f-80f0-b39a5d5d1096
+      - 1b297916-c385-4f5e-bc7c-541e1a061841
+      - 9d6ef8d7-184c-4155-a936-9ffd40aee31a
+      - af0827a8-dde2-4ed2-9f64-42bd35370f4e
+      - 34d816e1-9d7d-4f80-909c-95a85dcdd2e3
+      - ce6baabd-063b-4295-b5ec-d99c87fd0d3c
+      - 8d98b646-8572-4cce-bc63-ac57f316db3e
+      - 1d5bda10-1140-46b3-b251-7aa0cbd0e9be
+      - ab6a1cbb-1281-4100-ba84-846ec488ec3b
+      - 9bb70023-6d95-4b22-9c89-17f991399e90
+      - 0e47f5de-9c51-41e5-8171-f0e4dbba8b9b
+      - bfd9bf29-7d57-4faf-b078-9ab887988c2a
+      - a6c3755b-c415-42e1-ade8-11d5cad52a83
+      - 73536fb6-00f4-449b-8b59-fcce8ffbcee7
+      - 670cff8a-1cc9-44a9-a84f-d745f76b74d5
+      - 54e54e2b-9bb3-4e77-8f74-792c65a6c03a
+      - 5260b474-0fef-4044-a0ea-684bbf23762c
+      - 0f2c40af-5986-475f-a7d8-5b2b0cfc7402
+      - ca3f45c7-12ef-452b-9a00-d703049f5394
+      - 478803fb-87cf-4962-b0b2-baef962c567f
+      - a33d6ccd-2dad-45fe-9e48-132ebeb9ba61
+      - c5aecf95-a555-4f73-ad20-2fcd2c46ff31
+      - 678bd622-193c-4c45-a9b2-1f7ca9e8e14b
+      - 72bac268-e7b8-4edc-8d5f-e7ae4be4d83e
+      - 6b4fa67c-d895-42bf-b19c-2a3db3e32002
+      - d05b1f44-15db-4f53-9555-5bb2bed8d7a2
+      - 929dac2d-02e2-4194-8db7-c5e6e38e925a
+      - 766fe407-74e2-4a92-a997-a064c977e664
+      - 648e9298-670d-4f4e-adbb-18ecdf4cd69c
+      - 6f7aa696-50d7-4ba8-acfb-3fce879138d2
+      - ac6cec9d-1cc2-43b1-87d9-81cd31c387aa
+      - c7494b6b-6f94-4a5a-b5c3-ed169e39c4be
+      - d1b3a3b3-3655-4189-b339-ee2603d06c2b
+      - d42f9f2c-861d-4053-b122-7902e459d3d5
+      - 6fdd8cac-6ccb-4f7b-be9e-3d0d200a031d
+      - acc4715c-db0a-4bf7-9b70-8bc0c4a60a6b
+      - cd1f471c-0a9c-42de-a69a-c1eab9d43fd8
+      - f44225df-8d88-4afa-9ccd-0a166faba8ba
+      - 5cefd3c8-2f35-4b90-b7ed-5c949e627066
+      - a46537cf-68e5-4ee1-9721-ecc54b22b436
+      - b3bb248a-5bfb-4201-9987-f50c492926f0
+      - 4b1119db-6a46-4441-9f2e-234383182cd3
+      - f37268e8-aaa6-4674-b4ff-f38a6d7aab9a
+      - db89fd70-eccf-4921-8eeb-f36b539ec8c4
+      - 9548ce72-781f-4cf2-99af-5269185505bc
+      - 96f17cd6-d8da-4f17-84a9-203b91ecf4ce
+      - 42b93290-ed3e-4f69-972b-04b66b6be42b
+    _themeOrders:
+      _ids:
+      - 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+    _activeThemeId: 5da7e055-609a-4aa0-a8d0-58697d9c9dbd
+  _gradientPalette:
+    _entries:
+      _keys: []
+      _values: []
+    _themes:
+      _keys:
+      - 45527b09-2293-4768-85c4-a3a8ea983103
+      _values:
+      - _id: 45527b09-2293-4768-85c4-a3a8ea983103
+        _name:
+          _value: Default
+    _entryOrders:
+      _ids: []
+    _themeOrders:
+      _ids:
+      - 45527b09-2293-4768-85c4-a3a8ea983103
+    _activeThemeId: 45527b09-2293-4768-85c4-a3a8ea983103
+  _characterStylePalette:
+    _entries:
+      _keys: []
+      _values: []
+    _themes:
+      _keys:
+      - dfc377bc-5005-44e1-bc95-6385291146fa
+      _values:
+      - _id: dfc377bc-5005-44e1-bc95-6385291146fa
+        _name:
+          _value: Default
+    _entryOrders:
+      _ids: []
+    _themeOrders:
+      _ids:
+      - dfc377bc-5005-44e1-bc95-6385291146fa
+    _activeThemeId: dfc377bc-5005-44e1-bc95-6385291146fa
+  _characterStyleTMPPalette:
+    _entries:
+      _keys: []
+      _values: []
+    _themes:
+      _keys:
+      - add0d5ec-97c4-4010-9f60-4057e797fa20
+      _values:
+      - _id: add0d5ec-97c4-4010-9f60-4057e797fa20
+        _name:
+          _value: Default
+    _entryOrders:
+      _ids: []
+    _themeOrders:
+      _ids:
+      - add0d5ec-97c4-4010-9f60-4057e797fa20
+    _activeThemeId: add0d5ec-97c4-4010-9f60-4057e797fa20
+  _missingEntryErrorLevel: 1

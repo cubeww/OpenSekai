@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 126b13a9d83b446884a2772397f57ca3, type: 3}
+  m_Name: ScreenLayerUI
+  m_EditorClassIdentifier:
+  m_Active: 1
+  m_BlurSettings:
+    BlurLayerMask:
+      serializedVersion: 2
+      m_Bits: 64
+    UILayerMask:
+      serializedVersion: 2
+      m_Bits: 32
+  m_PassSettings:
+    Event_DrawBlurUI: 300
+    Event_Blur: 500
+    Event_DrawUI: 600
+  m_AreaCameraSettings:
+    Event_DrawUI: 450
+    Event_CopyScreenToCapture: 500

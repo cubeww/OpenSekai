@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - MVCamera
+  - FrontCamera
+  - PropCamera
+  - RaycastTargetGroup
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - MysekaiGround
+  - Water
+  - UI
+  - BlurUI
+  - 
+  - PostEffect
+  - MysekaiNavMeshBuildTarget
+  - 
+  - Area
+  - Live2D
+  - Worldmap
+  - ScenarioEffect
+  - SpineStudio
+  - Lobby
+  - LobbyBG
+  - Transition
+  - ProfileCardDynamicContent
+  - LiveUI
+  - MainCamera
+  - SubCamera
+  - VirtualLiveName
+  - LiveMV
+  - LiveVL
+  - VRUI
+  - Mysekai3DPreview
+  - EffectOverlay
+  - CameraProp
+  - BakeRenderTexture
+  - Invisible
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Blur UI
+    uniqueID: 2187811071
+    locked: 0
+  - name: UI
+    uniqueID: 3946633851
+    locked: 0
+  - name: AreaBG
+    uniqueID: 4114010779
+    locked: 0
+  - name: AreaObject
+    uniqueID: 109347411
+    locked: 0
+  - name: AreaObjectCover
+    uniqueID: 3086139017
+    locked: 0
+  - name: AreaIcon
+    uniqueID: 705287687
+    locked: 0
+  - name: AreaOverlay
+    uniqueID: 2551505891
+    locked: 0
+  - name: AreaHighlight
+    uniqueID: 393332447
+    locked: 0
+  - name: Worldmap
+    uniqueID: 2315861165
+    locked: 0
+  - name: WorldmapHighlight
+    uniqueID: 33038313
+    locked: 0
+  - name: Lobby
+    uniqueID: 719314771
+    locked: 0
+  - name: LobbyBG
+    uniqueID: 2280800609
+    locked: 0

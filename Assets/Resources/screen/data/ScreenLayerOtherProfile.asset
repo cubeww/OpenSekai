@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b339a84d11cf11ebf4fa476c1706f505, type: 3}
+  m_Name: ScreenLayerOtherProfile
+  m_EditorClassIdentifier:
+  ScreenType: 83
+  DisplayLayer: 1
+  StartAnimationType: 2
+  MaskInTexture: {fileID: 0}
+  MaskInUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  MaskInHaveDirection: 0
+  ExitAnimationType: 1
+  MaskOutTexture: {fileID: 0}
+  MaskOutUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  MaskOutHaveDirection: 0
+  DisplayHeader: 2
+  DisplayCategory: 257
+  DisplayPlayerInfo: 2
+  DisplayBackUIScreen: 1
+  EnableBackUIScreen: 1
+  DisplayScreenName: 2
+  ScreenName: title_profile
+  ScreenSubName: WORD_PLAYER_PROFILE
+  EnableTapScreenAnimation: 0
+  IncludeChildCanvasForAlphaTransiton: 0
+  hasLayerCamera: 0
+  layerCameraPriority: 0
+  bgmType: 0
+  BackgroundType: 0

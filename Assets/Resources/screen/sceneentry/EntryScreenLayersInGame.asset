@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1a46eb00f25a16155013e5bf8694cb7, type: 3}
+  m_Name: EntryScreenLayersInGame
+  m_EditorClassIdentifier:
+  Entries:
+  - {fileID: 11400000, guid: a88dcf2cb19a089459d3db1dc6f3c200, type: 2}
+  - {fileID: 11400000, guid: 71112a428a52ea94fa9d58f77110de67, type: 2}
+  - {fileID: 11400000, guid: d142ced7e3ed1cc46a224444427f6830, type: 2}
+  - {fileID: 11400000, guid: 34224de7ffcdad04c8d66d0accedd418, type: 2}
+  - {fileID: 11400000, guid: f0d7aab4e16f1f3448fbebbbb1a45155, type: 2}

@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 1a587ec5f86fbf34b9454e9c372104f5
+timeCreated: 1779027766
+licenseType: Free
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData:
+  assetBundleName: shader/sandbox
+  assetBundleVariant:

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &687078895
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: LiveFrontUIAtlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 21300000, guid: d623c3482b6fe2d489bc6e816ff58cb3, type: 2}
+    - {fileID: 21300000, guid: 9b2c0cba73d18d049b460fe3062ff6d9, type: 2}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 9b2c0cba73d18d049b460fe3062ff6d9: 21300000
+    - d623c3482b6fe2d489bc6e816ff58cb3: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 9b2c0cba73d18d049b460fe3062ff6d9, type: 2}
+  - {fileID: 21300000, guid: d623c3482b6fe2d489bc6e816ff58cb3, type: 2}
+  m_PackedSpriteNamesToIndex:
+  - bar_scoreGauge_mask
+  - icon_create_score_h64_wh
+  m_RenderDataMap: {}
+  m_Tag: LiveFrontUIAtlas
+  m_IsVariant: 0
