@@ -31,20 +31,28 @@ namespace Sekai.Live
 			}
 		}
 
-		public static readonly int MinHeight = 720;
+		public static readonly int MinHeight = 640;
 		public static readonly int MaxHeight = 1080;
-		public static readonly int MinHeightForIngame3DMV = 540;
+		public static readonly int MinHeightForIngame3DMV = 560;
 		public static readonly int MaxHeightForIngame3DMV = 1080;
-		public static readonly float Aspect = 16f / 9f;
-		public static readonly ScreenSize DefaultSize = new ScreenSize(1920, 1080);
-		public static readonly ScreenSize LowDPISize = new ScreenSize(1280, 720);
-		public static readonly ScreenSize HighDPISize = DefaultSize;
-		public static readonly ScreenSize LowDPISizeForIngame3DMV = new ScreenSize(960, 540);
-		public static readonly ScreenSize HighDPISizeForIngame3DMV = DefaultSize;
-		public static readonly ScreenSize VirtualLiveDefaultDPISize = DefaultSize;
-		public static readonly ScreenSize StreamingLiveHighDPISize = DefaultSize;
-		public static readonly ScreenSize StreamingLiveDefaultDPISize = DefaultSize;
-		public static readonly ScreenSize StreamingLiveLowDPISize = LowDPISize;
+		private static readonly float TargetLowDpi = 350f;
+		private static readonly float TargetHighDpi = 500f;
+		private static readonly float TargetLowRenderingScaleForIngame3DMV = 0.6f;
+		private static readonly float TargetHighRenderingScaleForIngame3DMV = 0.8f;
+		private static readonly float VirtualLiveDefaultTargetDpi = 350f;
+		private static readonly float StreamingLiveHighDpi = 500f;
+		private static readonly float StreamingLiveDefaultDpi = 320f;
+		private static readonly float StreamingLiveLowDpi = 250f;
+		public static readonly ScreenSize DefaultSize = new ScreenSize(Screen.width, Screen.height);
+		public static readonly float Aspect = DefaultSize.height > 0 ? (float)DefaultSize.width / DefaultSize.height : 16f / 9f;
+		public static readonly ScreenSize LowDPISize = CalculateDpiSize(TargetLowDpi, MinHeight, MaxHeight, true);
+		public static readonly ScreenSize HighDPISize = CalculateDpiSize(TargetHighDpi, MinHeight, MaxHeight, false);
+		public static readonly ScreenSize LowDPISizeForIngame3DMV = CalculateScaleSize(TargetLowRenderingScaleForIngame3DMV, MinHeightForIngame3DMV, MaxHeightForIngame3DMV, true);
+		public static readonly ScreenSize HighDPISizeForIngame3DMV = CalculateScaleSize(TargetHighRenderingScaleForIngame3DMV, MinHeightForIngame3DMV, MaxHeightForIngame3DMV, false);
+		public static readonly ScreenSize VirtualLiveDefaultDPISize = CalculateDpiSize(VirtualLiveDefaultTargetDpi, MinHeight, MaxHeight, true);
+		public static readonly ScreenSize StreamingLiveHighDPISize = CalculateDpiSize(StreamingLiveHighDpi, MinHeight, MaxHeight, true);
+		public static readonly ScreenSize StreamingLiveDefaultDPISize = CalculateDpiSize(StreamingLiveDefaultDpi, MinHeight, MaxHeight, true);
+		public static readonly ScreenSize StreamingLiveLowDPISize = CalculateDpiSize(StreamingLiveLowDpi, MinHeight, MaxHeight, true);
 
 		public static ResolutionQuality CurrentResolutionQuality { get; private set; } = ResolutionQuality.Default;
 
@@ -65,7 +73,9 @@ namespace Sekai.Live
 		public static void DownResolution(ResolutionQuality resolutionQuality)
 		{
 			CurrentResolutionQuality = resolutionQuality;
-			var size = resolutionQuality == ResolutionQuality.Low ? LowDPISize : DefaultSize;
+			var size = resolutionQuality == ResolutionQuality.Low ? LowDPISize :
+				resolutionQuality == ResolutionQuality.Middle ? VirtualLiveDefaultDPISize :
+				HighDPISize;
 			if (ShouldApplyMobileResolution())
 			{
 				Screen.SetResolution(size.width, size.height, Screen.fullScreenMode);
@@ -88,6 +98,22 @@ namespace Sekai.Live
 			{
 				Screen.SetResolution(DefaultSize.width, DefaultSize.height, Screen.fullScreenMode);
 			}
+		}
+
+		private static ScreenSize CalculateDpiSize(float targetDpi, int minHeight, int maxHeight, bool clampMaxHeight)
+		{
+			float dpi = Screen.dpi;
+			float scale = dpi > 0f ? targetDpi / dpi : float.PositiveInfinity;
+			return CalculateScaleSize(scale, minHeight, maxHeight, clampMaxHeight);
+		}
+
+		private static ScreenSize CalculateScaleSize(float scale, int minHeight, int maxHeight, bool clampMaxHeight)
+		{
+			float height = Mathf.Max(DefaultSize.height, 1);
+			float minScale = Mathf.Min(minHeight / height, 1f);
+			float maxScale = clampMaxHeight ? Mathf.Min(maxHeight / height, 1f) : 1f;
+			float clampedScale = Mathf.Clamp(scale, minScale, maxScale);
+			return new ScreenSize((int)(DefaultSize.width * clampedScale), (int)(DefaultSize.height * clampedScale));
 		}
 
 		private static bool ShouldApplyMobileResolution()

@@ -6816,13 +6816,14 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private MasterMusicDifficulty CreateTestPlayDifficulty(int musicId)
 		{
+			NoteAndComboCountInfo countInfo = NoteAndComboCountInfo.Calculate(CurrentData());
 			return new MasterMusicDifficulty
 			{
 				id = _model?.BaseMusicDifficultyId ?? MasterMusicDifficulty.INVALID_ID,
 				musicId = musicId,
 				musicDifficulty = NormalizeTestPlayDifficulty(_model?.Difficulty),
 				playLevel = _model?.CustomMusicScorePackage?.Manifest.playLevel ?? 0,
-				totalNoteCount = CurrentData()?.NoteList?.Count ?? 0
+				totalNoteCount = countInfo.TotalComboCount
 			};
 		}
 

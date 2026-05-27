@@ -26,7 +26,11 @@ namespace Sekai.Core.Live
 		{
 			score = default;
 			scoreInfo = bootData?.MusicData?.Score;
-			int totalCombo = musicScore?.NoteArray?.Length ?? bootData?.MusicData?.TotalNoteCount ?? 0;
+			int totalCombo = LiveUtility.CalculateTotalComboCount(musicScore);
+			if (totalCombo <= 0)
+			{
+				totalCombo = bootData?.MusicData?.TotalNoteCount ?? 0;
+			}
 			score.totalComboCount = totalCombo;
 			score.life = liveBundleBuildData != null && liveBundleBuildData.Life > 0 ? liveBundleBuildData.Life : 1000;
 			score.rank = ScoreRank.D;

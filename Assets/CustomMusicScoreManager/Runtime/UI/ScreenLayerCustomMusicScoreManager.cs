@@ -626,7 +626,7 @@ namespace Sekai.CustomMusicScoreManager
 			LiveBundleBuildData liveBundleBuildData = Resources.Load<LiveBundleBuildData>(LiveConfig.ConfigBundleNamePath);
 			MusicScore musicScore = scoreData.ToMusicScore(liveBundleBuildData);
 			int deckId = UserDataManager.Instance.SelectedDeckId;
-			MasterMusicDifficulty difficulty = CreateDirectPlayDifficulty(package, scoreData);
+			MasterMusicDifficulty difficulty = CreateDirectPlayDifficulty(package, musicScore);
 			string difficultyString = difficulty?.musicDifficulty ?? "master";
 			MusicCategory musicCategory = MusicCategory.original;
 
@@ -676,7 +676,7 @@ namespace Sekai.CustomMusicScoreManager
 			return bootData;
 		}
 
-		private static MasterMusicDifficulty CreateDirectPlayDifficulty(CustomMusicScorePackage package, MusicScoreMakerData scoreData)
+		private static MasterMusicDifficulty CreateDirectPlayDifficulty(CustomMusicScorePackage package, MusicScore musicScore)
 		{
 			return new MasterMusicDifficulty
 			{
@@ -684,7 +684,7 @@ namespace Sekai.CustomMusicScoreManager
 				musicId = package.MusicId,
 				musicDifficulty = NormalizeDifficulty(package.Manifest.musicDifficultyType),
 				playLevel = package.Manifest.playLevel,
-				totalNoteCount = scoreData?.NoteList?.Count ?? 0
+				totalNoteCount = LiveUtility.CalculateTotalComboCount(musicScore)
 			};
 		}
 

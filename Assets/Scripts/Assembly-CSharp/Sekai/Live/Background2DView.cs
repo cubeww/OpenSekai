@@ -86,6 +86,7 @@ namespace Sekai.Live
 			DisableMovieMode();
 
 			LoadDefaultBackground();
+			FitDefaultBackgroundToCamera();
 			Texture2D jacketTexture = LoadJacketTexture();
 			if (jacketTexture != null)
 			{
@@ -115,6 +116,31 @@ namespace Sekai.Live
 				}
 				backgroundRenderer.gameObject.SetActive(true);
 			}
+		}
+
+		private void FitDefaultBackgroundToCamera()
+		{
+			if (backgroundRenderer == null || jacketCamera == null || backgroundRenderer.sprite == null)
+			{
+				return;
+			}
+
+			float height = jacketCamera.orthographicSize * 2f;
+			RenderTexture targetTexture = jacketCamera.targetTexture ?? baseController?.BackgroundTexture;
+			float aspect = targetTexture != null && targetTexture.height > 0
+				? (float)targetTexture.width / targetTexture.height
+				: Screen.height > 0 ? (float)Screen.width / Screen.height : 16f / 9f;
+
+			Vector2 spriteSize = backgroundRenderer.sprite.bounds.size;
+			if (spriteSize.x <= 0f || spriteSize.y <= 0f)
+			{
+				return;
+			}
+
+			float width = height * aspect;
+			float scale = Mathf.Max(width / spriteSize.x, height / spriteSize.y);
+			Vector3 localScale = backgroundRenderer.transform.localScale;
+			backgroundRenderer.transform.localScale = new Vector3(scale, scale, localScale.z);
 		}
 
 		private void DisableMovieMode()

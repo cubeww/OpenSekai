@@ -333,6 +333,8 @@ namespace Sekai.Live
 				return;
 			}
 
+			UpdateBackgroundScale();
+
 			if (backgroundMaterial != null)
 			{
 				backgroundMaterial.DOKill();
@@ -349,6 +351,18 @@ namespace Sekai.Live
 			}
 
 			backgroundRenderer.enabled = true;
+		}
+
+		private void UpdateBackgroundScale()
+		{
+			if (backgroundRenderer == null || cameraSizeUpdater == null)
+			{
+				return;
+			}
+
+			float height = cameraSizeUpdater.OrthographicSize * 2f;
+			float aspect = Screen.height > 0 ? (float)Screen.width / Screen.height : ScreenConfig.Aspect;
+			backgroundRenderer.transform.localScale = new Vector3(height * aspect, height, 1f);
 		}
 
 		private void SetupDeadMask()

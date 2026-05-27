@@ -162,6 +162,33 @@ namespace Sekai
 			return judgeTimeData.BadBeforeJudgeTime > offsetJudgeTime && -judgeTimeData.BadAfterJudgeTime < offsetJudgeTime;
 		}
 
+		public static int CalculateTotalComboCount(MusicScore musicScore)
+		{
+			if (musicScore?.NoteArray == null)
+			{
+				return 0;
+			}
+
+			int count = 0;
+			foreach (NoteBase rootNote in musicScore.NoteArray)
+			{
+				if (rootNote?.NoteList == null)
+				{
+					continue;
+				}
+
+				foreach (NoteBase note in rootNote.NoteList)
+				{
+					if (note != null && note.HasJudgment)
+					{
+						count++;
+					}
+				}
+			}
+
+			return count;
+		}
+
 		public static bool GreaterEqual(ref MusicScoreInfo a, ref MusicScoreInfo b)
 		{
 			return a.bar < b.bar || a.bar == b.bar && a.barProgress <= b.barProgress;

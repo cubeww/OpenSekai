@@ -38,7 +38,7 @@ namespace Sekai
 			set
 			{
 				musicScore = value;
-				cachedCustomTotalNoteCount = value?.NoteArray?.Length ?? 0;
+				cachedCustomTotalNoteCount = LiveUtility.CalculateTotalComboCount(value);
 			}
 		}
 
