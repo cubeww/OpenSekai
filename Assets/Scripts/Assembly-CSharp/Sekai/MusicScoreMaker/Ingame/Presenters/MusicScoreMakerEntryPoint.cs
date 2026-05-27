@@ -1,5 +1,4 @@
 using CP;
-using Sekai.MusicScoreMaker.Common;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
@@ -87,29 +86,8 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 			if (bootArg == null)
 			{
-				CustomMusicScorePackage customPackage = CustomMusicScoreStorage.LoadFirstPackage();
-				bootArg = customPackage != null
-					? new ScreenLayerMusicScoreMaker.BootArg
-					{
-						musicId = customPackage.MusicId,
-						difficulty = customPackage.Manifest.musicDifficultyType,
-						vocalId = 0,
-						baseMusicDifficultyId = -1,
-						MusicScoreMakerData = null,
-						LastSavedDataHash = null,
-						CurrentMusicScoreScale = 1f,
-						CustomMusicScorePackage = customPackage
-					}
-					: new ScreenLayerMusicScoreMaker.BootArg
-				{
-					musicId = 0,
-					difficulty = "EXPERT",
-					vocalId = 0,
-					baseMusicDifficultyId = -1,
-					MusicScoreMakerData = null,
-					LastSavedDataHash = null,
-					CurrentMusicScoreScale = 1f
-				};
+				ScreenManager.Instance.PushUIScreen(MenuScreenType.MusicScoreMakerTop, false);
+				return;
 			}
 
 			ScreenManager.Instance.PushUIScreen(MenuScreenType.MusicScoreMaker, bootArg, false);

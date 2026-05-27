@@ -137,6 +137,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
 			dispatcher.Remove<SetSelectedNoteDataEvent>(OnSetSelectedNoteDataEvent);
 			dispatcher.Remove<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);

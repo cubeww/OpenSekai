@@ -1719,6 +1719,13 @@ namespace Sekai.MusicScoreMaker.Ingame.Utilities
 		{
 			void RequestScene()
 			{
+				if (screenType == MenuScreenType.MusicScoreMakerTop)
+				{
+					Sekai.MusicScoreMaker.Ingame.Presenters.MusicScoreMakerEntryPoint.BootData = null;
+					SceneManager.Instance.RequestScene(SceneManager.Scene.MusicScoreMaker);
+					return;
+				}
+
 				Type bootDataType = Type.GetType("Sekai.OutGameBootData, Assembly-CSharp");
 				Type controllerType = Type.GetType("Sekai.OutGameController, Assembly-CSharp");
 				if (bootDataType != null && controllerType != null)

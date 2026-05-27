@@ -197,6 +197,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		public void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
 			dispatcher.Remove<UpdateMusicScoreEvent>(UpdateMusicScoreEvent);
 			dispatcher.Remove<RefreshMusicScoreEvent>(RefreshMusicScoreEvent);

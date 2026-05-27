@@ -1125,10 +1125,45 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private void ExitToOutGame()
 		{
+			if (_model?.CustomMusicScorePackage != null || _fromScreenType == MenuScreenType.MusicScoreMakerTop)
+			{
+				ReturnToMusicScoreMakerTop();
+				return;
+			}
+
 			Dispose();
 			if (ScreenManager.Instance != null)
 			{
 				ScreenManager.Instance.RemoveScreen(MenuScreenType.MusicScoreMaker);
+			}
+		}
+
+		private void ReturnToMusicScoreMakerTop()
+		{
+			SaveCustomMusicScoreBeforeReturningToManager();
+			MusicScoreMakerEntryPoint.BootData = null;
+			ScreenManager screenManager = ScreenManager.Instance;
+			if (screenManager != null && screenManager.GetScreenStackList().Contains(MenuScreenType.MusicScoreMakerTop))
+			{
+				Dispose();
+				screenManager.BackUIScreenAndDestroyExitedScreen(MenuScreenType.MusicScoreMaker);
+				return;
+			}
+
+			MusicScoreMakerUtility.RequestTransitionToOutGame(MenuScreenType.MusicScoreMakerTop);
+			Dispose();
+		}
+
+		private void SaveCustomMusicScoreBeforeReturningToManager()
+		{
+			if (_model?.CustomMusicScorePackage == null)
+			{
+				return;
+			}
+
+			if (!TrySaveCustomMusicScorePackage())
+			{
+				UnityEngine.Debug.LogWarning("Failed to save custom music score before returning to manager.");
 			}
 		}
 
@@ -6725,7 +6760,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 				MasterMusicAll masterMusicAll = _model?.CustomMusicScorePackage == null ? LoadMasterMusicAll(musicId) : null;
 				bootData.MusicData.Music = masterMusicAll?.music ?? CreateTestPlayMusic(musicId, cueName);
 				bootData.MusicData.Difficulty = difficulty;
-				bootData.MusicData.Vocal = FindMasterMusicVocal(masterMusicAll, vocalId) ?? CreateTestPlayVocal(musicId, vocalId, cueName);
+				bootData.MusicData.Vocal = FindMasterMusicVocal(masterMusicAll, vocalId) ?? CreateTestPlayVocal(musicId, vocalId, cueName, _model?.CustomMusicScorePackage?.Manifest.singer);
 				bootData.MusicData.Score = new MasterPlayLevelScore
 				{
 					liveType = LiveType.solo.ToString(),
@@ -6744,7 +6779,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			{
 				bootData.CustomMusicScoreId = package.Manifest.id;
 				bootData.CustomMusicScorePath = package.RootDirectory;
-				bootData.CustomMusicScoreTitle = package.Manifest.title;
+				bootData.CustomMusicScoreTitle = package.Manifest.scoreTitle;
 				bootData.CustomMusicScoreAuthorName = package.Manifest.userName;
 			}
 
@@ -6870,12 +6905,14 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			};
 		}
 
-		private static MasterMusicVocal CreateTestPlayVocal(int musicId, int vocalId, string cueName)
+		private static MasterMusicVocal CreateTestPlayVocal(int musicId, int vocalId, string cueName, string singer)
 		{
 			return new MasterMusicVocal
 			{
 				id = vocalId,
 				musicId = musicId,
+				musicVocalType = MusicVocalType.original_song.ToString(),
+				caption = singer ?? string.Empty,
 				assetbundleName = cueName
 			};
 		}

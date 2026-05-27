@@ -80,6 +80,7 @@ namespace Sekai.Core.Live
 		protected virtual void LoadSound()
 		{
 			SoundManager.Instance.LoadSoundBundle("live/sound/live_se/default", true);
+			LoadTapSeSoundBundle();
 
 			string cueName = ResolveMusicCueName();
 			if (!string.IsNullOrEmpty(cueName))
@@ -87,6 +88,14 @@ namespace Sekai.Core.Live
 				SoundManager.Instance.LoadSoundBundle(GetLiveMusicBundleName(cueName), true);
 				UpdateMusicLength(cueName);
 			}
+		}
+
+		private void LoadTapSeSoundBundle()
+		{
+			int noteSeIndex = Settings?.NoteSeIndex ?? 0;
+			LiveConfig.SetNoteSeName(noteSeIndex);
+			SoundManager.Instance.LoadSoundBundle("live/tap_se/" + LiveConfig.NoteSeName, true);
+			SoundManager.Instance.ResumeIngameSe();
 		}
 
 		protected virtual IEnumerator LiveStart(float waitTime)
@@ -108,10 +117,11 @@ namespace Sekai.Core.Live
 
 			yield return StartCoroutine(MusicReady());
 
-			float transitionWait = keepTransitionUntilMusicStart ? waitTime : 0.05f;
-			if (transitionWait > 0f)
+			float musicStartWait = ShouldWaitBeforeMusicStart() ? waitTime : 0.05f;
+			OnBeforeMusicStartWait(musicStartWait);
+			if (musicStartWait > 0f)
 			{
-				yield return new WaitForSeconds(transitionWait);
+				yield return new WaitForSeconds(musicStartWait);
 			}
 
 			OnMusicStart();
@@ -120,7 +130,16 @@ namespace Sekai.Core.Live
 
 		protected virtual bool ShouldKeepTransitionUntilMusicStart()
 		{
+			return BootData?.MusicData?.IsTestPlay != true && BootData?.ReleaseTransitionBeforeMusicStart != true;
+		}
+
+		protected virtual bool ShouldWaitBeforeMusicStart()
+		{
 			return BootData?.MusicData?.IsTestPlay != true;
+		}
+
+		protected virtual void OnBeforeMusicStartWait(float waitSeconds)
+		{
 		}
 
 		protected virtual IEnumerator MusicReady()
@@ -208,8 +227,25 @@ namespace Sekai.Core.Live
 				return;
 			}
 
+			if (ShouldReturnCustomMusicScoreManagerAfterResult())
+			{
+				PreExit(1f, 4f);
+				return;
+			}
+
 			long restMs = Math.Max(0L, musicLength - currentMusicTimeMs);
 			PreExit(1f, Mathf.Max(restMs / 1000f - 1f, 4f));
+		}
+
+		private bool ShouldReturnCustomMusicScoreManagerAfterResult()
+		{
+			if (BootData?.IsCustomMusicScore != true)
+			{
+				return false;
+			}
+
+			return BootData is FreeLiveBootData freeLiveBootData
+				&& freeLiveBootData.ReturnScreenType == MenuScreenType.MusicScoreMakerTop;
 		}
 
 		protected virtual void OnBackKey()
@@ -242,6 +278,7 @@ namespace Sekai.Core.Live
 
 		protected virtual void OnFinished()
 		{
+			CallPreExit();
 		}
 
 		protected virtual void PreExit(float delay, float waitTime)

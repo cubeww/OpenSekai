@@ -186,6 +186,7 @@ namespace Sekai.Live
 			notesViewManager?.OnUpdate(viewTime);
 			longTapEffectView?.Excute(viewTime);
 			skillView?.OnUpdate(viewTime);
+			UpdateLaneMask();
 		}
 
 		public override void CreateNotePool(Dictionary<(NoteCategory, NoteType), int> notePoolCount)
@@ -261,8 +262,8 @@ namespace Sekai.Live
 
 		public override void UpdateLife(LiveScore score)
 		{
+			lifeView?.Excute(score.life);
 			life = score.life;
-			lifeView?.Excute(life);
 		}
 
 		public override void Result(int result)
@@ -361,6 +362,19 @@ namespace Sekai.Live
 			float height = orthographicSize * 2f;
 			float aspect = Screen.height > 0 ? (float)Screen.width / Screen.height : 16f / 9f;
 			deadMask.size = new Vector2(height * aspect, height);
+		}
+
+		private void UpdateLaneMask()
+		{
+			if (deadMask == null)
+			{
+				return;
+			}
+
+			Color color = deadMask.color;
+			float targetAlpha = life == 0 ? 1f : 0f;
+			color.a += (targetAlpha - color.a) * 0.1f;
+			deadMask.color = color;
 		}
 
 		private void ResolveBackgroundRenderer()

@@ -13,18 +13,36 @@ namespace Sekai
 
 		public void Setup(MusicDifficulty musicDifficulty)
 		{
+			bool isAppend = musicDifficulty == MusicDifficulty.append;
+			if (isAppend)
+			{
+				if (_defaultImage != null)
+				{
+					_defaultImage.SetActive(false);
+				}
+				if (_appendObject != null)
+				{
+					_appendObject.SetActive(true);
+				}
+				return;
+			}
+
+			if (_defaultImage != null)
+			{
+				_defaultImage.color = ColorUtility.GetDifficultyColor(musicDifficulty);
+				_defaultImage.SetActive(true);
+			}
 			if (_appendObject != null)
 			{
-				_appendObject.SetActive(musicDifficulty == MusicDifficulty.append);
+				_appendObject.SetActive(false);
 			}
-			Show();
 		}
 
 		public void Setup(string musicDifficulty)
 		{
 			if (!System.Enum.TryParse(musicDifficulty, true, out MusicDifficulty parsed))
 			{
-				parsed = MusicDifficulty.none;
+				return;
 			}
 			Setup(parsed);
 		}

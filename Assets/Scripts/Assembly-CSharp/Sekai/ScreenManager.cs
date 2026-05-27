@@ -2093,6 +2093,24 @@ namespace Sekai
 			StartCoroutine(changeUILayerCoroutine);
 		}
 
+		public void BackUIScreenAndDestroyExitedScreen(MenuScreenType screenType, bool isWaitExitAnimation = false)
+		{
+			if (OnBackUIScreenOverride != null)
+			{
+				ExecuteBackUIScreenOverride(isWaitExitAnimation);
+				DestroyScreenInstance(screenType);
+				return;
+			}
+
+			if (changeUILayerCoroutine != null)
+			{
+				return;
+			}
+
+			changeUILayerCoroutine = BackUIScreenAndDestroyExitedScreenRoutine(screenType, isWaitExitAnimation);
+			StartCoroutine(changeUILayerCoroutine);
+		}
+
 		public void ForceBackUIScreen(bool isWaitExitAnimation = false)
 		{
 			OnBackUIScreenOverride = null;
@@ -2173,6 +2191,13 @@ namespace Sekai
 		private IEnumerator PopUIScreen(bool isWaitExitAnimation = true)
 		{
 			return PopUIScreenRoutine(isWaitExitAnimation);
+		}
+
+		private IEnumerator BackUIScreenAndDestroyExitedScreenRoutine(MenuScreenType screenType, bool isWaitExitAnimation)
+		{
+			yield return StartCoroutine(PopUIScreenRoutine(isWaitExitAnimation));
+			DestroyScreenInstance(screenType);
+			changeUILayerCoroutine = null;
 		}
 
 		[IteratorStateMachine(typeof(_003CPreloadUIScreenCore_003Ed__141))]
@@ -2321,6 +2346,38 @@ namespace Sekai
 			}
 
 			return true;
+		}
+
+		public void DestroyScreenInstance(MenuScreenType screenType)
+		{
+			if (screenMap == null || !screenMap.TryGetValue(screenType, out var layer) || layer == null)
+			{
+				return;
+			}
+
+			if (layer.ScreenLayer != null)
+			{
+				if (layer.Data != null && layer.Data.hasLayerCamera && layer.ScreenLayer.LayerCamera != null && cameraStack != null)
+				{
+					cameraStack.RemoveFromStack(layer.ScreenLayer.LayerCamera);
+				}
+				layer.ScreenLayer.OnScreenLayerExitScene();
+			}
+
+			if (layer.RefInstance != null)
+			{
+				if (Application.isPlaying)
+				{
+					Destroy(layer.RefInstance);
+				}
+				else
+				{
+					DestroyImmediate(layer.RefInstance);
+				}
+			}
+
+			layer.RefInstance = null;
+			layer.ScreenLayer = null;
 		}
 
 		public T GetLayerComponent<T>(MenuScreenType screenType) where T : ScreenLayer

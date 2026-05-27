@@ -10,11 +10,15 @@ namespace Sekai.MusicScoreMaker.Common
 
 		public string title;
 
+		public string scoreTitle;
+
 		public string composer;
 
 		public string lyricist;
 
 		public string arranger;
+
+		public string singer;
 
 		public string description;
 
@@ -56,9 +60,14 @@ namespace Sekai.MusicScoreMaker.Common
 			{
 				title = "Untitled";
 			}
+			if (string.IsNullOrWhiteSpace(scoreTitle))
+			{
+				scoreTitle = title;
+			}
 			composer ??= string.Empty;
 			lyricist ??= string.Empty;
 			arranger ??= string.Empty;
+			singer ??= string.Empty;
 			description ??= string.Empty;
 			audioFileName ??= "audio.ogg";
 			jacketFileName ??= "jacket.png";

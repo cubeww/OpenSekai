@@ -112,6 +112,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
 			dispatcher.Remove<IncrementQuantizeDivisionEvent>(IncrementQuantizeDivision);
 			dispatcher.Remove<DecrementQuantizeDivisionEvent>(DecrementQuantizeDivision);

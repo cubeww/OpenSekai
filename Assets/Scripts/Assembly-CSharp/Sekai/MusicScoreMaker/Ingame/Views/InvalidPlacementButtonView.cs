@@ -17,9 +17,11 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			Setup();
 		}
 
-		private void Setup()
+		public void Setup()
 		{
-			MusicScoreMakerEventDispatcher.Instance.Register<ValidateViewEvent>(OnValidateView);
+			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
+			dispatcher.Remove<ValidateViewEvent>(OnValidateView);
+			dispatcher.Register<ValidateViewEvent>(OnValidateView);
 			UpdateDisplay(0);
 		}
 
@@ -28,8 +30,12 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			Dispose();
 		}
 
-		private void Dispose()
+		public void Dispose()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<ValidateViewEvent>(OnValidateView);
 		}
 

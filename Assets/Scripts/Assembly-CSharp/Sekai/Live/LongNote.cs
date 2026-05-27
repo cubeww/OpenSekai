@@ -202,7 +202,15 @@ namespace Sekai.Live
 
 		public void AddHoldCombo(LongHoldCombo longHoldCombo)
 		{
-			AddConnectionNote(longHoldCombo);
+			if (longHoldCombo == null)
+			{
+				return;
+			}
+
+			NoteList ??= new List<NoteBase> { this };
+			longHoldCombo.speedRatio = speedRatio;
+			NoteList.Add(longHoldCombo);
+			longHoldCombo.SetParentNote(this);
 		}
 
 		public void AddNoteListAndSetupChildNote(NoteBase note)

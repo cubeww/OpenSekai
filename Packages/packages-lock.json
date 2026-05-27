@@ -341,6 +341,13 @@
       },
       "url": "https://packages.unity.cn"
     },
+    "com.yasirkula.nativefilepicker": {
+      "version": "https://github.com/yasirkula/UnityNativeFilePicker.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "e32b48b3bab7ee0f06b9be281cf083e97d6f6811"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,

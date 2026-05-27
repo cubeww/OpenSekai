@@ -38,7 +38,7 @@ namespace Sekai.MusicScoreMaker.Common
 
 			return packages
 				.OrderByDescending(x => File.GetLastWriteTimeUtc(x.ManifestPath))
-				.ThenBy(x => x.Manifest.title, StringComparer.OrdinalIgnoreCase)
+				.ThenBy(x => x.Manifest.scoreTitle, StringComparer.OrdinalIgnoreCase)
 				.ToArray();
 		}
 

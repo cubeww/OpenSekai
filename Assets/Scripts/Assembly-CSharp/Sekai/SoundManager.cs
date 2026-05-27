@@ -79,6 +79,7 @@ namespace Sekai
 		private double ingameSmoothTimerStartClockTime;
 		private long ingameSmoothTimerStartTimeMs;
 		private float masterVolume = 1f;
+		private float bgmVolume = 1f;
 		private float seVolume = 1f;
 		private bool defaultSoundBundlesRequested;
 		private bool acfRegisterAttempted;
@@ -88,9 +89,10 @@ namespace Sekai
 		public void SetupVolume(float master, float bgm, float se, float voice)
 		{
 			masterVolume = Mathf.Clamp01(master);
+			bgmVolume = Mathf.Clamp01(bgm);
 			seVolume = Mathf.Clamp01(se);
 			soundEffectPlayer?.SetVolume(masterVolume * seVolume);
-			ingameBgmPlayer?.SetVolume(masterVolume);
+			ingameBgmPlayer?.SetVolume(masterVolume * bgmVolume);
 		}
 
 		public bool IsLoadedSoundBundle(string bundleName)
@@ -290,7 +292,7 @@ namespace Sekai
 				{
 					ingameBgmPlayer = new CriAtomExPlayer();
 					ingameBgmPlayer.SetCue(acb, resolvedCueName);
-					ingameBgmPlayer.SetVolume(masterVolume);
+					ingameBgmPlayer.SetVolume(masterVolume * bgmVolume);
 					ingameBgmPlayer.SetStartTime(ingameFallbackStartTimeMs);
 					currentIngamePlayback = ingameBgmPlayer.Start();
 					ingameFallbackTimerActive = currentIngamePlayback.id == 0;

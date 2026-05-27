@@ -28,6 +28,8 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private bool _isPlaying;
 
+		private bool _isSetup;
+
 		private const string OpenSeCueName = "SE_UI_DIALOG_OPEN";
 
 		private const string CloseSeCueName = "SE_CANCEL";
@@ -42,8 +44,13 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			Dispose();
 		}
 
-		private void Setup()
+		public void Setup()
 		{
+			if (_isSetup)
+			{
+				return;
+			}
+
 			if (_subWindowSlideAnimation != null)
 			{
 				_subWindowSlideAnimation.InitializeAnimation();
@@ -64,6 +71,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 				dispatcher.RegisterWithEventData(_closeEventClassName, CloseAnimation);
 			}
 			gameObject.SetActive(false);
+			_isSetup = true;
 		}
 
 		private void CloseProcess()
@@ -71,8 +79,14 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			CloseAnimationCore(playSe: true);
 		}
 
-		private void Dispose()
+		public void Dispose()
 		{
+			if (!_isSetup || !MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				_isSetup = false;
+				return;
+			}
+
 			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
 			if (!string.IsNullOrEmpty(_openEventClassName))
 			{
@@ -82,6 +96,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			{
 				dispatcher.RemoveWithEventData(_closeEventClassName, CloseAnimation);
 			}
+			_isSetup = false;
 		}
 
 		private void OpenAnimation()

@@ -65,7 +65,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			_isInitialized = true;
 		}
 
-		private void Dispose()
+		public void Dispose()
 		{
 			if (!_isInitialized)
 			{
@@ -146,6 +146,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
 			dispatcher.Remove<ShowNoteChangeButtonsEvent>(OnShowNoteChangeButtons);
 			dispatcher.Remove<ShowClipboardCacheListEvent>(OnShowClipboardCacheList);

@@ -22,24 +22,30 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			Dispose();
 		}
 
-		private void Setup()
+		public void Setup()
 		{
 			SetupEventDispatcher();
 			UpdateSelectedState();
 		}
 
-		private void Dispose()
+		public void Dispose()
 		{
 			DisposeEventDispatcher();
 		}
 
 		private void SetupEventDispatcher()
 		{
-			MusicScoreMakerEventDispatcher.Instance.Register<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
+			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
+			dispatcher.Remove<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
+			dispatcher.Register<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
 		}
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
 		}
 

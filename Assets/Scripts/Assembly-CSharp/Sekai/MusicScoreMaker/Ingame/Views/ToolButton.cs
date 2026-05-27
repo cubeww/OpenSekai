@@ -18,12 +18,17 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void Awake()
 		{
-			Setup(MusicScoreMakerUtility.GetSelectedToolType());
+			Setup();
 		}
 
 		private void OnDestroy()
 		{
 			Dispose();
+		}
+
+		public void Setup()
+		{
+			Setup(MusicScoreMakerUtility.GetSelectedToolType());
 		}
 
 		private void Setup(MusicScoreMakerUtility.ToolType selectedToolType)
@@ -40,7 +45,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			SetupEventDispatcher();
 		}
 
-		private void Dispose()
+		public void Dispose()
 		{
 			if (_button != null)
 			{
@@ -51,11 +56,17 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void SetupEventDispatcher()
 		{
-			MusicScoreMakerEventDispatcher.Instance.Register<OnToolIconClickEvent>(OnSetSelectedToolTypeEvent);
+			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
+			dispatcher.Remove<OnToolIconClickEvent>(OnSetSelectedToolTypeEvent);
+			dispatcher.Register<OnToolIconClickEvent>(OnSetSelectedToolTypeEvent);
 		}
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<OnToolIconClickEvent>(OnSetSelectedToolTypeEvent);
 		}
 

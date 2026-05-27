@@ -29,7 +29,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			Dispose();
 		}
 
-		private void Setup()
+		public void Setup()
 		{
 			if (_playImage != null)
 			{
@@ -63,9 +63,13 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void SetupEventDispatcher()
 		{
-			MusicScoreMakerEventDispatcher.Instance.Register<CallMusicPlayButtonEvent>(CallMusicPlayButton);
-			MusicScoreMakerEventDispatcher.Instance.Register<UpdateMusicTimeTextEvent>(UpdateMusicTimeText);
-			MusicScoreMakerEventDispatcher.Instance.Register<PauseMusicEvent>(OnPauseMusic);
+			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
+			dispatcher.Remove<CallMusicPlayButtonEvent>(CallMusicPlayButton);
+			dispatcher.Remove<UpdateMusicTimeTextEvent>(UpdateMusicTimeText);
+			dispatcher.Remove<PauseMusicEvent>(OnPauseMusic);
+			dispatcher.Register<CallMusicPlayButtonEvent>(CallMusicPlayButton);
+			dispatcher.Register<UpdateMusicTimeTextEvent>(UpdateMusicTimeText);
+			dispatcher.Register<PauseMusicEvent>(OnPauseMusic);
 		}
 
 		public void Dispose()
@@ -79,6 +83,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<CallMusicPlayButtonEvent>(CallMusicPlayButton);
 			MusicScoreMakerEventDispatcher.Instance.Remove<UpdateMusicTimeTextEvent>(UpdateMusicTimeText);
 			MusicScoreMakerEventDispatcher.Instance.Remove<PauseMusicEvent>(OnPauseMusic);

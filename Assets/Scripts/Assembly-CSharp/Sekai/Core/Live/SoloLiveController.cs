@@ -7,6 +7,7 @@ namespace Sekai.Core.Live
 	public class SoloLiveController : BaseLiveController
 	{
 		private bool isTestPlayFinishedCalled;
+		private bool liveViewMusicStartInvoked;
 		private Coroutine finishCoroutine;
 		private Coroutine resumeCoroutine;
 		private LiveViewBase[] liveViews;
@@ -33,11 +34,26 @@ namespace Sekai.Core.Live
 			StartCoroutine(LiveStart(6f));
 		}
 
+		protected override void OnBeforeMusicStartWait(float waitSeconds)
+		{
+			if (BootData?.ReleaseTransitionBeforeMusicStart != true || waitSeconds <= 0f || liveViewMusicStartInvoked)
+			{
+				return;
+			}
+
+			liveViewMusicStartInvoked = true;
+			LiveViewExt.MusicStart(liveViews, currentAudioLatencyMusicTimeMs);
+		}
+
 		protected override void OnMusicStart()
 		{
 			LiveTransitioner.SafeFinish(null, null);
 			base.OnMusicStart();
-			LiveViewExt.MusicStart(liveViews, currentAudioLatencyMusicTimeMs);
+			if (!liveViewMusicStartInvoked)
+			{
+				liveViewMusicStartInvoked = true;
+				LiveViewExt.MusicStart(liveViews, currentAudioLatencyMusicTimeMs);
+			}
 		}
 
 		protected override void OnRhythmGameStart()
@@ -139,9 +155,10 @@ namespace Sekai.Core.Live
 				return;
 			}
 
+			state = LiveControllerState.ResumeCountDown;
 			liveOutUIController?.Destroy();
-			state = LiveControllerState.Playing;
 			SoundManager.Instance.ResumeIngame(currentMusicTimeMs);
+			state = LiveControllerState.Playing;
 			LiveViewExt.Resume(liveViews, currentAudioLatencyMusicTimeMs);
 			liveLogic?.RefreshInput();
 		}
@@ -156,6 +173,7 @@ namespace Sekai.Core.Live
 			liveOutUIController?.Destroy();
 			SoundManager.Instance.StopIngame();
 			isTestPlayFinishedCalled = false;
+			liveViewMusicStartInvoked = false;
 			result = 0;
 			state = LiveControllerState.None;
 			currentMusicTimeMs = System.Math.Max(0L, BootData?.MusicData?.StartMusicTimeMs ?? 0L);
@@ -243,7 +261,7 @@ namespace Sekai.Core.Live
 			}
 			else
 			{
-				PreExit(0f, 0f);
+				base.OnFinished();
 			}
 		}
 
@@ -317,8 +335,17 @@ namespace Sekai.Core.Live
 		{
 			LiveViewExt.Finish3D(liveViews);
 			LiveViewExt.OnUnload(liveViews);
+			MenuScreenType? returnScreenType = (BootData as FreeLiveBootData)?.ReturnScreenType;
 			base.OnExit();
-			if (BootData?.MusicData?.IsTestPlay == true)
+			if (returnScreenType.HasValue)
+			{
+				if (returnScreenType.Value == MenuScreenType.MusicScoreMakerTop)
+				{
+					MusicScoreMakerEntryPoint.BootData = null;
+				}
+				SceneManager.Instance.RequestScene(SceneManager.Scene.MusicScoreMaker);
+			}
+			else if (BootData?.MusicData?.IsTestPlay == true)
 			{
 				SceneManager.Instance.RequestScene(SceneManager.Scene.MusicScoreMaker);
 			}

@@ -99,6 +99,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<ZoomTimelineScaleChangedEvent>(OnZoomTimelineScaleChanged);
 		}
 

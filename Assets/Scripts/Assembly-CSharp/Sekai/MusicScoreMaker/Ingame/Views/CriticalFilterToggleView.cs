@@ -60,6 +60,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
 			dispatcher.Remove<SwitchCriticalFilterEvent>(OnCriticalFilterChanged);
 			dispatcher.Remove<ShowNoteChangeButtonsEvent>(OnShowNoteChangeButtons);

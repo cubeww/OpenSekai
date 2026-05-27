@@ -1,5 +1,9 @@
+using System;
+using System.IO;
 using Beebyte.Obfuscator;
 using MessagePack;
+using Newtonsoft.Json;
+using UnityEngine;
 
 namespace Sekai
 {
@@ -15,6 +19,8 @@ namespace Sekai
 			Low = 3,
 			OriginalMV = 4
 		}
+
+		private const string StorageFileName = "LiveSettingData.json";
 
 		private static LiveSettingData cachedStorage;
 
@@ -82,6 +88,7 @@ namespace Sekai
 		public float _noteShowRate { get; set; }
 
 		[IgnoreMember]
+		[JsonIgnore]
 		public float NoteShowRate
 		{
 			get
@@ -151,16 +158,47 @@ namespace Sekai
 
 		public static LiveSettingData LoadFromStorage()
 		{
-			// TODO(original): restore PersistentDataUtility.Load<LiveSettingData>() once that storage layer is restored.
-			return cachedStorage ??= new LiveSettingData();
+			if (cachedStorage != null)
+			{
+				return cachedStorage;
+			}
+
+			LiveSettingData data = null;
+			string path = StoragePath;
+			if (File.Exists(path))
+			{
+				try
+				{
+					data = JsonConvert.DeserializeObject<LiveSettingData>(File.ReadAllText(path));
+				}
+				catch (Exception exception)
+				{
+					Debug.LogWarningFormat("LiveSettingData could not be loaded. path:{0} error:{1}", path, exception.Message);
+				}
+			}
+
+			cachedStorage = data ?? new LiveSettingData();
+			return cachedStorage;
 		}
 
 		[Skip]
 		public static void SaveToStorage(LiveSettingData data)
 		{
-			// TODO(original): restore PersistentDataUtility.Save and SUS_Converter.InvalidateLiveSettingCache().
 			cachedStorage = data ?? new LiveSettingData();
+			string path = StoragePath;
+			try
+			{
+				Directory.CreateDirectory(Path.GetDirectoryName(path));
+				File.WriteAllText(path, JsonConvert.SerializeObject(cachedStorage, Formatting.Indented));
+			}
+			catch (Exception exception)
+			{
+				Debug.LogWarningFormat("LiveSettingData could not be saved. path:{0} error:{1}", path, exception.Message);
+			}
+			SUS.Converter.InvalidateLiveSettingCache();
 		}
+
+		private static string StoragePath => Path.Combine(Application.persistentDataPath, StorageFileName);
 
 		public static string GetLiveModeTextKey(LiveModeType mode)
 		{

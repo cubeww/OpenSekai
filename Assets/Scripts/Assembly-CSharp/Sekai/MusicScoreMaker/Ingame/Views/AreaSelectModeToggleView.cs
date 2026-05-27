@@ -24,7 +24,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			Dispose();
 		}
 
-		private void Setup()
+		public void Setup()
 		{
 			if (_toggle == null)
 			{
@@ -54,13 +54,21 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 
 		private void SetupEventDispatcher()
 		{
-			MusicScoreMakerEventDispatcher.Instance.Register<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
-			MusicScoreMakerEventDispatcher.Instance.Register<PlayMusicEvent>(OnPlayMusicEvent);
-			MusicScoreMakerEventDispatcher.Instance.Register<PauseMusicEvent>(OnPauseMusicEvent);
+			MusicScoreMakerEventDispatcher dispatcher = MusicScoreMakerEventDispatcher.Instance;
+			dispatcher.Remove<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
+			dispatcher.Remove<PlayMusicEvent>(OnPlayMusicEvent);
+			dispatcher.Remove<PauseMusicEvent>(OnPauseMusicEvent);
+			dispatcher.Register<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
+			dispatcher.Register<PlayMusicEvent>(OnPlayMusicEvent);
+			dispatcher.Register<PauseMusicEvent>(OnPauseMusicEvent);
 		}
 
 		private void DisposeEventDispatcher()
 		{
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<UpdateButtonSelectionStateEvent>(OnUpdateButtonSelectionState);
 			MusicScoreMakerEventDispatcher.Instance.Remove<PlayMusicEvent>(OnPlayMusicEvent);
 			MusicScoreMakerEventDispatcher.Instance.Remove<PauseMusicEvent>(OnPauseMusicEvent);

@@ -37,7 +37,7 @@ namespace Sekai
 			}
 
 			float progress = note.Progress;
-			if ((note.ChildNote != null || note.Category == Sekai.Live.NoteCategory.Connection) && progress >= 1f)
+			if ((note.ChildNote != null || note.State == NoteState.InputBegan) && progress >= 1f)
 			{
 				progress = 1f;
 			}

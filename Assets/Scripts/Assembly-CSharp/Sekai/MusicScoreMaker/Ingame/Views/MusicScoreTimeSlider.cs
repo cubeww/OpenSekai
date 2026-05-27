@@ -26,6 +26,10 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			{
 				_slider.RemoveAllListeners();
 			}
+			if (!MusicScoreMakerEventDispatcher.ExistsInstance)
+			{
+				return;
+			}
 			MusicScoreMakerEventDispatcher.Instance.Remove<UpdateTimelineSliderValueWithoutNotifyEvent>(UpdateTimelineSliderValueWithoutNotify);
 			MusicScoreMakerEventDispatcher.Instance.Remove<PlayMusicEvent>(OnPlayMusic);
 			MusicScoreMakerEventDispatcher.Instance.Remove<PauseMusicEvent>(OnPauseMusic);

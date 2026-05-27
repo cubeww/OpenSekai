@@ -150,10 +150,7 @@ namespace Sekai.Core.Live
 			{
 				calcCamera = Camera.main ?? UnityEngine.Object.FindObjectOfType<Camera>();
 			}
-			if (result != 0)
-			{
-				result = 0;
-			}
+			ResetScoreState();
 			RefreshInput();
 		}
 
@@ -177,6 +174,16 @@ namespace Sekai.Core.Live
 			activeInputList.Clear();
 			touchPositionList.Clear();
 			InputedNormalNoteTouch.Clear();
+			var activeTouches = NativeInput.ActiveTouches;
+			for (int i = 0; i < activeTouches.Count; i++)
+			{
+				EnhancedTouch touch = activeTouches[i];
+				lastTouches[touch.touchId] = (touch.time, touch.phase);
+			}
+		}
+
+		private void ResetScoreState()
+		{
 			noteStartIndex = 0;
 			highSpeedNoteStartIndex = 0;
 			eventStartIndex = 0;
@@ -184,13 +191,6 @@ namespace Sekai.Core.Live
 			TapCount = 0;
 			musicScore?.ResetNote();
 			musicScore?.ResetEvent();
-
-			var activeTouches = NativeInput.ActiveTouches;
-			for (int i = 0; i < activeTouches.Count; i++)
-			{
-				EnhancedTouch touch = activeTouches[i];
-				lastTouches[touch.touchId] = (touch.time, touch.phase);
-			}
 		}
 
 		public void OnUpdate(float scoreInfoTime, double currentGameTime)
@@ -1140,6 +1140,7 @@ namespace Sekai.Core.Live
 
 		private void OnJudgmentNote(NoteBase note)
 		{
+			scoreLogic?.UpdateNoteResult(note);
 			LiveViewExt.JudgmentNote(liveViews, note);
 		}
 

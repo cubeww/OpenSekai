@@ -44,6 +44,8 @@ namespace Sekai
 
 		public bool canSkipDisplayMusicInfo { get; set; }
 
+		public bool ReleaseTransitionBeforeMusicStart { get; set; }
+
 		public LiveBootDataBase(int musicId, string difficulty, int vocalId, int deckId, LiveType liveType, LiveMusicData.CollaborationModeState collaboModeState, bool is6MemberMv = false)
 		{
 			LiveType = liveType;

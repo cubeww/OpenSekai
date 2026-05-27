@@ -59,12 +59,22 @@ namespace Sekai.Live
 		[SerializeField]
 		private GameObject _scoreIcon;
 
+		private const string CreatorWordingKey = "MSG_CREATOR_NAME";
+		private const string SingerWordingKey = "MSG_SINGER_NAME";
+		private const string InstrumentalVocalNamesWordingKey = "WORD_INSTRUMENTLE_VERSION_NAMES";
+		private const float CustomScoreMusicInfoOffsetY = 110f;
+		private const float CustomScoreCollaborationRibbonOffsetY = 90f;
+
 		public float JacketFadeOutDelaySec;
 
 		private bool _playStartEffectEnabled;
 		private readonly List<Tween> _activeTweens = new List<Tween>();
 		private Vector3 _difficultyJacketInitialLocalPosition;
 		private bool _hasDifficultyJacketInitialLocalPosition;
+		private Vector3 _musicInfoRootInitialLocalPosition;
+		private bool _hasMusicInfoRootInitialLocalPosition;
+		private Vector3 _collaborationRibbonInitialLocalPosition;
+		private bool _hasCollaborationRibbonInitialLocalPosition;
 
 		public float AnimationDurationSec
 		{
@@ -79,7 +89,9 @@ namespace Sekai.Live
 			LiveMusicData musicData = bootData?.MusicData;
 			_playStartEffectEnabled = musicData?.PlayStartEffectEnabled ?? true;
 			CacheDifficultyJacketPosition();
+			CacheCustomScoreLayoutPositions();
 			ResetDifficultyJacketPosition();
+			ResetCustomScoreLayoutPositions();
 			KillTweens();
 
 			if (viewGroup != null)
@@ -113,21 +125,17 @@ namespace Sekai.Live
 			{
 				_scoreInfoRoot.SetActive(isCustomScore);
 			}
+			ApplyCustomScoreLayout(isCustomScore);
 
 			string title = musicData?.Music?.title ?? string.Empty;
 			string lyricist = musicData?.Music?.lyricist ?? string.Empty;
 			string composer = musicData?.Music?.composer ?? string.Empty;
 			string arranger = musicData?.Music?.arranger ?? string.Empty;
-			string singer = musicData?.Vocal?.caption ?? string.Empty;
-
-			if (isCustomScore)
-			{
-				ApplyCustomScoreInfo(freeLiveBootData, ref title, ref lyricist, ref composer, ref arranger, ref singer);
-			}
+			string singer = ResolveVocalText(musicData?.Vocal, string.Empty);
 
 			titleLabel?.SetText(title);
-			creatorLabel?.SetText(BuildCreatorText(lyricist, composer, arranger));
-			singerLabel?.SetText(singer);
+			creatorLabel?.SetWordingText(CreatorWordingKey, lyricist, composer, arranger);
+			singerLabel?.SetWordingText(SingerWordingKey, singer);
 
 			if (collaborationRibbon != null)
 			{
@@ -349,6 +357,53 @@ namespace Sekai.Live
 			}
 		}
 
+		private void CacheCustomScoreLayoutPositions()
+		{
+			if (!_hasMusicInfoRootInitialLocalPosition && _musicInfoRoot != null)
+			{
+				_musicInfoRootInitialLocalPosition = _musicInfoRoot.transform.localPosition;
+				_hasMusicInfoRootInitialLocalPosition = true;
+			}
+			if (!_hasCollaborationRibbonInitialLocalPosition && collaborationRibbon != null)
+			{
+				_collaborationRibbonInitialLocalPosition = collaborationRibbon.transform.localPosition;
+				_hasCollaborationRibbonInitialLocalPosition = true;
+			}
+		}
+
+		private void ResetCustomScoreLayoutPositions()
+		{
+			if (_hasMusicInfoRootInitialLocalPosition && _musicInfoRoot != null)
+			{
+				_musicInfoRoot.transform.localPosition = _musicInfoRootInitialLocalPosition;
+			}
+			if (_hasCollaborationRibbonInitialLocalPosition && collaborationRibbon != null)
+			{
+				collaborationRibbon.transform.localPosition = _collaborationRibbonInitialLocalPosition;
+			}
+		}
+
+		private void ApplyCustomScoreLayout(bool isCustomScore)
+		{
+			if (!isCustomScore)
+			{
+				return;
+			}
+
+			if (_hasMusicInfoRootInitialLocalPosition && _musicInfoRoot != null)
+			{
+				Vector3 position = _musicInfoRootInitialLocalPosition;
+				position.y += CustomScoreMusicInfoOffsetY;
+				_musicInfoRoot.transform.localPosition = position;
+			}
+			if (_hasCollaborationRibbonInitialLocalPosition && collaborationRibbon != null)
+			{
+				Vector3 position = _collaborationRibbonInitialLocalPosition;
+				position.y += CustomScoreCollaborationRibbonOffsetY;
+				collaborationRibbon.transform.localPosition = position;
+			}
+		}
+
 		private void Track(Tween tween)
 		{
 			if (tween != null)
@@ -384,46 +439,24 @@ namespace Sekai.Live
 			}
 		}
 
-		private static void ApplyCustomScoreInfo(FreeLiveBootData bootData, ref string title, ref string lyricist, ref string composer, ref string arranger, ref string singer)
+		private static string ResolveVocalText(MasterMusicVocal vocal, string fallback)
 		{
-			if (!string.IsNullOrEmpty(bootData.CustomMusicScoreTitle))
+			if (vocal == null)
 			{
-				title = bootData.CustomMusicScoreTitle;
-			}
-			if (!string.IsNullOrEmpty(bootData.CustomMusicScoreAuthorName))
-			{
-				singer = bootData.CustomMusicScoreAuthorName;
+				return fallback ?? string.Empty;
 			}
 
-			try
+			if (string.Equals(vocal.musicVocalType, MusicVocalType.instrumental.ToString(), StringComparison.OrdinalIgnoreCase))
 			{
-				CustomMusicScorePackage package = CustomMusicScoreStorage.LoadPackage(bootData.CustomMusicScorePath);
-				CustomMusicScoreManifest manifest = package?.Manifest;
-				if (manifest == null)
-				{
-					return;
-				}
-				title = string.IsNullOrEmpty(manifest.title) ? title : manifest.title;
-				lyricist = manifest.lyricist ?? string.Empty;
-				composer = manifest.composer ?? string.Empty;
-				arranger = manifest.arranger ?? string.Empty;
-				singer = string.IsNullOrEmpty(manifest.userName) ? singer : manifest.userName;
+				return WordingManager.Get(InstrumentalVocalNamesWordingKey);
 			}
-			catch
-			{
-				// Custom score packages are optional during live restoration; keep boot-data text when manifest lookup fails.
-			}
-		}
 
-		private static string BuildCreatorText(string lyricist, string composer, string arranger)
-		{
-			string[] values =
+			if (!string.IsNullOrEmpty(vocal.caption))
 			{
-				string.IsNullOrEmpty(lyricist) ? null : lyricist,
-				string.IsNullOrEmpty(composer) ? null : composer,
-				string.IsNullOrEmpty(arranger) ? null : arranger
-			};
-			return string.Join(" / ", Array.FindAll(values, value => !string.IsNullOrEmpty(value)));
+				return vocal.caption;
+			}
+
+			return fallback ?? string.Empty;
 		}
 
 		private static Texture2D LoadJacketTexture(LiveBootDataBase bootData, LiveMusicData musicData)
