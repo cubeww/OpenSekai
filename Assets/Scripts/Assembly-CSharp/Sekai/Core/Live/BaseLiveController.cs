@@ -117,7 +117,7 @@ namespace Sekai.Core.Live
 
 			yield return StartCoroutine(MusicReady());
 
-			float musicStartWait = ShouldWaitBeforeMusicStart() ? waitTime : 0.05f;
+			float musicStartWait = ShouldWaitBeforeMusicStart() ? waitTime : 0.35f;
 			OnBeforeMusicStartWait(musicStartWait);
 			if (musicStartWait > 0f)
 			{
@@ -130,12 +130,12 @@ namespace Sekai.Core.Live
 
 		protected virtual bool ShouldKeepTransitionUntilMusicStart()
 		{
-			return BootData?.MusicData?.IsTestPlay != true && BootData?.ReleaseTransitionBeforeMusicStart != true;
+			return BootData?.MusicData?.PlayStartEffectEnabled == true && BootData?.ReleaseTransitionBeforeMusicStart != true;
 		}
 
 		protected virtual bool ShouldWaitBeforeMusicStart()
 		{
-			return BootData?.MusicData?.IsTestPlay != true;
+			return BootData?.MusicData?.PlayStartEffectEnabled == true;
 		}
 
 		protected virtual void OnBeforeMusicStartWait(float waitSeconds)
