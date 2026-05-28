@@ -95,13 +95,7 @@ namespace Sekai
 		private CriAtomExPlayer ingameBgmPlayer;
 		private CriAtomExPlayback currentIngamePlayback = CriAtomExPlayback.Invalid;
 		private uint currentIngamePlaybackRequestId;
-		private bool audioSyncedUnityTimerEnabled;
-		private bool ingameFallbackTimerActive;
-		private long ingameFallbackStartTimeMs;
-		private long ingameLastPlaybackTimeMs;
-		private bool ingameSmoothTimerRunning;
-		private double ingameSmoothTimerStartClockTime;
-		private long ingameSmoothTimerStartTimeMs;
+		private AudioSyncedUnityTimer audioSyncedUnityTimer;
 		private float masterVolume = 1f;
 		private float bgmVolume = 1f;
 		private float seVolume = 1f;
@@ -259,56 +253,14 @@ namespace Sekai
 			return GetCueInfosWithLength(acb);
 		}
 
-		public bool IsAudioSyncedUnityTimerEnabled => audioSyncedUnityTimerEnabled;
-
-		private static double GetAudioClockTime()
-		{
-			// AudioSettings.dspTime is quantized by the audio buffer on some Unity
-			// backends, which makes note movement step every 20-40ms at high FPS.
-			// Use Unity's realtime clock for the visual live timer after anchoring
-			// the start position to the requested audio playback time.
-			return Time.realtimeSinceStartupAsDouble;
-		}
-
-		private void StartIngameSmoothTimer(long startTimeMs)
-		{
-			ingameSmoothTimerStartTimeMs = Math.Max(0L, startTimeMs);
-			ingameSmoothTimerStartClockTime = GetAudioClockTime();
-			ingameLastPlaybackTimeMs = ingameSmoothTimerStartTimeMs;
-			ingameSmoothTimerRunning = true;
-		}
-
-		private long GetIngameSmoothTimerMs()
-		{
-			if (!ingameSmoothTimerRunning)
-			{
-				return ingameLastPlaybackTimeMs;
-			}
-
-			double elapsedSeconds = Math.Max(0.0, GetAudioClockTime() - ingameSmoothTimerStartClockTime);
-			long currentTimeMs = ingameSmoothTimerStartTimeMs + (long)(elapsedSeconds * 1000.0);
-			return Math.Max(ingameLastPlaybackTimeMs, currentTimeMs);
-		}
-
-		private void PauseIngameSmoothTimer()
-		{
-			if (!ingameSmoothTimerRunning)
-			{
-				return;
-			}
-
-			ingameLastPlaybackTimeMs = GetIngameSmoothTimerMs();
-			ingameSmoothTimerRunning = false;
-		}
+		public bool IsAudioSyncedUnityTimerEnabled => audioSyncedUnityTimer != null;
 
 		public uint PrepareIngameBGM(string cueName, float startTime, Action callback = null, bool loop = false)
 		{
 			StopIngame();
 			uint requestId = AllocateIngamePlaybackRequestId();
 			float startTimeSeconds = Mathf.Max(0f, startTime);
-			ingameFallbackStartTimeMs = (long)(startTimeSeconds * 1000f);
-			ingameLastPlaybackTimeMs = ingameFallbackStartTimeMs;
-			audioSyncedUnityTimerEnabled = true;
+			long startTimeMs = (long)(startTimeSeconds * 1000f);
 
 			if (TryResolveIngameCue(cueName, out CriAtomExAcb acb, out string resolvedCueName))
 			{
@@ -317,10 +269,9 @@ namespace Sekai
 					ingameBgmPlayer = new CriAtomExPlayer();
 					ingameBgmPlayer.SetCue(acb, resolvedCueName);
 					ingameBgmPlayer.SetVolume(masterVolume * bgmVolume);
-					ingameBgmPlayer.SetStartTime(ingameFallbackStartTimeMs);
+					ingameBgmPlayer.SetStartTime(startTimeMs);
 					currentIngamePlayback = ingameBgmPlayer.Start();
-					ingameFallbackTimerActive = currentIngamePlayback.id == 0;
-					StartIngameSmoothTimer(ingameFallbackStartTimeMs);
+					audioSyncedUnityTimer = new AudioSyncedUnityTimer(currentIngamePlayback);
 					callback?.Invoke();
 					return requestId;
 				}
@@ -330,9 +281,8 @@ namespace Sekai
 				}
 			}
 
-			ingameFallbackTimerActive = true;
 			currentIngamePlayback = CriAtomExPlayback.Invalid;
-			StartIngameSmoothTimer(ingameFallbackStartTimeMs);
+			audioSyncedUnityTimer = null;
 			if (!string.IsNullOrEmpty(cueName))
 			{
 				LogMissingCue(cueName);
@@ -353,20 +303,13 @@ namespace Sekai
 		public void ResumePreparedPlaybackIngame()
 		{
 			currentIngamePlayback.Resume();
-			if (!ingameSmoothTimerRunning)
-			{
-				StartIngameSmoothTimer(ingameLastPlaybackTimeMs);
-			}
+			ResetAudioSyncedUnityTimer();
 		}
 
 		public void ResumeIngame(long musicTimeMs)
 		{
-			ingameLastPlaybackTimeMs = Math.Max(0L, musicTimeMs);
 			currentIngamePlayback.Resume();
-			if (!ingameSmoothTimerRunning)
-			{
-				StartIngameSmoothTimer(ingameLastPlaybackTimeMs);
-			}
+			ResetAudioSyncedUnityTimer();
 		}
 
 		public void SetAudioSyncedUnityTimer(uint requestId)
@@ -375,15 +318,12 @@ namespace Sekai
 			{
 				return;
 			}
-			if (audioSyncedUnityTimerEnabled && !ingameSmoothTimerRunning)
-			{
-				StartIngameSmoothTimer(ingameLastPlaybackTimeMs);
-			}
+			ResetAudioSyncedUnityTimer();
 		}
 
 		public long GetAudioSyncedUnityTimer()
 		{
-			if (!audioSyncedUnityTimerEnabled)
+			if (audioSyncedUnityTimer == null)
 			{
 				return 0L;
 			}
@@ -393,23 +333,35 @@ namespace Sekai
 				CriAtomExPlayback.Status status = currentIngamePlayback.GetStatus();
 				if (status == CriAtomExPlayback.Status.Playing)
 				{
-					ingameLastPlaybackTimeMs = GetIngameSmoothTimerMs();
-					return ingameLastPlaybackTimeMs;
+					audioSyncedUnityTimer.Execute(Time.time);
+					return audioSyncedUnityTimer.PlaybackTime;
 				}
 				if (status == CriAtomExPlayback.Status.PlayEnd || status == CriAtomExPlayback.Status.Stop || status == CriAtomExPlayback.Status.Error)
 				{
 					return 0L;
 				}
-				return ingameLastPlaybackTimeMs;
-			}
-
-			if (ingameFallbackTimerActive)
-			{
-				ingameLastPlaybackTimeMs = GetIngameSmoothTimerMs();
-				return ingameLastPlaybackTimeMs;
+				return audioSyncedUnityTimer.PlaybackTime;
 			}
 
 			return 0L;
+		}
+
+		public bool TryGetAudioSyncedUnityTimer(out long playbackTime)
+		{
+			playbackTime = 0L;
+			if (audioSyncedUnityTimer == null)
+			{
+				return false;
+			}
+
+			audioSyncedUnityTimer.Execute(Time.time);
+			playbackTime = audioSyncedUnityTimer.PlaybackTime;
+			return true;
+		}
+
+		private void ResetAudioSyncedUnityTimer()
+		{
+			audioSyncedUnityTimer = currentIngamePlayback.id != 0 ? new AudioSyncedUnityTimer(currentIngamePlayback) : null;
 		}
 
 		public void StopIngame()
@@ -418,12 +370,7 @@ namespace Sekai
 			ingameBgmPlayer?.Dispose();
 			ingameBgmPlayer = null;
 			currentIngamePlayback = CriAtomExPlayback.Invalid;
-			audioSyncedUnityTimerEnabled = false;
-			ingameFallbackTimerActive = false;
-			ingameLastPlaybackTimeMs = 0L;
-			ingameSmoothTimerRunning = false;
-			ingameSmoothTimerStartClockTime = 0.0;
-			ingameSmoothTimerStartTimeMs = 0L;
+			audioSyncedUnityTimer = null;
 		}
 
 		public void StopAll()
@@ -1288,16 +1235,82 @@ namespace Sekai
 
 		public void Pause()
 		{
-			PauseIngameSmoothTimer();
 			currentIngamePlayback.Pause();
 		}
 
 		public void Resume()
 		{
 			currentIngamePlayback.Resume();
-			if (!ingameSmoothTimerRunning)
+			ResetAudioSyncedUnityTimer();
+		}
+	}
+
+	internal sealed class AudioSyncedUnityTimer
+	{
+		private const long ReferenceAudioTimeThresholdMs = 99L;
+		private const long SyncCorrectionThresholdMs = 63L;
+		private const long MaxLeadAfterCorrectionMs = 62L;
+
+		private readonly CriAtomExPlayback playback;
+		private long referenceAudioTimeMs = -1L;
+		private float referenceUnityTime = -1f;
+		private bool isWaitingForAudioTimeUpdate;
+
+		public long PlaybackTime { get; private set; } = -1L;
+
+		public long DebugAudioSyncedTime { get; private set; } = -1L;
+
+		public AudioSyncedUnityTimer(CriAtomExPlayback playback)
+		{
+			this.playback = playback;
+		}
+
+		public void Execute(float unityTime)
+		{
+			playback.GetTimeAndScaleSyncedWithAudio(out long audioTimeMs, out float timeScale);
+			DebugAudioSyncedTime = audioTimeMs;
+			if (audioTimeMs <= ReferenceAudioTimeThresholdMs)
 			{
-				StartIngameSmoothTimer(ingameLastPlaybackTimeMs);
+				PlaybackTime = audioTimeMs;
+				return;
+			}
+
+			if (referenceAudioTimeMs < 0L)
+			{
+				referenceAudioTimeMs = audioTimeMs;
+				referenceUnityTime = unityTime;
+			}
+
+			if (isWaitingForAudioTimeUpdate)
+			{
+				long previousPlaybackTime = PlaybackTime;
+				referenceAudioTimeMs = audioTimeMs;
+				referenceUnityTime = unityTime;
+				if (audioTimeMs > previousPlaybackTime)
+				{
+					PlaybackTime = audioTimeMs;
+					isWaitingForAudioTimeUpdate = false;
+				}
+				return;
+			}
+
+			float elapsedMs = (unityTime - referenceUnityTime) * timeScale * 1000f;
+			long estimatedDeltaMs = float.IsNaN(elapsedMs) || float.IsInfinity(elapsedMs) ? 0L : (long)elapsedMs;
+			long estimatedAudioTimeMs = referenceAudioTimeMs + estimatedDeltaMs;
+			if (estimatedAudioTimeMs - audioTimeMs >= SyncCorrectionThresholdMs)
+			{
+				PlaybackTime = audioTimeMs + MaxLeadAfterCorrectionMs;
+				isWaitingForAudioTimeUpdate = true;
+			}
+			else if (audioTimeMs - estimatedAudioTimeMs >= SyncCorrectionThresholdMs)
+			{
+				PlaybackTime = audioTimeMs;
+				referenceAudioTimeMs = audioTimeMs;
+				referenceUnityTime = unityTime;
+			}
+			else
+			{
+				PlaybackTime = estimatedAudioTimeMs;
 			}
 		}
 	}

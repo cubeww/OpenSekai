@@ -450,6 +450,11 @@ namespace CriWare
 			return CriAtomAudioRuntime.GetTimeMs(id);
 		}
 
+		public void GetTimeAndScaleSyncedWithAudio(out long playbackTime, out float timeScale)
+		{
+			CriAtomAudioRuntime.GetTimeAndScaleSyncedWithAudio(id, out playbackTime, out timeScale);
+		}
+
 		public void Stop()
 		{
 			CriAtomAudioRuntime.Stop(id);
@@ -565,6 +570,23 @@ namespace CriWare
 			}
 
 			return (long)(state.Source.time * 1000f);
+		}
+
+		public static void GetTimeAndScaleSyncedWithAudio(uint id, out long playbackTime, out float timeScale)
+		{
+			playbackTime = -1L;
+			timeScale = 1f;
+			if (id == 0 || !playbacks.TryGetValue(id, out PlaybackState state) || state.Source == null)
+			{
+				return;
+			}
+
+			playbackTime = (long)(state.Source.time * 1000f);
+			timeScale = state.Source.pitch;
+			if (timeScale <= 0f)
+			{
+				timeScale = 1f;
+			}
 		}
 
 		public static void Stop(uint id)
