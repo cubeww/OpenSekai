@@ -603,21 +603,62 @@ namespace Sekai.MusicScoreMaker.Ingame.Utilities
 
 		public static void ApplyNoteTicksDeltaWithConnectionConstraint(MusicScoreMakerData MusicScoreMakerData, ref long ticks, MusicScoreNoteBase musicScoreNoteBase, SelectedTargetOperation operation)
 		{
-			ticks = ClampTicksToValidRange(ticks + operation.deltaTicks);
-			if (musicScoreNoteBase == null || MusicScoreMakerData == null)
+			if (operation == null)
 			{
 				return;
 			}
-			Dictionary<int, MusicScoreNoteBase> noteIdCache = MusicScoreMakerData.GetNoteIdCacheOrRebuild();
-			MusicScoreNoteBase prev = musicScoreNoteBase.FindPrevNote(noteIdCache, true);
-			MusicScoreNoteBase next = musicScoreNoteBase.FindNextNote(noteIdCache, true);
-			if (prev != null)
+			if (MusicScoreMakerData == null)
 			{
-				ticks = Math.Max(ticks, prev.ticks + MinTickInterval);
+				return;
 			}
-			if (next != null)
+			long actualMoveDelta = operation.deltaTicks;
+			Dictionary<int, MusicScoreNoteBase> noteIdCache = MusicScoreMakerData.GetNoteIdCacheOrRebuild();
+			HashSet<int> selectedNoteIds = MusicScoreMakerData.SelectedNoteTargetIdSet;
+			if (selectedNoteIds != null && selectedNoteIds.Count >= 2)
 			{
-				ticks = Math.Min(ticks, next.ticks - MinTickInterval);
+				long minSelectedTicks = FindMinSelectedNoteTicks(MusicScoreMakerData.SelectedNoteIdList, MusicScoreMakerData.SelectedTemporaryNoteIdList, noteIdCache);
+				if (minSelectedTicks != long.MaxValue)
+				{
+					actualMoveDelta = CalculateSnapQuantizedTicks(actualMoveDelta, minSelectedTicks) - minSelectedTicks;
+				}
+			}
+			else
+			{
+				actualMoveDelta = CalculateSnapQuantizedTicks(actualMoveDelta, ticks) - ticks;
+			}
+			long movedTicks = ClampTicksToValidRange(ticks + actualMoveDelta);
+			if (musicScoreNoteBase != null && selectedNoteIds != null && !musicScoreNoteBase.IsSingle && actualMoveDelta != 0L)
+			{
+				(MusicScoreNoteBase adjacent, int skipCount) = GetAdjacentUnselectedNoteWithSkipCount(actualMoveDelta, musicScoreNoteBase, selectedNoteIds, noteIdCache);
+				if (adjacent != null && !selectedNoteIds.Contains(adjacent.id))
+				{
+					long interval = skipCount + MinTickInterval;
+					movedTicks = actualMoveDelta < 1L ? Math.Max(movedTicks, adjacent.ticks + interval) : Math.Min(movedTicks, adjacent.ticks - interval);
+				}
+			}
+			ticks = movedTicks;
+		}
+
+		private static long FindMinSelectedNoteTicks(List<int> selectedNoteIds, List<int> selectedTemporaryNoteIds, Dictionary<int, MusicScoreNoteBase> noteIdCache)
+		{
+			long minTicks = long.MaxValue;
+			ApplyMinSelectedNoteTicks(selectedNoteIds, noteIdCache, ref minTicks);
+			ApplyMinSelectedNoteTicks(selectedTemporaryNoteIds, noteIdCache, ref minTicks);
+			return minTicks;
+		}
+
+		private static void ApplyMinSelectedNoteTicks(List<int> noteIds, Dictionary<int, MusicScoreNoteBase> noteIdCache, ref long minTicks)
+		{
+			if (noteIds == null || noteIdCache == null)
+			{
+				return;
+			}
+			foreach (int noteId in noteIds)
+			{
+				if (noteIdCache.TryGetValue(noteId, out MusicScoreNoteBase note) && note != null)
+				{
+					minTicks = Math.Min(minTicks, note.ticks);
+				}
 			}
 		}
 

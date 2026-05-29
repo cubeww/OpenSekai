@@ -162,6 +162,17 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			{
 				_stopImage.SetActive(false);
 			}
+			ResetPlayButtonInteraction();
+		}
+
+		private void ResetPlayButtonInteraction()
+		{
+			if (_playButton == null)
+			{
+				return;
+			}
+			ButtonViewInteractionBase interaction = _playButton.GetComponent<ButtonViewInteractionBase>();
+			interaction?.ResetInteraction();
 		}
 
 		private void UpdateMusicTimeText(UpdateMusicTimeTextEvent evt)

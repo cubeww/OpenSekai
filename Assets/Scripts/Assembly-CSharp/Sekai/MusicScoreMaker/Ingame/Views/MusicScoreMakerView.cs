@@ -486,11 +486,21 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			long ticksMax = MusicScoreMakerUtility.GetMusicScoreTicksMax();
 			if (_scrollLowerLimitButton != null)
 			{
-				_scrollLowerLimitButton.enabled = focusTicks > 0L && !isMusicPlaying;
+				bool enabled = focusTicks > 0L && !isMusicPlaying;
+				if (!enabled && _scrollLowerLimitButton.enabled)
+				{
+					_scrollLowerLimitButton.StopHoldRepeat();
+				}
+				_scrollLowerLimitButton.enabled = enabled;
 			}
 			if (_scrollUpperLimitButton != null)
 			{
-				_scrollUpperLimitButton.enabled = focusTicks < ticksMax && !isMusicPlaying;
+				bool enabled = focusTicks < ticksMax && !isMusicPlaying;
+				if (!enabled && _scrollUpperLimitButton.enabled)
+				{
+					_scrollUpperLimitButton.StopHoldRepeat();
+				}
+				_scrollUpperLimitButton.enabled = enabled;
 			}
 		}
 

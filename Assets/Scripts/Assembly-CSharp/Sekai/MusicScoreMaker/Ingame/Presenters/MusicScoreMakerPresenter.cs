@@ -2282,7 +2282,19 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			{
 				_model.FillerSec = 0f;
 			}
-			uint playbackId = SoundManager.Instance.PrepareIngameBGM(_model.AssetbundleName, Mathf.Max(currentTime, 0f) + _model.FillerSec);
+			float playbackStartTime = Mathf.Max(currentTime, 0f) + _model.FillerSec;
+			// OpenSekai: official data keeps secForMusicScoreMaker within the playable BGM range.
+			// Custom charts can exceed the audio length, so avoid seeking CRI/our shim past EOF.
+			if (_model.MusicLength > 0L && playbackStartTime * 1000f >= _model.MusicLength)
+			{
+				_model.IsMusicPlaying = false;
+				if (MusicScoreMakerEventDispatcher.ExistsInstance)
+				{
+					MusicScoreMakerEventDispatcher.Instance.Publish(new PauseMusicEvent());
+				}
+				return;
+			}
+			uint playbackId = SoundManager.Instance.PrepareIngameBGM(_model.AssetbundleName, playbackStartTime);
 			CriAtomExPlayback? playback = SoundManager.Instance.GetPlayback(playbackId);
 			_musicUpdateCts?.Cancel();
 			_musicUpdateCts?.Dispose();
@@ -2365,6 +2377,12 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 		private void UpdateMusicTimeTextEventFromFocusTicks()
 		{
 			if (_model == null)
+			{
+				return;
+			}
+			// Original behavior: while BGM is playing, the audio clock owns CurrentMusicTime.
+			// FocusTicks may be clamped at the editor top edge, but the time display keeps advancing.
+			if (_model.IsMusicPlaying)
 			{
 				return;
 			}
@@ -3420,7 +3438,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			int width = _model != null && _model.LastNoteWidth > 0 ? _model.LastNoteWidth : MusicScoreMakerModel.DEFAULT_LAST_NOTE_WIDTH;
 			(int laneStart, int laneEnd) = GetLaneRangeFromCenterLane(centerLane, width);
 			NoteCategory category = _model?.SelectedNoteCategory ?? NoteCategory.Normal;
-			long lengthTicks = Math.Max(DefaultLongNoteLengthTicks, GetQuantizeTicks());
+			long lengthTicks = DefaultLongNoteLengthTicks;
 			if (IsLongRootCategory(category) || category == NoteCategory.Guide)
 			{
 				AdjustLongNoteStartTicksToFit(ref ticks, lengthTicks);
@@ -4149,42 +4167,178 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private void FlipSelectedNotesVertically(FlipSelectedNotesVerticallyEvent obj)
 		{
-			List<MusicScoreNoteBase> notes = GetSelectedOrSingleNotes(-1);
-			if (notes.Count == 0)
+			MusicScoreMakerData data = CurrentData();
+			if (data?.NoteList == null)
 			{
 				return;
 			}
-			List<MusicScoreNoteBase> snapshots = CloneNotesForUndo(notes);
+			HashSet<int> selectedNoteIds = data.SelectedNoteTargetIdSet;
+			List<MusicScoreNoteBase> selectedNotes = new List<MusicScoreNoteBase>();
+			foreach (MusicScoreNoteBase note in data.NoteList)
+			{
+				if (note != null && selectedNoteIds.Contains(note.id))
+				{
+					selectedNotes.Add(note);
+				}
+			}
+			if (selectedNotes.Count == 0)
+			{
+				return;
+			}
+			List<MusicScoreNoteBase> selectedSingleNotes = FindSelectedNoteList(selectedNotes);
+			List<MusicScoreNoteBase> selectedLongRoots = FindSelectedLongNoteList(selectedNotes, selectedNoteIds, isOnlyStartNote: true);
+			List<MusicScoreNoteBase> affectedNotes = CollectVerticalFlipAffectedNotes(selectedSingleNotes, selectedLongRoots);
+			if (affectedNotes.Count == 0)
+			{
+				return;
+			}
+			List<MusicScoreNoteBase> snapshots = CloneNotesForUndo(affectedNotes);
 			long minTicks = long.MaxValue;
 			long maxTicks = long.MinValue;
-			foreach (MusicScoreNoteBase note in notes)
+			foreach (MusicScoreNoteBase note in selectedNotes)
 			{
 				minTicks = Math.Min(minTicks, note.ticks);
 				maxTicks = Math.Max(maxTicks, note.ticks);
 			}
 			Action redo = () =>
 			{
-				foreach (MusicScoreNoteBase note in notes)
+				HashSet<long> editedTicks = CollectNoteTicks(affectedNotes);
+				foreach (MusicScoreNoteBase note in selectedSingleNotes)
 				{
 					note.ticks = ClampTicksToValidRange(maxTicks - (note.ticks - minTicks));
 				}
-				CurrentData()?.MarkNoteListOrderDirty();
-				MarkEditedAndRefresh(notes);
+				foreach (MusicScoreNoteBase note in selectedLongRoots)
+				{
+					FlipConnectedNoteChainVertically(data, note, minTicks, maxTicks);
+				}
+				data.MarkNoteListOrderDirty();
+				data.UpdateConnectionNotes();
+				editedTicks.UnionWith(CollectNoteTicks(affectedNotes));
+				MarkEditedTicksAndRefresh(editedTicks);
 			};
 			Action undo = () =>
 			{
+				HashSet<long> editedTicks = CollectNoteTicks(affectedNotes);
 				RestoreNoteSnapshots(snapshots);
-				MarkEditedAndRefresh(snapshots);
+				editedTicks.UnionWith(CollectNoteTicks(affectedNotes));
+				MarkEditedTicksAndRefresh(editedTicks);
 			};
 			PushUndoableAction(undo, redo, minTicks, minTicks);
 		}
 
-		private static List<MusicScoreNoteBase> FindSelectedNoteList(List<MusicScoreNoteBase> selectedNoteList)
+		private List<MusicScoreNoteBase> CollectVerticalFlipAffectedNotes(List<MusicScoreNoteBase> selectedSingleNotes, List<MusicScoreNoteBase> selectedLongRoots)
 		{
-			return selectedNoteList ?? new List<MusicScoreNoteBase>();
+			List<MusicScoreNoteBase> result = new List<MusicScoreNoteBase>();
+			HashSet<int> ids = new HashSet<int>();
+			AddUniqueNotes(result, ids, selectedSingleNotes);
+			if (selectedLongRoots != null)
+			{
+				foreach (MusicScoreNoteBase root in selectedLongRoots)
+				{
+					if (root?.ConnectedNotes != null && root.ConnectedNotes.Count > 0)
+					{
+						AddUniqueNotes(result, ids, root.ConnectedNotes);
+					}
+					else if (root != null && ids.Add(root.id))
+					{
+						result.Add(root);
+					}
+				}
+			}
+			return result;
 		}
 
-		private List<MusicScoreNoteBase> FindSelectedLongNoteList(List<MusicScoreNoteBase> selectedNoteList, HashSet<int> allSelectedIds, bool isOnlyStartNote = false)
+		private static void AddUniqueNotes(List<MusicScoreNoteBase> target, HashSet<int> ids, IEnumerable<MusicScoreNoteBase> notes)
+		{
+			if (target == null || ids == null || notes == null)
+			{
+				return;
+			}
+			foreach (MusicScoreNoteBase note in notes)
+			{
+				if (note != null && ids.Add(note.id))
+				{
+					target.Add(note);
+				}
+			}
+		}
+
+		private static HashSet<long> CollectNoteTicks(IEnumerable<MusicScoreNoteBase> notes)
+		{
+			HashSet<long> result = new HashSet<long>();
+			if (notes == null)
+			{
+				return result;
+			}
+			foreach (MusicScoreNoteBase note in notes)
+			{
+				if (note != null)
+				{
+					result.Add(note.ticks);
+				}
+			}
+			return result;
+		}
+
+		private void MarkEditedTicksAndRefresh(IEnumerable<long> editedTicks)
+		{
+			MusicScoreMakerUtility.AddEditedTicks(editedTicks);
+			RecheckJudgmentNoteGapIfEditedInGapRange();
+			NotifyMusicScoreAndTimelineChanged();
+		}
+
+		private void FlipConnectedNoteChainVertically(MusicScoreMakerData data, MusicScoreNoteBase root, long minTicks, long maxTicks)
+		{
+			if (data == null || root?.ConnectedNotes == null)
+			{
+				return;
+			}
+			foreach (MusicScoreNoteBase note in root.ConnectedNotes)
+			{
+				if (note == null)
+				{
+					continue;
+				}
+				note.ticks = ClampTicksToValidRange(maxTicks - (note.ticks - minTicks));
+				SwapConnectionIds(note);
+			}
+			Dictionary<int, MusicScoreNoteBase> noteIdCache = data.GetNoteIdCacheOrRebuild();
+			MusicScoreNoteBase startNote = root.FindStartNote(noteIdCache);
+			MusicScoreNoteBase endNote = root.FindEndNote(noteIdCache);
+			SwapEndpointNoteData(startNote, endNote);
+		}
+
+		private static void SwapConnectionIds(MusicScoreNoteBase note)
+		{
+			if (note == null)
+			{
+				return;
+			}
+			int previousConnectionId = note.previousConnectionId;
+			note.previousConnectionId = note.nextConnectionId;
+			note.nextConnectionId = previousConnectionId;
+		}
+
+		private static void SwapEndpointNoteData(MusicScoreNoteBase startNote, MusicScoreNoteBase endNote)
+		{
+			if (startNote == null || endNote == null || startNote == endNote)
+			{
+				return;
+			}
+			MusicScoreNoteBase.NoteBaseType noteBaseType = startNote.noteBaseType;
+			startNote.noteBaseType = endNote.noteBaseType;
+			endNote.noteBaseType = noteBaseType;
+
+			NoteDirection direction = startNote.direction;
+			startNote.direction = endNote.direction;
+			endNote.direction = direction;
+
+			NoteCategory category = startNote.category;
+			startNote.category = endNote.category;
+			endNote.category = category;
+		}
+
+		private static List<MusicScoreNoteBase> FindSelectedNoteList(List<MusicScoreNoteBase> selectedNoteList)
 		{
 			List<MusicScoreNoteBase> result = new List<MusicScoreNoteBase>();
 			if (selectedNoteList == null)
@@ -4193,15 +4347,54 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			}
 			foreach (MusicScoreNoteBase note in selectedNoteList)
 			{
-				if (note == null || note.IsSingle)
+				if (note != null && note.IsSingle)
+				{
+					result.Add(note);
+				}
+			}
+			return result;
+		}
+
+		private List<MusicScoreNoteBase> FindSelectedLongNoteList(List<MusicScoreNoteBase> selectedNoteList, HashSet<int> allSelectedIds, bool isOnlyStartNote = false)
+		{
+			List<MusicScoreNoteBase> result = new List<MusicScoreNoteBase>();
+			MusicScoreMakerData data = CurrentData();
+			if (selectedNoteList == null || allSelectedIds == null || data == null)
+			{
+				return result;
+			}
+			Dictionary<int, MusicScoreNoteBase> noteIdCache = data.GetNoteIdCacheOrRebuild();
+			List<MusicScoreNoteBase> connectedNotes = new List<MusicScoreNoteBase>();
+			foreach (MusicScoreNoteBase note in selectedNoteList)
+			{
+				if (note == null || !note.IsConnectedFirst)
 				{
 					continue;
 				}
-				if (isOnlyStartNote && note.previousConnectionId != -1)
+				note.FindConnectedNotes(noteIdCache, connectedNotes);
+				bool isAllSelected = true;
+				foreach (MusicScoreNoteBase connectedNote in connectedNotes)
+				{
+					if (connectedNote == null || !allSelectedIds.Contains(connectedNote.id))
+					{
+						isAllSelected = false;
+						break;
+					}
+				}
+				if (!isAllSelected)
 				{
 					continue;
 				}
-				result.Add(note);
+				note.ConnectedNotes.Clear();
+				note.ConnectedNotes.AddRange(connectedNotes);
+				if (isOnlyStartNote)
+				{
+					result.Add(note);
+				}
+				else
+				{
+					result.AddRange(connectedNotes);
+				}
 			}
 			return result;
 		}
@@ -4991,12 +5184,20 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private long ClampDeltaTicksForSelectedNotes(long deltaTicks)
 		{
-			long minTicks = GetMinTicksFromSelectedNotes();
-			if (minTicks == long.MaxValue)
+			if (deltaTicks == 0L)
+			{
+				return 0L;
+			}
+			if (_model?.MusicScoreMakerData == null)
+			{
+				return 0L;
+			}
+			if (!TryGetSelectedNoteTicksRange(out long minTicks, out long maxTicks))
 			{
 				return deltaTicks;
 			}
-			return Math.Max(deltaTicks, -minTicks);
+			deltaTicks = Math.Max(deltaTicks, -minTicks);
+			return Math.Min(deltaTicks, GetMaxFocusableTicks() - maxTicks);
 		}
 
 		private long SnapDeltaTicksForSelectedNotes(long deltaTicks, SelectedTargetOperation.NoteTapPosition noteTapPosition)
@@ -5016,21 +5217,28 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private long GetMinTicksFromSelectedNotes()
 		{
+			return TryGetSelectedNoteTicksRange(out long minTicks, out _) ? minTicks : long.MaxValue;
+		}
+
+		private bool TryGetSelectedNoteTicksRange(out long minTicks, out long maxTicks)
+		{
+			minTicks = long.MaxValue;
+			maxTicks = long.MinValue;
 			MusicScoreMakerData data = CurrentData();
 			if (data == null)
 			{
-				return long.MaxValue;
+				return false;
 			}
-			long minTicks = long.MaxValue;
 			foreach (int id in data.SelectedNoteTargetIdSet)
 			{
 				MusicScoreNoteBase note = data.FindNote(id);
 				if (note != null)
 				{
 					minTicks = Math.Min(minTicks, note.ticks);
+					maxTicks = Math.Max(maxTicks, note.ticks);
 				}
 			}
-			return minTicks;
+			return minTicks != long.MaxValue;
 		}
 
 		private void OnMusicScorePreviewPointerDown(OnMusicScorePreviewPointerDownEvent obj)
@@ -5076,8 +5284,6 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			if (_model?.AreaSelectMode == true)
 			{
 				ClearSelectedList();
-				NotifyMusicScoreAndTimelineChanged();
-				return;
 			}
 			SelectedToolTypeAction(obj);
 		}
@@ -6175,11 +6381,31 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private long GetMaxFocusableTicks()
 		{
-			if (_model == null)
+			if (_model == null || _model.MusicScoreMakerData == null)
 			{
 				return 0L;
 			}
-			return _model.MusicScoreTicksMax;
+			if (_model.MasterMusicSec <= 0)
+			{
+				return _model.MusicScoreTicksMax;
+			}
+			List<MusicScoreEventData> eventList = _model.MusicScoreMakerData.MusicScoreEventDataList;
+			if (eventList == null)
+			{
+				return 0L;
+			}
+			int eventHash = CalculateBpmAndTimeSignatureEventHash(eventList);
+			if (ShouldUseMaxFocusableTicksCache(eventHash))
+			{
+				return _maxFocusableTicksCache;
+			}
+			long ticks = ComputeMaxTicksForEventList(eventList);
+			_maxFocusableTicksCacheValid = true;
+			_maxFocusableTicksEventHashCache = eventHash;
+			_maxFocusableTicksMasterMusicSecCache = _model.MasterMusicSec;
+			_maxFocusableTicksFillerSecCache = _model.FillerSec;
+			_maxFocusableTicksCache = ticks;
+			return ticks;
 		}
 
 		private long ComputeMaxTicksForEventList(List<MusicScoreEventData> eventList)
@@ -6236,7 +6462,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private long GetMusicScoreTicksMax(GetMusicScoreTicksMaxEvent arg)
 		{
-			return _model?.MusicScoreTicksMax ?? 0L;
+			return GetMaxFocusableTicks();
 		}
 
 		private void OnInvalidateMaxTicksCache(InvalidateMaxFocusableTicksCacheEvent arg)
@@ -6496,7 +6722,6 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			if (_model.AreaSelectMode)
 			{
 				_model.RemoveMode = false;
-				_model.SelectedToolType = MusicScoreMakerUtility.ToolType.AreaSelect;
 			}
 			ClearTemporaryAreaSelection();
 			NotifyMusicScoreAndTimelineChanged();
