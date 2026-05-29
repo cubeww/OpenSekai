@@ -54,8 +54,6 @@ namespace Sekai.Live
 				[NoteCategory.FrictionLong] = CreateTypedPools(noteCountDictionary, NoteCategory.FrictionLong, "FrictionLongNotePool", "FrictionLongNote", "FrictionLongCriticalNotePool", "FrictionLongCrtNote", noteShowRate),
 				[NoteCategory.FrictionFlick] = CreateTypedPools(noteCountDictionary, NoteCategory.FrictionFlick, "FrictionFlickNotePool", "FrictionFlickNote", "FrictionFlickCriticalNotePool", "FrictionFlickCrtNote", noteShowRate)
 			};
-			notePoolDict[NoteCategory.FrictionHide] = notePoolDict[NoteCategory.Friction];
-			notePoolDict[NoteCategory.FrictionHideLong] = notePoolDict[NoteCategory.FrictionLong];
 
 			bool isCustomMusicScore = baseController.BootData?.IsCustomMusicScore ?? false;
 			LiveBundleBuildData bundleBuildData = baseController.BootData?.BundleBuildData;
@@ -235,11 +233,6 @@ namespace Sekai.Live
 
 			if (!notePoolDict.TryGetValue(category, out Dictionary<NoteType, NotePool> typedPools))
 			{
-				typedPools = notePoolDict.TryGetValue(NoteCategory.Normal, out Dictionary<NoteType, NotePool> normalPools) ? normalPools : null;
-			}
-
-			if (typedPools == null)
-			{
 				return null;
 			}
 
@@ -248,7 +241,7 @@ namespace Sekai.Live
 				return pool;
 			}
 
-			return typedPools.TryGetValue(NoteType.Default, out pool) ? pool : null;
+			return null;
 		}
 
 		private T CreateLineView<T>(string viewName) where T : Component

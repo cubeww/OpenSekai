@@ -64,11 +64,9 @@ namespace Sekai.Core.Live
 			LiveBootDataBase bootData = BootData;
 			if (bootData != null)
 			{
-				Sekai.Live.MVQualityType qualityType = ConvertQualityType(bootData.MVQualityType);
-				ScreenConfig.ScreenSize renderTextureSize = LiveConfig.GetRenderTextureSize(qualityType, bootData.LivePlayMode);
-				BackgroundTexture = new RenderTexture(renderTextureSize.width, renderTextureSize.height, 24, RenderTextureFormat.ARGB32);
+				EnsureBackgroundTextureSizeForCurrentScreen();
 				ScreenConfig.CaptureStandaloneRestoreSize();
-				ScreenConfig.DownResolution(qualityType);
+				ScreenConfig.DownResolution(ConvertQualityType(bootData.MVQualityType));
 			}
 
 			ApplicationLocalSettings localSettings = ApplicationLocalSettings.LoadFromStorage();
@@ -76,6 +74,50 @@ namespace Sekai.Core.Live
 			SoundManager.Instance.SetupVolume(1f, liveVolume.Bgm, liveVolume.Se, liveVolume.Voice);
 
 			timingAdjust = (Settings?.TimingAdjustData ?? 0f) * 0.016667f;
+		}
+
+		public bool EnsureBackgroundTextureSizeForCurrentScreen()
+		{
+			if (BootData == null)
+			{
+				return false;
+			}
+
+			ScreenConfig.ScreenSize renderTextureSize = GetBackgroundRenderTextureSizeForCurrentScreen();
+			if (BackgroundTexture != null && BackgroundTexture.width == renderTextureSize.width && BackgroundTexture.height == renderTextureSize.height)
+			{
+				return false;
+			}
+
+			if (BackgroundTexture == null)
+			{
+				BackgroundTexture = new RenderTexture(renderTextureSize.width, renderTextureSize.height, 24, RenderTextureFormat.ARGB32);
+				return true;
+			}
+
+			BackgroundTexture.Release();
+			BackgroundTexture.width = renderTextureSize.width;
+			BackgroundTexture.height = renderTextureSize.height;
+			BackgroundTexture.Create();
+			return true;
+		}
+
+		private ScreenConfig.ScreenSize GetBackgroundRenderTextureSizeForCurrentScreen()
+		{
+			Sekai.Live.MVQualityType qualityType = ConvertQualityType(BootData.MVQualityType);
+			ScreenConfig.ScreenSize renderTextureSize = LiveConfig.GetRenderTextureSize(qualityType, BootData.LivePlayMode);
+			int screenWidth = Screen.width;
+			int screenHeight = Screen.height;
+			if (screenWidth <= 0 || screenHeight <= 0 || renderTextureSize.width <= 0 || renderTextureSize.height <= 0)
+			{
+				return renderTextureSize;
+			}
+
+			// OpenSekai: live background baking must keep the current display aspect.
+			// Otherwise a 16:9 baked jacket texture is stretched on wide or narrow screens.
+			float screenAspect = (float)screenWidth / screenHeight;
+			int width = Mathf.Max(1, Mathf.RoundToInt(renderTextureSize.height * screenAspect));
+			return new ScreenConfig.ScreenSize(width, renderTextureSize.height);
 		}
 
 		protected virtual void LoadSound()

@@ -9,6 +9,7 @@ namespace Sekai.Live
 	{
 		private const string DefaultBackgroundBundleName = "live/2dmode/background/default";
 		private const string DefaultBackgroundAssetName = "default";
+		private const float BaseAspect = 16f / 9f;
 
 		[SerializeField]
 		private Camera movieCamera;
@@ -34,6 +35,8 @@ namespace Sekai.Live
 		private BaseLiveController baseController;
 		private Texture2D externalJacketTexture;
 		private Sprite externalJacketSprite;
+		private int lastRenderedScreenWidth;
+		private int lastRenderedScreenHeight;
 
 		private void Awake()
 		{
@@ -86,22 +89,13 @@ namespace Sekai.Live
 			DisableMovieMode();
 
 			LoadDefaultBackground();
-			FitDefaultBackgroundToCamera();
 			Texture2D jacketTexture = LoadJacketTexture();
 			if (jacketTexture != null)
 			{
 				ApplyJacketTexture(jacketTexture, destroyWhenReplaced: IsExternalJacketTexture(jacketTexture));
 			}
 
-			if (jacketCamera != null)
-			{
-				DisableMovieMode();
-				jacketCamera.targetTexture = baseController?.BackgroundTexture;
-				jacketCamera.enabled = true;
-				jacketCamera.Render();
-				jacketCamera.enabled = false;
-			}
-
+			RenderJacketBackground();
 			gameObject.SetActive(false);
 		}
 
@@ -118,29 +112,64 @@ namespace Sekai.Live
 			}
 		}
 
-		private void FitDefaultBackgroundToCamera()
+		public override void OnUpdate(float musicTime)
 		{
-			if (backgroundRenderer == null || jacketCamera == null || backgroundRenderer.sprite == null)
+			if (Screen.width == lastRenderedScreenWidth && Screen.height == lastRenderedScreenHeight)
 			{
 				return;
 			}
 
-			float height = jacketCamera.orthographicSize * 2f;
-			RenderTexture targetTexture = jacketCamera.targetTexture ?? baseController?.BackgroundTexture;
-			float aspect = targetTexture != null && targetTexture.height > 0
-				? (float)targetTexture.width / targetTexture.height
-				: Screen.height > 0 ? (float)Screen.width / Screen.height : 16f / 9f;
+			RenderJacketBackground();
+		}
 
-			Vector2 spriteSize = backgroundRenderer.sprite.bounds.size;
-			if (spriteSize.x <= 0f || spriteSize.y <= 0f)
+		private void RenderJacketBackground()
+		{
+			if (jacketCamera == null)
 			{
 				return;
 			}
 
-			float width = height * aspect;
-			float scale = Mathf.Max(width / spriteSize.x, height / spriteSize.y);
-			Vector3 localScale = backgroundRenderer.transform.localScale;
-			backgroundRenderer.transform.localScale = new Vector3(scale, scale, localScale.z);
+			bool wasActive = gameObject.activeSelf;
+			if (!wasActive)
+			{
+				gameObject.SetActive(true);
+			}
+
+			if (jacketModeRoot != null)
+			{
+				jacketModeRoot.SetActive(true);
+			}
+			DisableMovieMode();
+
+			baseController?.EnsureBackgroundTextureSizeForCurrentScreen();
+			jacketCamera.targetTexture = baseController?.BackgroundTexture;
+			float aspect = GetRenderTargetAspect();
+			if (aspect > 0f)
+			{
+				jacketCamera.aspect = aspect;
+				jacketCamera.ResetProjectionMatrix();
+			}
+			jacketCamera.enabled = true;
+			jacketCamera.Render();
+			jacketCamera.enabled = false;
+			lastRenderedScreenWidth = Screen.width;
+			lastRenderedScreenHeight = Screen.height;
+
+			if (!wasActive)
+			{
+				gameObject.SetActive(false);
+			}
+		}
+
+		private float GetRenderTargetAspect()
+		{
+			RenderTexture targetTexture = jacketCamera != null ? jacketCamera.targetTexture : null;
+			if (targetTexture != null && targetTexture.height > 0)
+			{
+				return (float)targetTexture.width / targetTexture.height;
+			}
+
+			return Screen.height > 0 ? (float)Screen.width / Screen.height : BaseAspect;
 		}
 
 		private void DisableMovieMode()
