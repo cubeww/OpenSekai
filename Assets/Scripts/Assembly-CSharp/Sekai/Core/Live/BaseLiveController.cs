@@ -67,6 +67,7 @@ namespace Sekai.Core.Live
 				Sekai.Live.MVQualityType qualityType = ConvertQualityType(bootData.MVQualityType);
 				ScreenConfig.ScreenSize renderTextureSize = LiveConfig.GetRenderTextureSize(qualityType, bootData.LivePlayMode);
 				BackgroundTexture = new RenderTexture(renderTextureSize.width, renderTextureSize.height, 24, RenderTextureFormat.ARGB32);
+				ScreenConfig.CaptureStandaloneRestoreSize();
 				ScreenConfig.DownResolution(qualityType);
 			}
 

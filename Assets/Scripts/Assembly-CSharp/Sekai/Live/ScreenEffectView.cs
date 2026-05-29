@@ -9,8 +9,17 @@ namespace Sekai.Live
 		public void Setup()
 		{
 			damageEffectController = CreateEffect(LivePrefabDefine.FX_SCREEN_DAMAGE);
+			RefreshScreenSize();
+		}
+
+		public void RefreshScreenSize()
+		{
 			float aspect = Screen.height > 0 ? (float)Screen.width / Screen.height : 1.7778f;
 			transform.localScale = Vector3.one * Mathf.Max(1.7778f / aspect, 1f);
+			if (damageEffectController != null)
+			{
+				damageEffectController.transform.localScale = new Vector3(aspect * 10f, 10f, 1f);
+			}
 		}
 
 		public void Excute(INote note)

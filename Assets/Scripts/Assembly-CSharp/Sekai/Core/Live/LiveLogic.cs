@@ -460,7 +460,9 @@ namespace Sekai.Core.Live
 
 		private void UpdateJudgmentNoteArray(NoteBase note)
 		{
-			if (note != null && note.HasJudgment)
+			// FrictionHideLongNote itself has no scoring judgment, but it is the hidden input carrier for trace long notes.
+			// It must still receive held input frames so its generated LongHoldCombo points are judged by LongNote.Judgment.
+			if (note != null && (note.HasJudgment || note is FrictionHideLongNote))
 			{
 				judgmentNoteList.Add(note);
 			}
@@ -828,6 +830,7 @@ namespace Sekai.Core.Live
 			for (int inputIndex = 0; inputIndex < activeInputList.Count; inputIndex++)
 			{
 				InputTmp input = activeInputList[inputIndex];
+				bool hasCandidate = input.CandidateNotes.Count > 0;
 				for (int candidateIndex = 0; candidateIndex < input.CandidateNotes.Count; candidateIndex++)
 				{
 					NoteBase note = input.CandidateNotes[candidateIndex];
@@ -844,9 +847,12 @@ namespace Sekai.Core.Live
 					}
 
 					judgmentNoteList.Remove(note);
+				}
+
+				if (hasCandidate)
+				{
 					input.CandidateNotes.Clear();
 					usedFingerList.Add(input.Touch.fingerId);
-					break;
 				}
 			}
 

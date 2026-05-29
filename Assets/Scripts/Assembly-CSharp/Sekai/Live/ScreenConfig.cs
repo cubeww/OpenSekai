@@ -54,15 +54,29 @@ namespace Sekai.Live
 		public static readonly ScreenSize StreamingLiveDefaultDPISize = CalculateDpiSize(StreamingLiveDefaultDpi, MinHeight, MaxHeight, true);
 		public static readonly ScreenSize StreamingLiveLowDPISize = CalculateDpiSize(StreamingLiveLowDpi, MinHeight, MaxHeight, true);
 
+		private static ScreenSize standaloneRestoreSize = DefaultSize;
+
 		public static ResolutionQuality CurrentResolutionQuality { get; private set; } = ResolutionQuality.Default;
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		private static void InitializeStandaloneResolution()
 		{
+			CaptureStandaloneRestoreSize();
 			if (ShouldRestoreStandaloneDefaultResolution())
 			{
-				Screen.SetResolution(DefaultSize.width, DefaultSize.height, Screen.fullScreenMode);
+				RestoreStandaloneResolution();
 			}
+		}
+
+		public static void CaptureStandaloneRestoreSize()
+		{
+			if (!ShouldRestoreStandaloneDefaultResolution())
+			{
+				return;
+			}
+
+			// OpenSekai: desktop players can resize the window before live; remember that size.
+			standaloneRestoreSize = new ScreenSize(Screen.width, Screen.height);
 		}
 
 		public static void DownResolution(MVQualityType qualityType)
@@ -82,7 +96,7 @@ namespace Sekai.Live
 			}
 			else if (ShouldRestoreStandaloneDefaultResolution())
 			{
-				Screen.SetResolution(DefaultSize.width, DefaultSize.height, Screen.fullScreenMode);
+				RestoreStandaloneResolution();
 			}
 		}
 
@@ -94,10 +108,19 @@ namespace Sekai.Live
 		public static void ResetResolution()
 		{
 			CurrentResolutionQuality = ResolutionQuality.Default;
-			if (ShouldApplyMobileResolution() || ShouldRestoreStandaloneDefaultResolution())
+			if (ShouldApplyMobileResolution())
 			{
 				Screen.SetResolution(DefaultSize.width, DefaultSize.height, Screen.fullScreenMode);
 			}
+			else if (ShouldRestoreStandaloneDefaultResolution())
+			{
+				RestoreStandaloneResolution();
+			}
+		}
+
+		private static void RestoreStandaloneResolution()
+		{
+			Screen.SetResolution(standaloneRestoreSize.width, standaloneRestoreSize.height, Screen.fullScreenMode);
 		}
 
 		private static ScreenSize CalculateDpiSize(float targetDpi, int minHeight, int maxHeight, bool clampMaxHeight)

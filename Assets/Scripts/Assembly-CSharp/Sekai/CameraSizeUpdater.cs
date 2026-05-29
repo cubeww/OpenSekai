@@ -63,6 +63,11 @@ namespace Sekai
 			UpdateOrthographicSize();
 		}
 
+		public void ForceUpdate()
+		{
+			UpdateOrthographicSize();
+		}
+
 		private void UpdateOrthographicSize()
 		{
 			if (camera == null)

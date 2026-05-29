@@ -35,10 +35,20 @@ namespace Sekai.Live
 				return;
 			}
 
-			if (MusicScoreInfo.time <= currentFrameInfo.time)
+			if (MusicScoreInfo.time > currentFrameInfo.time)
 			{
-				State = NoteState.Last;
+				return;
 			}
+
+			var childNote = parentNote?.ChildNote;
+			if (childNote != null && (childNote.Result > NoteResult.Pass || childNote.State == NoteState.Input))
+			{
+				JudgeInfo = (NoteResult.JustPerfect, NoteResultDescription.None);
+				State = NoteState.Done;
+				return;
+			}
+
+			State = NoteState.Last;
 		}
 
 		public override bool IsJudgment(ref LiveTouch touch, float lane)
@@ -69,9 +79,12 @@ namespace Sekai.Live
 				return;
 			}
 
-			JudgeInfo = parentNote != null && !parentNote.WasHoldingWhenTerminated
-				? (NoteResult.Miss, NoteResultDescription.None)
-				: (NoteResult.JustPerfect, NoteResultDescription.None);
+			var childNote = parentNote?.ChildNote;
+			JudgeInfo = parentNote != null
+				&& (parentNote.WasHoldingWhenTerminated
+					|| (childNote != null && (childNote.Result > NoteResult.Pass || childNote.State == NoteState.Input)))
+						? (NoteResult.JustPerfect, NoteResultDescription.None)
+						: (NoteResult.Miss, NoteResultDescription.None);
 			State = NoteState.Done;
 		}
 

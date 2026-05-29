@@ -10,8 +10,6 @@ namespace Sekai.Live
 	{
 		protected int lastInputFrame;
 
-		private int checkJudgementMiddleNoteIndex;
-
 		public float LaneOffset
 		{
 			[CompilerGenerated]
@@ -174,14 +172,12 @@ namespace Sekai.Live
 			ViewNoteList = new List<INote> { this };
 			Category = NoteCategory.Long;
 			Type = NoteType.Default;
-			checkJudgementMiddleNoteIndex = 1;
 		}
 
 		public LongNote(MusicScoreInfo info, int id, int laneStart, int laneEnd, NoteCategory category, NoteType type, float speedRatio, float laneOffset, NoteLineType lineType = NoteLineType.Linear)
 			: base(info, id, laneStart, laneEnd, category, speedRatio, laneOffset, type)
 		{
 			LineType = lineType;
-			checkJudgementMiddleNoteIndex = 1;
 			LaneOffset = laneOffset;
 		}
 
@@ -226,7 +222,6 @@ namespace Sekai.Live
 			ViewNoteList ??= new List<INote> { this };
 			NoteList.Add(note);
 			ViewNoteList.Add(note);
-			checkJudgementMiddleNoteIndex = 1;
 			SortNoteList();
 		}
 
@@ -358,24 +353,22 @@ namespace Sekai.Live
 
 		protected void ConnectionNoteJudgment(ref LiveTouch touch, float lane)
 		{
+			if (State != NoteState.InputBegan && State != NoteState.Input && State != NoteState.Release)
+			{
+				return;
+			}
+
 			if (NoteList == null)
 			{
 				return;
 			}
 
-			for (var i = checkJudgementMiddleNoteIndex; i < NoteList.Count - 1; i++)
+			for (var i = 1; i < NoteList.Count - 1; i++)
 			{
 				var note = NoteList[i];
-				if (note.State == NoteState.Done)
-				{
-					checkJudgementMiddleNoteIndex = i + 1;
-					continue;
-				}
-
-				if (note.IsJudgment(ref touch, lane))
+				if (note != null)
 				{
 					note.Judgment(ref touch, lane);
-					checkJudgementMiddleNoteIndex = i + 1;
 				}
 			}
 		}
@@ -460,12 +453,9 @@ namespace Sekai.Live
 				return;
 			}
 
-			for (var i = checkJudgementMiddleNoteIndex; i < NoteList.Count - 1; i++)
+			for (var i = 1; i < NoteList.Count - 1; i++)
 			{
-				if (NoteList[i].AutoJudgment(currentFrameInfo))
-				{
-					checkJudgementMiddleNoteIndex = i + 1;
-				}
+				NoteList[i]?.AutoJudgment(currentFrameInfo);
 			}
 		}
 
@@ -478,7 +468,6 @@ namespace Sekai.Live
 		{
 			base.ResetNote();
 			lastInputFrame = 0;
-			checkJudgementMiddleNoteIndex = 1;
 			WasHoldingWhenTerminated = false;
 		}
 

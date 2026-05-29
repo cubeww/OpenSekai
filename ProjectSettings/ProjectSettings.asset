@@ -94,7 +94,7 @@ PlayerSettings:
   bakeCollisionMeshes: 0
   forceSingleInstance: 0
   useFlipModelSwapchain: 1
-  resizableWindow: 0
+  resizableWindow: 1
   useMacAppStoreValidation: 0
   macAppStoreCategory: public.app-category.games
   gpuSkinning: 0
@@ -141,7 +141,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 0.5.0
+  bundleVersion: 0.5.1
   preloadedAssets:
   - {fileID: 11400000, guid: fe8f6c0f9ce51364f989107db233ab24, type: 2}
   - {fileID: 11400000, guid: fb4140c8908e2164fb7c60a3d980231c, type: 2}

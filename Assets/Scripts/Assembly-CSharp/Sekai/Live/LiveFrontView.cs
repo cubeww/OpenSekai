@@ -96,6 +96,9 @@ namespace Sekai.Live
 		private bool isAuto;
 		private bool isPlayedHaptic;
 		private int life;
+		private int lastScreenWidth;
+		private int lastScreenHeight;
+		private float effectCameraBaseFieldOfView = -1f;
 
 		private static readonly int TapEffectViewMatrixId = Shader.PropertyToID("_TapEffectViewMatrix");
 		private static readonly int TapEffectProjectionMatrixId = Shader.PropertyToID("_TapEffectProjectionMatrix");
@@ -129,6 +132,7 @@ namespace Sekai.Live
 			laneView?.Setup(controller?.Settings);
 			SetupNotesView();
 			SetupTapEffect();
+			RefreshScreenDependentLayout(force: true);
 			CacheSpriteRendererAlpha();
 			UpdateSpriteAlpha(0f);
 			if (autoLabel != null)
@@ -187,6 +191,11 @@ namespace Sekai.Live
 			longTapEffectView?.Excute(viewTime);
 			skillView?.OnUpdate(viewTime);
 			UpdateLaneMask();
+		}
+
+		private void Update()
+		{
+			RefreshScreenDependentLayout(force: false);
 		}
 
 		public override void CreateNotePool(Dictionary<(NoteCategory, NoteType), int> notePoolCount)
@@ -376,6 +385,32 @@ namespace Sekai.Live
 			float height = orthographicSize * 2f;
 			float aspect = Screen.height > 0 ? (float)Screen.width / Screen.height : 16f / 9f;
 			deadMask.size = new Vector2(height * aspect, height);
+		}
+
+		private void RefreshScreenDependentLayout(bool force)
+		{
+			int currentWidth = Screen.width;
+			int currentHeight = Screen.height;
+			if (currentWidth <= 0 || currentHeight <= 0)
+			{
+				return;
+			}
+			if (!force && currentWidth == lastScreenWidth && currentHeight == lastScreenHeight)
+			{
+				return;
+			}
+
+			lastScreenWidth = currentWidth;
+			lastScreenHeight = currentHeight;
+			// OpenSekai: desktop windows can be resized during live; keep camera/world-space effects aligned.
+			ResolveCameraReferences();
+			cameraSizeUpdater?.ForceUpdate();
+			UpdateBackgroundScale();
+			SetupDeadMask();
+			RefreshTapEffectProjection();
+			screenEffectView?.RefreshScreenSize();
+			lifeView?.CalculateButtonBounds(frontViewCamera);
+			consecutiveAutoLiveView?.CalculateButtonBounds(frontViewCamera);
 		}
 
 		private void UpdateLaneMask()
@@ -599,9 +634,7 @@ namespace Sekai.Live
 			parent.position = transform.position;
 			if (effectCamera != null)
 			{
-				effectCamera.fieldOfView = SekaiCameraAspect.CalculateVerticalFov(effectCamera.fieldOfView);
-				Shader.SetGlobalMatrix(TapEffectViewMatrixId, effectCamera.worldToCameraMatrix);
-				Shader.SetGlobalMatrix(TapEffectProjectionMatrixId, GL.GetGPUProjectionMatrix(effectCamera.projectionMatrix, false));
+				RefreshTapEffectProjection();
 				effectCamera.enabled = false;
 			}
 		}
@@ -677,6 +710,33 @@ namespace Sekai.Live
 			{
 				cameraSizeUpdater = GetComponent<CameraSizeUpdater>();
 			}
+
+			if (effectCamera != null && effectCameraBaseFieldOfView < 0f)
+			{
+				effectCameraBaseFieldOfView = effectCamera.fieldOfView;
+			}
+		}
+
+		private void RefreshTapEffectProjection()
+		{
+			if (effectCamera == null)
+			{
+				return;
+			}
+
+			// OpenSekai: the effect camera is disabled after setup, so keep its
+			// projection in sync when desktop/mobile resolution changes at runtime.
+			if (Screen.height > 0)
+			{
+				effectCamera.aspect = (float)Screen.width / Screen.height;
+			}
+			if (effectCameraBaseFieldOfView > 0f)
+			{
+				effectCamera.fieldOfView = SekaiCameraAspect.CalculateVerticalFov(effectCameraBaseFieldOfView);
+			}
+			effectCamera.ResetProjectionMatrix();
+			Shader.SetGlobalMatrix(TapEffectViewMatrixId, effectCamera.worldToCameraMatrix);
+			Shader.SetGlobalMatrix(TapEffectProjectionMatrixId, GL.GetGPUProjectionMatrix(effectCamera.projectionMatrix, false));
 		}
 
 		private static UniversalAdditionalCameraData GetOrAddCameraData(Camera camera)

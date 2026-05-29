@@ -38,9 +38,11 @@ namespace Sekai.Live
 
 		public override bool IsJudgment(ref LiveTouch touch, float lane)
 		{
+			var left = JudgeInfo.result == NoteResult.None ? JudgeLaneStart : JudgedLaneStart;
+			var right = JudgeInfo.result == NoteResult.None ? JudgeLaneEnd : JudgedLaneEnd;
 			return State != NoteState.Done
-				&& JudgedLaneStart <= lane
-				&& JudgedLaneEnd >= lane
+				&& left <= lane
+				&& right >= lane
 				&& LiveUtility.IsJudgmentTiming(LiveUtility.GetINoteToJudgeFrameType(this), OffsetJudgeTime);
 		}
 
