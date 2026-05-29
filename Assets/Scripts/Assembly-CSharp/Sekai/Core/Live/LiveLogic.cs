@@ -169,6 +169,12 @@ namespace Sekai.Core.Live
 
 		public void RefreshInput()
 		{
+			Input.ResetInputAxes();
+			foreach (var device in InputSystem.devices)
+			{
+				InputSystem.ResetDevice(device);
+			}
+
 			NativeInput.Enable();
 			lastTouches.Clear();
 			activeInputList.Clear();
@@ -693,60 +699,8 @@ namespace Sekai.Core.Live
 
 		private void OverlapJudgmentSorting()
 		{
-			for (int inputIndex = activeInputList.Count - 1; inputIndex >= 0; inputIndex--)
-			{
-				InputTmp input = activeInputList[inputIndex];
-				if (input.CandidateNotes.Count <= 1)
-				{
-					continue;
-				}
-
-				input.CandidateNotes.Sort((a, b) =>
-				{
-					if (ReferenceEquals(a, b))
-					{
-						return 0;
-					}
-
-					int resultCompare = a.CalcNoteResult(input.Touch.musicTime).CompareTo(b.CalcNoteResult(input.Touch.musicTime));
-					if (resultCompare != 0)
-					{
-						return resultCompare;
-					}
-
-					int timeCompare = a.MusicScoreInfo.time.CompareTo(b.MusicScoreInfo.time);
-					if (timeCompare != 0)
-					{
-						return timeCompare;
-					}
-
-					float aDistance = a.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref a, ref input));
-					float bDistance = b.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref b, ref input));
-					return aDistance.CompareTo(bDistance);
-				});
-
-				for (int i = input.CandidateNotes.Count - 1; i > 0; i--)
-				{
-					NoteBase current = input.CandidateNotes[i];
-					NoteBase previous = input.CandidateNotes[i - 1];
-					if (current == null || previous == null || !IsSameJudgmentTime(current, previous))
-					{
-						continue;
-					}
-
-					float currentDistance = current.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref current, ref input));
-					float previousDistance = previous.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref previous, ref input));
-					if (previousDistance <= currentDistance)
-					{
-						input.CandidateNotes.RemoveAt(i);
-					}
-					else
-					{
-						input.CandidateNotes.RemoveAt(i - 1);
-					}
-				}
-			}
-
+			// Original keeps per-input candidate order as score-time order here.
+			// Same-touch fast-generation pruning is handled by LeaveNotesFastGeneration.
 			ResolveOverlappingCandidatesAcrossInputs();
 		}
 
@@ -804,15 +758,15 @@ namespace Sekai.Core.Live
 			for (int inputIndex = activeInputList.Count - 1; inputIndex >= 0; inputIndex--)
 			{
 				InputTmp input = activeInputList[inputIndex];
-				if (input.CandidateNotes.Count < 2)
+				for (int i = input.CandidateNotes.Count - 1; i >= 0; i--)
 				{
-					continue;
-				}
+					if (input.CandidateNotes.Count < 2)
+					{
+						break;
+					}
 
-				for (int i = input.CandidateNotes.Count - 1; i > 0; i--)
-				{
-					NoteBase first = ResolveJudgmentNote(input.CandidateNotes[0], input);
-					NoteBase current = ResolveJudgmentNote(input.CandidateNotes[i], input);
+					NoteBase first = ResolveFastGenerationNote(input.CandidateNotes[0], input);
+					NoteBase current = ResolveFastGenerationNote(input.CandidateNotes[i], input);
 					if (first == null || current == null)
 					{
 						continue;
@@ -822,7 +776,7 @@ namespace Sekai.Core.Live
 					{
 						float firstDistance = first.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref first, ref input));
 						float currentDistance = current.LaneDistance(ref currentFrameInfo, ConvertLaneBy(ref current, ref input));
-						if (firstDistance <= currentDistance)
+						if (firstDistance < currentDistance)
 						{
 							input.CandidateNotes.RemoveAt(i);
 						}
@@ -830,20 +784,13 @@ namespace Sekai.Core.Live
 						{
 							input.CandidateNotes.RemoveAt(0);
 						}
-						continue;
 					}
-
-					if (current.CalcNoteResult(input.Touch.musicTime) <= NoteResult.Good
-						&& first.CalcNoteResult(input.Touch.musicTime) > NoteResult.Good)
+					else if (current.CalcNoteResult(input.Touch.musicTime) >= NoteResult.Great
+						&& first.CalcNoteResult(input.Touch.musicTime) <= NoteResult.Good)
 					{
 						input.CandidateNotes.RemoveAt(0);
 					}
-					else if (first.CalcNoteResult(input.Touch.musicTime) <= NoteResult.Good
-						&& current.CalcNoteResult(input.Touch.musicTime) > NoteResult.Good)
-					{
-						input.CandidateNotes.RemoveAt(i);
-					}
-					else if (first.MusicScoreInfo.time <= current.MusicScoreInfo.time)
+					else if (first.MusicScoreInfo.time < current.MusicScoreInfo.time)
 					{
 						input.CandidateNotes.RemoveAt(i);
 					}
@@ -851,6 +798,8 @@ namespace Sekai.Core.Live
 					{
 						input.CandidateNotes.RemoveAt(0);
 					}
+
+					i = input.CandidateNotes.Count;
 				}
 			}
 		}
@@ -1102,6 +1051,25 @@ namespace Sekai.Core.Live
 			return GetFirstNote(note);
 		}
 
+		private NoteBase ResolveFastGenerationNote(NoteBase note, InputTmp input)
+		{
+			if (note?.NoteList == null || note.NoteList.Count == 1)
+			{
+				return note;
+			}
+
+			NoteBase resolved = note.Result != NoteResult.None || input.Touch.phase != InputTouchPhase.Began
+				? GetLastNote(note)
+				: GetFirstNote(note);
+			float lane = ConvertLaneBy(ref resolved, ref input);
+			if (lane < 0f || resolved == null || !resolved.IsJudgment(ref input.Touch, lane))
+			{
+				return note;
+			}
+
+			return resolved;
+		}
+
 		private static NoteBase GetFirstNote(NoteBase note)
 		{
 			return note?.NoteList != null && note.NoteList.Count > 0 ? note.NoteList[0] : note;
@@ -1114,7 +1082,7 @@ namespace Sekai.Core.Live
 
 		private static bool IsSameJudgmentTime(NoteBase a, NoteBase b)
 		{
-			return a != null && b != null && Mathf.Approximately(a.MusicScoreInfo.time, b.MusicScoreInfo.time);
+			return a != null && b != null && a.MusicScoreInfo.time.Equals(b.MusicScoreInfo.time);
 		}
 
 		private static bool IsEndedOrCanceled(InputTouchPhase phase)

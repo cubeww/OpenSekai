@@ -2,6 +2,8 @@ using System;
 using Sekai.MusicScoreMaker.Ingame.Events;
 using Sekai.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Sekai.MusicScoreMaker.Ingame.Views
 {
@@ -27,6 +29,17 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 		private void OnDestroy()
 		{
 			Dispose();
+		}
+
+		// OpenSekai: allow Space to trigger the same play/pause path as the UI button.
+		private void Update()
+		{
+			if (!UnityEngine.Input.GetKeyDown(KeyCode.Space) || !CanHandlePlayPauseShortcut())
+			{
+				return;
+			}
+
+			CallMusicPlayButton(null);
 		}
 
 		public void Setup()
@@ -98,6 +111,45 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			{
 				_playButton.onClick.Invoke();
 			}
+		}
+
+		private bool CanHandlePlayPauseShortcut()
+		{
+			if (_playButton == null || !_playButton.isActiveAndEnabled || !_playButton.interactable)
+			{
+				return false;
+			}
+			if (IsInputFieldFocused())
+			{
+				return false;
+			}
+			if (ScreenManager.Instance != null && ScreenManager.Instance.ExistsDialog())
+			{
+				return false;
+			}
+
+			SubWindowSlideAnimationController[] subWindows = FindObjectsOfType<SubWindowSlideAnimationController>(true);
+			foreach (SubWindowSlideAnimationController subWindow in subWindows)
+			{
+				if (subWindow != null && subWindow.gameObject.activeSelf)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static bool IsInputFieldFocused()
+		{
+			GameObject selectedObject = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+			if (selectedObject == null)
+			{
+				return false;
+			}
+
+			return selectedObject.GetComponent<TMPro.TMP_InputField>() != null
+				|| selectedObject.GetComponent<InputField>() != null;
 		}
 
 		private void OnPauseMusic(PauseMusicEvent evt)
