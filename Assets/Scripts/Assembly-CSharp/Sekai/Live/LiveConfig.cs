@@ -246,6 +246,13 @@ namespace Sekai.Live
 
 		public static void LoadOptionData()
 		{
+			LiveSettingData liveSettingData = LiveSettingData.LoadFromStorage();
+			LongNoteAlpha = liveSettingData.GetNoteAlpha();
+			GuideAlpha = liveSettingData.GetGuideAlpha();
+			SetNoteSkinAssetBundleName(Mathf.Clamp(liveSettingData.NoteSkinIndex, 0, 1));
+			SetNoteSeName(liveSettingData.NoteSeIndex);
+			SetNoteEffectName(liveSettingData.NoteEffect);
+			SetFeverEffectName(liveSettingData.FeverEffectTypeIndex);
 			CacheSpeedTime = 0f;
 			CacheTimingTime = 0f;
 			NoteSpeedOffset = 0.04f;

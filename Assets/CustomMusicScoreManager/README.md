@@ -32,3 +32,5 @@ SUS files are converted to the local `score.json` format on import.
 
 `manifest.title` is the song title shown in live MusicInfo. `manifest.scoreTitle`
 is the custom score title shown in the score-info area.
+`manifest.collaborationLabel` controls the MusicInfo collaboration ribbon; leave it
+empty to hide the ribbon.

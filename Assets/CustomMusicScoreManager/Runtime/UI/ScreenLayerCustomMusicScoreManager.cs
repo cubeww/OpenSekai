@@ -101,6 +101,13 @@ namespace Sekai.CustomMusicScoreManager
 		private TMP_InputField _settingLiveSeInput;
 		private TMP_InputField _settingNoteSpeedInput;
 		private TMP_InputField _settingTimingAdjustInput;
+		private TMP_InputField _settingNoteShowRateInput;
+		private TextMeshProUGUI _settingNoteSkinLabel;
+		private int _settingNoteSkinIndex;
+		private TextMeshProUGUI _settingMusicInfoDisplayModeLabel;
+		private int _settingMusicInfoDisplayMode;
+		private TextMeshProUGUI _settingFastLateFlickLabel;
+		private bool _settingFastLateFlickEnabled;
 		private TMP_InputField _titleInput;
 		private TMP_InputField _scoreTitleInput;
 		private TMP_InputField _userInput;
@@ -108,6 +115,7 @@ namespace Sekai.CustomMusicScoreManager
 		private TMP_InputField _lyricistInput;
 		private TMP_InputField _arrangerInput;
 		private TMP_InputField _singerInput;
+		private TMP_InputField _collaborationLabelInput;
 		private TMP_InputField _descriptionInput;
 		private RectTransform _difficultyFieldRect;
 		private TextMeshProUGUI _difficultyLabel;
@@ -263,6 +271,7 @@ namespace Sekai.CustomMusicScoreManager
 			_lyricistInput = CreateInputField(_manifestFieldGrid, "作词", "lyricist");
 			_arrangerInput = CreateInputField(_manifestFieldGrid, "编曲", "arranger");
 			_singerInput = CreateInputField(_manifestFieldGrid, "歌手", "singer");
+			_collaborationLabelInput = CreateInputField(_manifestFieldGrid, "联动标签", "collaborationLabel");
 			_descriptionInput = CreateInputField(_manifestFieldGrid, "描述", "description");
 			RectTransform saveRow = CreateRect("SaveManifestRow", detailPanel);
 			SetStretchBottom(saveRow, 28f, 28f, 28f, 64f);
@@ -291,13 +300,13 @@ namespace Sekai.CustomMusicScoreManager
 			_settingsOverlay.gameObject.SetActive(false);
 
 			RectTransform dialog = CreatePanel("SettingsDialog", _settingsOverlay, new Color32(31, 37, 45, 255));
-			SetAnchor(dialog, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760f, 660f));
+			SetAnchor(dialog, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760f, 960f));
 
 			VerticalLayoutGroup dialogLayout = dialog.gameObject.AddComponent<VerticalLayoutGroup>();
 			dialogLayout.padding = new RectOffset(32, 32, 32, 32);
 			dialogLayout.spacing = 16f;
 			dialogLayout.childControlWidth = true;
-			dialogLayout.childControlHeight = false;
+			dialogLayout.childControlHeight = true;
 			dialogLayout.childForceExpandWidth = true;
 			dialogLayout.childForceExpandHeight = false;
 
@@ -305,10 +314,31 @@ namespace Sekai.CustomMusicScoreManager
 			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
 			titleLayout.preferredHeight = 46f;
 
-			_settingLiveBgmInput = CreateInputField(dialog, "音乐音量", "0.0 - 1.0");
-			_settingLiveSeInput = CreateInputField(dialog, "音效音量", "0.0 - 1.0");
-			_settingNoteSpeedInput = CreateInputField(dialog, "音符流速", "1.0 - 12.0");
-			_settingTimingAdjustInput = CreateInputField(dialog, "判定偏移", "-20.0 - 20.0");
+			ScrollRect settingsScroll = CreateMaskedScrollRect("SettingsScroll", dialog, out RectTransform settingsContent);
+			settingsScroll.scrollSensitivity = 48f;
+			LayoutElement settingsScrollLayout = settingsScroll.gameObject.AddComponent<LayoutElement>();
+			settingsScrollLayout.preferredHeight = 760f;
+			settingsScrollLayout.minHeight = 1f;
+			settingsScrollLayout.flexibleHeight = 1f;
+
+			VerticalLayoutGroup settingsLayout = settingsContent.gameObject.AddComponent<VerticalLayoutGroup>();
+			settingsLayout.padding = new RectOffset(16, 16, 16, 16);
+			settingsLayout.spacing = 16f;
+			settingsLayout.childControlWidth = true;
+			settingsLayout.childControlHeight = true;
+			settingsLayout.childForceExpandWidth = true;
+			settingsLayout.childForceExpandHeight = false;
+			ContentSizeFitter settingsFitter = settingsContent.gameObject.AddComponent<ContentSizeFitter>();
+			settingsFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+			_settingLiveBgmInput = CreateInputField(settingsContent, "音乐音量", "0.0 - 1.0");
+			_settingLiveSeInput = CreateInputField(settingsContent, "音效音量", "0.0 - 1.0");
+			_settingNoteSpeedInput = CreateInputField(settingsContent, "音符流速", "1.0 - 12.0");
+			_settingTimingAdjustInput = CreateInputField(settingsContent, "判定偏移", "-20.0 - 20.0");
+			_settingNoteShowRateInput = CreateInputField(settingsContent, "上隐挡板", "0 - 100");
+			CreateSettingNoteSkinSelector(settingsContent);
+			CreateSettingMusicInfoDisplayModeSelector(settingsContent);
+			CreateSettingFastLateFlickSelector(settingsContent);
 
 			RectTransform buttonRow = CreateRect("ButtonRow", dialog);
 			LayoutElement buttonRowLayout = buttonRow.gameObject.AddComponent<LayoutElement>();
@@ -336,6 +366,10 @@ namespace Sekai.CustomMusicScoreManager
 			_settingLiveSeInput.SetTextWithoutNotify(FormatSettingValue(liveVolume.Se));
 			_settingNoteSpeedInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.NoteSpeed));
 			_settingTimingAdjustInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.TimingAdjustData));
+			_settingNoteShowRateInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData._noteShowRate * 100f));
+			SetSettingNoteSkinIndex(liveSettingData.NoteSkinIndex);
+			SetSettingMusicInfoDisplayMode(liveSettingData.CustomMusicScoreMusicInfoDisplayMode ?? LiveSettingData.MusicInfoDisplayModeCustomScore);
+			SetSettingFastLateFlick(liveSettingData.IsFastLateFlick);
 			_settingsOverlay.gameObject.SetActive(true);
 			_settingsOverlay.SetAsLastSibling();
 		}
@@ -362,15 +396,28 @@ namespace Sekai.CustomMusicScoreManager
 				LiveConfig.MinNoteTiming,
 				LiveConfig.MaxNoteTiming,
 				liveSettingData.TimingAdjustData);
+			liveSettingData.SetNoteShowRate(ParseClampedSetting(
+				_settingNoteShowRateInput.text,
+				LiveConfig.MinNoteShowRate,
+				LiveConfig.MaxNoteShowRate,
+				liveSettingData._noteShowRate * 100f));
+			liveSettingData.NoteSkinIndex = _settingNoteSkinIndex;
+			liveSettingData.CustomMusicScoreMusicInfoDisplayMode = _settingMusicInfoDisplayMode;
+			liveSettingData.IsFastLateFlick = _settingFastLateFlickEnabled;
 
 			ApplicationLocalSettings.SaveToStorage(localSettings);
 			LiveSettingData.SaveToStorage(liveSettingData);
 			SoundManager.Instance.SetupVolume(1f, liveVolume.Bgm, liveVolume.Se, liveVolume.Voice);
+			LiveConfig.SetNoteSkinAssetBundleName(liveSettingData.NoteSkinIndex);
 
 			_settingLiveBgmInput.SetTextWithoutNotify(FormatSettingValue(liveVolume.Bgm));
 			_settingLiveSeInput.SetTextWithoutNotify(FormatSettingValue(liveVolume.Se));
 			_settingNoteSpeedInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.NoteSpeed));
 			_settingTimingAdjustInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.TimingAdjustData));
+			_settingNoteShowRateInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData._noteShowRate * 100f));
+			SetSettingNoteSkinIndex(liveSettingData.NoteSkinIndex);
+			SetSettingMusicInfoDisplayMode(liveSettingData.CustomMusicScoreMusicInfoDisplayMode ?? LiveSettingData.MusicInfoDisplayModeCustomScore);
+			SetSettingFastLateFlick(liveSettingData.IsFastLateFlick);
 			CloseSettings();
 			SetStatus("设置已保存。");
 		}
@@ -387,6 +434,136 @@ namespace Sekai.CustomMusicScoreManager
 		private static string FormatSettingValue(float value)
 		{
 			return value.ToString("0.###", CultureInfo.InvariantCulture);
+		}
+
+		private void CreateSettingNoteSkinSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("NoteSkinSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "Note皮肤", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingNoteSkin, 220f, 54f);
+			_settingNoteSkinLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingNoteSkinIndex(0);
+		}
+
+		private void CycleSettingNoteSkin()
+		{
+			SetSettingNoteSkinIndex((_settingNoteSkinIndex + 1) % 2);
+		}
+
+		private void SetSettingNoteSkinIndex(int index)
+		{
+			_settingNoteSkinIndex = Mathf.Clamp(index, 0, 1);
+			if (_settingNoteSkinLabel != null)
+			{
+				_settingNoteSkinLabel.text = string.Format("custom{0:00}", _settingNoteSkinIndex + 1);
+			}
+		}
+
+		private void CreateSettingMusicInfoDisplayModeSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("MusicInfoDisplayModeSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "MusicInfo显示", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingMusicInfoDisplayMode, 220f, 54f);
+			_settingMusicInfoDisplayModeLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingMusicInfoDisplayMode(LiveSettingData.MusicInfoDisplayModeCustomScore);
+		}
+
+		private void CycleSettingMusicInfoDisplayMode()
+		{
+			int nextMode = _settingMusicInfoDisplayMode == LiveSettingData.MusicInfoDisplayModeCustomScore
+				? LiveSettingData.MusicInfoDisplayModeNormal
+				: LiveSettingData.MusicInfoDisplayModeCustomScore;
+			SetSettingMusicInfoDisplayMode(nextMode);
+		}
+
+		private void SetSettingMusicInfoDisplayMode(int mode)
+		{
+			_settingMusicInfoDisplayMode = mode == LiveSettingData.MusicInfoDisplayModeNormal
+				? LiveSettingData.MusicInfoDisplayModeNormal
+				: LiveSettingData.MusicInfoDisplayModeCustomScore;
+			if (_settingMusicInfoDisplayModeLabel != null)
+			{
+				_settingMusicInfoDisplayModeLabel.text = _settingMusicInfoDisplayMode == LiveSettingData.MusicInfoDisplayModeCustomScore
+					? "自制谱模式"
+					: "正常模式";
+			}
+		}
+
+		private void CreateSettingFastLateFlickSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("FastLateFlickSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "判定偏差显示", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingFastLateFlick, 220f, 54f);
+			_settingFastLateFlickLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingFastLateFlick(false);
+		}
+
+		private void CycleSettingFastLateFlick()
+		{
+			SetSettingFastLateFlick(!_settingFastLateFlickEnabled);
+		}
+
+		private void SetSettingFastLateFlick(bool enabled)
+		{
+			_settingFastLateFlickEnabled = enabled;
+			if (_settingFastLateFlickLabel != null)
+			{
+				_settingFastLateFlickLabel.text = enabled ? "开启" : "关闭";
+			}
 		}
 
 		private void UpdateManifestFieldLayout()
@@ -788,6 +965,7 @@ namespace Sekai.CustomMusicScoreManager
 			bootData.CustomMusicScorePath = entry.RootDirectory;
 			bootData.CustomMusicScoreTitle = entry.Manifest.scoreTitle;
 			bootData.CustomMusicScoreAuthorName = entry.Manifest.userName;
+			bootData.CustomMusicScoreCollaborationLabel = entry.Manifest.collaborationLabel;
 
 			if (bootData.MusicData != null)
 			{
@@ -1241,6 +1419,7 @@ namespace Sekai.CustomMusicScoreManager
 			manifest.lyricist = _lyricistInput.text;
 			manifest.arranger = _arrangerInput.text;
 			manifest.singer = _singerInput.text;
+			manifest.collaborationLabel = _collaborationLabelInput.text;
 			manifest.description = _descriptionInput.text;
 			manifest.musicDifficultyType = GetSelectedDifficultyType();
 			manifest.audioFileName = Path.GetFileName(_audioInput.text);
@@ -1286,6 +1465,7 @@ namespace Sekai.CustomMusicScoreManager
 			_lyricistInput.SetTextWithoutNotify(manifest.lyricist);
 			_arrangerInput.SetTextWithoutNotify(manifest.arranger);
 			_singerInput.SetTextWithoutNotify(manifest.singer);
+			_collaborationLabelInput.SetTextWithoutNotify(manifest.collaborationLabel);
 			_descriptionInput.SetTextWithoutNotify(manifest.description);
 			SetDifficultyDropdownValue(manifest.musicDifficultyType);
 			_levelInput.SetTextWithoutNotify(manifest.playLevel.ToString(CultureInfo.InvariantCulture));
@@ -1300,7 +1480,7 @@ namespace Sekai.CustomMusicScoreManager
 		{
 			TMP_InputField[] inputs =
 			{
-				_titleInput, _scoreTitleInput, _userInput, _composerInput, _lyricistInput, _arrangerInput, _singerInput, _descriptionInput, _levelInput,
+				_titleInput, _scoreTitleInput, _userInput, _composerInput, _lyricistInput, _arrangerInput, _singerInput, _collaborationLabelInput, _descriptionInput, _levelInput,
 				_durationInput, _fillerInput, _audioInput, _jacketInput, _scoreInput
 			};
 			foreach (TMP_InputField input in inputs)
@@ -1314,7 +1494,7 @@ namespace Sekai.CustomMusicScoreManager
 		{
 			TMP_InputField[] inputs =
 			{
-				_titleInput, _scoreTitleInput, _userInput, _composerInput, _lyricistInput, _arrangerInput, _singerInput, _descriptionInput, _levelInput,
+				_titleInput, _scoreTitleInput, _userInput, _composerInput, _lyricistInput, _arrangerInput, _singerInput, _collaborationLabelInput, _descriptionInput, _levelInput,
 				_durationInput, _fillerInput, _audioInput, _jacketInput, _scoreInput
 			};
 			foreach (TMP_InputField input in inputs)

@@ -20,6 +20,8 @@ namespace Sekai.MusicScoreMaker.Common
 
 		public string singer;
 
+		public string collaborationLabel;
+
 		public string description;
 
 		public string audioFileName;
@@ -68,6 +70,7 @@ namespace Sekai.MusicScoreMaker.Common
 			lyricist ??= string.Empty;
 			arranger ??= string.Empty;
 			singer ??= string.Empty;
+			collaborationLabel ??= string.Empty;
 			description ??= string.Empty;
 			audioFileName ??= "audio.ogg";
 			jacketFileName ??= "jacket.png";

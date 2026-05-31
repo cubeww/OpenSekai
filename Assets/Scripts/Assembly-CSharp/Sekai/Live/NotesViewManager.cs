@@ -8,6 +8,8 @@ namespace Sekai.Live
 	{
 		private static readonly int DefaultNoteDictCapacity;
 
+		private static readonly int NoteShowRateId = Shader.PropertyToID("_NoteShowRate");
+
 		private Dictionary<INote, BaseNoteView> spawnNoteDict;
 
 		private Transform noteRoot;
@@ -72,6 +74,10 @@ namespace Sekai.Live
 
 		private void SetupNoteMask(float NoteShowRate)
 		{
+			ApplyNoteMask(noteLineView?.Material, NoteShowRate);
+			ApplyNoteMask(guideLineView?.Material, NoteShowRate);
+			ApplyNoteMask(pairNoteLineView?.Material, NoteShowRate);
+
 			if (notePoolDict == null)
 			{
 				return;
@@ -88,6 +94,14 @@ namespace Sekai.Live
 				{
 					pool?.SetupNoteMask(NoteShowRate);
 				}
+			}
+		}
+
+		private static void ApplyNoteMask(Material material, float NoteShowRate)
+		{
+			if (material != null)
+			{
+				material.SetFloat(NoteShowRateId, NoteShowRate);
 			}
 		}
 

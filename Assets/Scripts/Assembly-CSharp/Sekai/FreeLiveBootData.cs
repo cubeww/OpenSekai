@@ -14,6 +14,8 @@ namespace Sekai
 
 		public string CustomMusicScoreAuthorName { get; set; }
 
+		public string CustomMusicScoreCollaborationLabel { get; set; }
+
 		public MenuScreenType? ReturnScreenType { get; set; }
 
 		public FreeLiveBootData(int musicId, string difficulty, int vocalId, int deckId, int[] formationIndexes, LiveMusicData.CollaborationModeState collaboModeState, bool isOriginalMember = false, LiveScoreMode liveScoreMode = LiveScoreMode.Normal, LiveTournamentMode liveTournamentMode = LiveTournamentMode.None)

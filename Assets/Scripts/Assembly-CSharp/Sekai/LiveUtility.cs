@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sekai.Core;
 using Sekai.Live;
 using Sekai.MusicScoreMaker.Ingame.Models;
 using UnityEngine;
@@ -206,19 +207,19 @@ namespace Sekai
 
 		public static float CalcNoteShowRate(float settingsNoteShowRate)
 		{
-			return Mathf.Clamp01(settingsNoteShowRate);
+			return CalcNoteShowRate(CalcNoteShowRatePosition(settingsNoteShowRate));
 		}
 
 		public static float CalcNoteShowRate(Vector2 position)
 		{
-			var firstJudgmentPosition = LiveConfig.JudgmentPositions.Length > 0 ? LiveConfig.JudgmentPositions[0] : Vector2.zero;
-			var totalDistance = Vector2.Distance(LiveConfig.SpawnPosition, firstJudgmentPosition);
-			if (Mathf.Approximately(totalDistance, 0f))
+			Camera frontCamera = CameraUtility.GetFrontCamera();
+			if (frontCamera == null || Screen.height <= 0)
 			{
 				return 1f;
 			}
 
-			return Mathf.Clamp01(1f - Vector2.Distance(position, firstJudgmentPosition) / totalDistance);
+			float screenY = frontCamera.WorldToScreenPoint(new Vector3(position.x, position.y, 0f)).y;
+			return screenY / Screen.height;
 		}
 
 		public static Vector2 CalcNoteShowRatePosition(float settingsNoteShowRate)

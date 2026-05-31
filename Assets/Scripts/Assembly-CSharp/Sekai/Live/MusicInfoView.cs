@@ -117,15 +117,16 @@ namespace Sekai.Live
 
 			FreeLiveBootData freeLiveBootData = bootData as FreeLiveBootData;
 			bool isCustomScore = freeLiveBootData != null && bootData.IsCustomMusicScore;
+			bool showCustomScoreInfo = isCustomScore && (bootData.LiveSettingData?.UsesCustomMusicScoreMusicInfoDisplay ?? true);
 			if (_scoreIcon != null)
 			{
-				_scoreIcon.SetActive(isCustomScore);
+				_scoreIcon.SetActive(showCustomScoreInfo);
 			}
 			if (_scoreInfoRoot != null)
 			{
-				_scoreInfoRoot.SetActive(isCustomScore);
+				_scoreInfoRoot.SetActive(showCustomScoreInfo);
 			}
-			ApplyCustomScoreLayout(isCustomScore);
+			ApplyCustomScoreLayout(showCustomScoreInfo);
 
 			string title = musicData?.Music?.title ?? string.Empty;
 			string lyricist = musicData?.Music?.lyricist ?? string.Empty;
@@ -139,15 +140,16 @@ namespace Sekai.Live
 
 			if (collaborationRibbon != null)
 			{
-				bool hasCollaboration = musicData != null && musicData.IsCollaboration && musicData.Collaboration != null;
+				string collaborationLabel = ResolveCollaborationLabel(musicData, freeLiveBootData, isCustomScore);
+				bool hasCollaboration = !string.IsNullOrWhiteSpace(collaborationLabel);
 				collaborationRibbon.gameObject.SetActive(hasCollaboration);
 				if (hasCollaboration)
 				{
-					collaborationRibbon.SetText(musicData.Collaboration.label);
+					collaborationRibbon.SetText(collaborationLabel);
 				}
 			}
 
-			if (isCustomScore)
+			if (showCustomScoreInfo)
 			{
 				_scoreTitleLabel?.SetText(freeLiveBootData.CustomMusicScoreTitle ?? title);
 				_scoreCreatorLabel?.SetText(freeLiveBootData.CustomMusicScoreAuthorName ?? string.Empty);
@@ -457,6 +459,21 @@ namespace Sekai.Live
 			}
 
 			return fallback ?? string.Empty;
+		}
+
+		private static string ResolveCollaborationLabel(LiveMusicData musicData, FreeLiveBootData freeLiveBootData, bool isCustomScore)
+		{
+			if (musicData != null && musicData.IsCollaboration && musicData.Collaboration != null)
+			{
+				return musicData.Collaboration.label;
+			}
+
+			if (isCustomScore && freeLiveBootData != null)
+			{
+				return freeLiveBootData.CustomMusicScoreCollaborationLabel;
+			}
+
+			return string.Empty;
 		}
 
 		private static Texture2D LoadJacketTexture(LiveBootDataBase bootData, LiveMusicData musicData)

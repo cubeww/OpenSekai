@@ -72,6 +72,7 @@ namespace Sekai.CustomMusicScoreManager
 				lyricist = string.Empty,
 				arranger = string.Empty,
 				singer = string.Empty,
+				collaborationLabel = string.Empty,
 				audioFileName = "audio.ogg",
 				jacketFileName = "jacket.png",
 				scoreFileName = "score.json",
