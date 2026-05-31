@@ -20,6 +20,7 @@ namespace Sekai
 
 		public VolumeSettings SystemVolume = new VolumeSettings();
 		public VolumeSettings LiveVolume;
+		public bool? FullscreenEnabled;
 
 		public static ApplicationLocalSettings LoadFromStorage()
 		{

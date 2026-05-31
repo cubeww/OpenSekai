@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CriWare;
+using Sekai.Live;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -30,6 +31,7 @@ namespace Sekai
 		private const string SoundBundleBuildDataAssetName = "SoundBundleBuildData";
 		private const string LiveDefaultSoundBundleName = "live/sound/live_se/default";
 		private const string LiveDefaultCommonAcbFileName = "se_live_common.acb.bytes";
+		private const string LiveTapSeBundleNamePrefix = "live/tap_se";
 		private const string LiveTapSeCustom01BundleName = "live/tap_se/custom01";
 		private const string LiveMusicBundleNameBase = "music/long/{0}";
 		private const string ProjectSekaiAcfFileName = "ProjectSekai.acf";
@@ -38,6 +40,7 @@ namespace Sekai
 			"se_live_long",
 			"se_live_long_critical",
 			"se_live_perfect",
+			"se_live_tap",
 			"se_live_great",
 			"se_live_good",
 			"se_live_critical",
@@ -54,6 +57,7 @@ namespace Sekai
 			"se_live_long",
 			"se_live_long_critical",
 			"se_live_perfect",
+			"se_live_tap",
 			"se_live_great",
 			"se_live_good",
 			"se_live_critical",
@@ -75,8 +79,10 @@ namespace Sekai
 		private static readonly Dictionary<string, string[]> PredecodeCueNamesByBundleName = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
 		{
 			{ LiveDefaultSoundBundleName, LiveDefaultPredecodeCueNames },
+			{ LiveTapSeBundleNamePrefix, LiveTapPredecodeCueNames },
 			{ LiveTapSeCustom01BundleName, LiveTapPredecodeCueNames }
 		};
+		private static readonly HashSet<string> LiveTapCueNameSet = new HashSet<string>(LiveTapPredecodeCueNames, StringComparer.OrdinalIgnoreCase);
 
 		private static readonly SoundManager instance = new SoundManager();
 		private readonly HashSet<string> loadedBundles = new HashSet<string>();
@@ -476,6 +482,11 @@ namespace Sekai
 
 			EnsureDefaultSoundBundlesLoaded();
 
+			if (IsLiveTapCueName(cueName) && TryResolveCurrentLiveTapSeCue(cueName, out acb, out string currentTapSeCueName))
+			{
+				return currentTapSeCueName;
+			}
+
 			// Original SoundManager.Initialize registers MenuCommon_Built_in before
 			// dynamic menu bundles, so common button SE should resolve there first.
 			string builtInCueName = ResolveCueNameFromBundle(MenuCommonBuiltInCueSheetName, cueName, out acb);
@@ -522,6 +533,18 @@ namespace Sekai
 			}
 
 			return null;
+		}
+
+		private static bool IsLiveTapCueName(string cueName)
+		{
+			return !string.IsNullOrEmpty(cueName) && LiveTapCueNameSet.Contains(cueName);
+		}
+
+		private bool TryResolveCurrentLiveTapSeCue(string cueName, out CriAtomExAcb acb, out string resolvedCueName)
+		{
+			string bundleName = LiveTapSeBundleNamePrefix + "/" + LiveConfig.NoteSeName;
+			resolvedCueName = ResolveCueNameFromBundle(bundleName, cueName, out acb);
+			return resolvedCueName != null;
 		}
 
 		private string ResolveCueNameFromBundle(string bundleName, string cueName, out CriAtomExAcb acb)

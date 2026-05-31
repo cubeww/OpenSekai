@@ -11,5 +11,11 @@ namespace CP
 				Sekai.SoundManager.Instance.PlaySEOneShot(cueName);
 			}
 		}
+
+		// Restored animation clips use this exact event name.
+		public void PLaySE(string cueName)
+		{
+			Play(cueName);
+		}
 	}
 }

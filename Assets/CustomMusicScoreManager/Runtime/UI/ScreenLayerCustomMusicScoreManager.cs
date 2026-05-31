@@ -46,6 +46,28 @@ namespace Sekai.CustomMusicScoreManager
 
 		private const float ManifestFormBottom = 112f;
 
+		private const float BestResultPreferredWidth = 500f;
+
+		private const float BestResultMinWidth = 420f;
+
+		private const float BestResultHeight = 168f;
+
+		private const float BestResultTop = 28f;
+
+		private const float BestResultRight = 28f;
+
+		private const float BestResultGap = 24f;
+
+		private const int NoteSkinTypeCount = 2;
+
+		private const int NoteSeTypeCount = 2;
+
+		private const int NoteEffectTypeCount = 2;
+
+		private const float MinVisualAlphaPercent = 10f;
+
+		private const float MaxVisualAlphaPercent = 100f;
+
 		private static readonly string[] DifficultyTypes =
 		{
 			"easy",
@@ -82,9 +104,13 @@ namespace Sekai.CustomMusicScoreManager
 		private HorizontalLayoutGroup _actionButtonsLayout;
 		private TextMeshProUGUI _emptyText;
 		private TextMeshProUGUI _statusText;
+		private RectTransform _detailPanel;
 		private TextMeshProUGUI _detailTitle;
 		private TextMeshProUGUI _detailMeta;
 		private TextMeshProUGUI _detailStatus;
+		private RectTransform _bestResultPanel;
+		private TextMeshProUGUI _bestResultLeftText;
+		private TextMeshProUGUI _bestResultRightText;
 		private Image _jacketImage;
 		private Button _editButton;
 		private Button _playButton;
@@ -102,12 +128,22 @@ namespace Sekai.CustomMusicScoreManager
 		private TMP_InputField _settingNoteSpeedInput;
 		private TMP_InputField _settingTimingAdjustInput;
 		private TMP_InputField _settingNoteShowRateInput;
+		private TMP_InputField _settingNoteLineAlphaInput;
+		private TMP_InputField _settingGuideLineAlphaInput;
 		private TextMeshProUGUI _settingNoteSkinLabel;
 		private int _settingNoteSkinIndex;
+		private TextMeshProUGUI _settingNoteSeLabel;
+		private int _settingNoteSeIndex;
+		private TextMeshProUGUI _settingNoteEffectLabel;
+		private int _settingNoteEffectIndex;
+		private TextMeshProUGUI _settingSimultaneousLineLabel;
+		private bool _settingSimultaneousLineEnabled;
 		private TextMeshProUGUI _settingMusicInfoDisplayModeLabel;
 		private int _settingMusicInfoDisplayMode;
 		private TextMeshProUGUI _settingFastLateFlickLabel;
 		private bool _settingFastLateFlickEnabled;
+		private TextMeshProUGUI _settingFullscreenLabel;
+		private bool _settingFullscreenEnabled;
 		private TMP_InputField _titleInput;
 		private TMP_InputField _scoreTitleInput;
 		private TMP_InputField _userInput;
@@ -151,6 +187,7 @@ namespace Sekai.CustomMusicScoreManager
 		{
 			UpdateActionButtonLayout();
 			UpdateManifestFieldLayout();
+			UpdateDetailHeaderLayout();
 		}
 
 		protected override void OnExited()
@@ -203,6 +240,7 @@ namespace Sekai.CustomMusicScoreManager
 			SetStretchOffsets(_emptyText.rectTransform, 28f, 100f, 28f, 100f);
 
 			RectTransform detailPanel = CreatePanel("DetailPanel", body, new Color32(28, 34, 42, 255));
+			_detailPanel = detailPanel;
 			SetStretchOffsets(detailPanel, 688f, 0f, 0f, 0f);
 
 			_jacketImage = CreateImage("Jacket", detailPanel, new Color32(42, 49, 58, 255));
@@ -217,6 +255,39 @@ namespace Sekai.CustomMusicScoreManager
 
 			_detailStatus = CreateText("DetailStatus", detailPanel, string.Empty, 22, FontStyles.Bold, TextAlignmentOptions.Left);
 			SetStretchTop(_detailStatus.rectTransform, 252f, 184f, 30f, 38f);
+
+			_bestResultPanel = CreatePanel("BestResult", detailPanel, new Color32(22, 27, 34, 255));
+			SetAnchor(_bestResultPanel, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-BestResultRight, -BestResultTop), new Vector2(BestResultPreferredWidth, BestResultHeight));
+			VerticalLayoutGroup bestResultLayout = _bestResultPanel.gameObject.AddComponent<VerticalLayoutGroup>();
+			bestResultLayout.padding = new RectOffset(18, 18, 14, 14);
+			bestResultLayout.spacing = 6f;
+			bestResultLayout.childControlWidth = true;
+			bestResultLayout.childControlHeight = true;
+			bestResultLayout.childForceExpandWidth = true;
+			bestResultLayout.childForceExpandHeight = false;
+			TextMeshProUGUI bestResultTitle = CreateText("Title", _bestResultPanel, "最佳成绩", 22, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement bestResultTitleLayout = bestResultTitle.gameObject.AddComponent<LayoutElement>();
+			bestResultTitleLayout.minHeight = 30f;
+			bestResultTitleLayout.preferredHeight = 30f;
+			RectTransform bestResultContent = CreateRect("Content", _bestResultPanel);
+			LayoutElement bestResultContentLayout = bestResultContent.gameObject.AddComponent<LayoutElement>();
+			bestResultContentLayout.minHeight = 92f;
+			bestResultContentLayout.preferredHeight = 92f;
+			HorizontalLayoutGroup bestResultContentGroup = bestResultContent.gameObject.AddComponent<HorizontalLayoutGroup>();
+			bestResultContentGroup.spacing = 24f;
+			bestResultContentGroup.childControlWidth = true;
+			bestResultContentGroup.childControlHeight = true;
+			bestResultContentGroup.childForceExpandWidth = true;
+			bestResultContentGroup.childForceExpandHeight = true;
+			_bestResultLeftText = CreateText("LeftText", bestResultContent, string.Empty, 18, FontStyles.Normal, TextAlignmentOptions.Left);
+			_bestResultLeftText.enableWordWrapping = false;
+			_bestResultLeftText.overflowMode = TextOverflowModes.Overflow;
+			_bestResultLeftText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+			_bestResultRightText = CreateText("RightText", bestResultContent, string.Empty, 18, FontStyles.Normal, TextAlignmentOptions.Left);
+			_bestResultRightText.enableWordWrapping = false;
+			_bestResultRightText.overflowMode = TextOverflowModes.Overflow;
+			_bestResultRightText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+			_bestResultPanel.gameObject.SetActive(false);
 
 			RectTransform actionButtons = CreateRect("ActionButtons", detailPanel);
 			SetStretchTop(actionButtons, 28f, ActionButtonsTop, 28f, ActionButtonHeight);
@@ -336,9 +407,15 @@ namespace Sekai.CustomMusicScoreManager
 			_settingNoteSpeedInput = CreateInputField(settingsContent, "音符流速", "1.0 - 12.0");
 			_settingTimingAdjustInput = CreateInputField(settingsContent, "判定偏移", "-20.0 - 20.0");
 			_settingNoteShowRateInput = CreateInputField(settingsContent, "上隐挡板", "0 - 100");
+			_settingNoteLineAlphaInput = CreateInputField(settingsContent, "长条线不透明度", "10 - 100");
+			_settingGuideLineAlphaInput = CreateInputField(settingsContent, "Guide线不透明度", "10 - 100");
 			CreateSettingNoteSkinSelector(settingsContent);
+			CreateSettingNoteSeSelector(settingsContent);
+			CreateSettingNoteEffectSelector(settingsContent);
+			CreateSettingSimultaneousLineSelector(settingsContent);
 			CreateSettingMusicInfoDisplayModeSelector(settingsContent);
 			CreateSettingFastLateFlickSelector(settingsContent);
+			CreateSettingFullscreenSelector(settingsContent);
 
 			RectTransform buttonRow = CreateRect("ButtonRow", dialog);
 			LayoutElement buttonRowLayout = buttonRow.gameObject.AddComponent<LayoutElement>();
@@ -367,9 +444,15 @@ namespace Sekai.CustomMusicScoreManager
 			_settingNoteSpeedInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.NoteSpeed));
 			_settingTimingAdjustInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.TimingAdjustData));
 			_settingNoteShowRateInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData._noteShowRate * 100f));
+			_settingNoteLineAlphaInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.GetNoteAlpha() * 100f));
+			_settingGuideLineAlphaInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.GetGuideAlpha() * 100f));
 			SetSettingNoteSkinIndex(liveSettingData.NoteSkinIndex);
+			SetSettingNoteSeIndex(liveSettingData.NoteSeIndex);
+			SetSettingNoteEffectIndex(liveSettingData.NoteEffect);
+			SetSettingSimultaneousLine(liveSettingData.UseSimultaneousPushingLine);
 			SetSettingMusicInfoDisplayMode(liveSettingData.CustomMusicScoreMusicInfoDisplayMode ?? LiveSettingData.MusicInfoDisplayModeCustomScore);
 			SetSettingFastLateFlick(liveSettingData.IsFastLateFlick);
+			SetSettingFullscreen(localSettings.FullscreenEnabled ?? Screen.fullScreen);
 			_settingsOverlay.gameObject.SetActive(true);
 			_settingsOverlay.SetAsLastSibling();
 		}
@@ -401,23 +484,54 @@ namespace Sekai.CustomMusicScoreManager
 				LiveConfig.MinNoteShowRate,
 				LiveConfig.MaxNoteShowRate,
 				liveSettingData._noteShowRate * 100f));
+			liveSettingData.NoteAlpha = ParseClampedSetting(
+				_settingNoteLineAlphaInput.text,
+				MinVisualAlphaPercent,
+				MaxVisualAlphaPercent,
+				liveSettingData.GetNoteAlpha() * 100f) / 100f;
+			liveSettingData.GuideAlpha = ParseClampedSetting(
+				_settingGuideLineAlphaInput.text,
+				MinVisualAlphaPercent,
+				MaxVisualAlphaPercent,
+				liveSettingData.GetGuideAlpha() * 100f) / 100f;
 			liveSettingData.NoteSkinIndex = _settingNoteSkinIndex;
+			liveSettingData.NoteSeIndex = _settingNoteSeIndex;
+			liveSettingData.NoteEffect = _settingNoteEffectIndex;
+			liveSettingData.UseSimultaneousPushingLine = _settingSimultaneousLineEnabled;
 			liveSettingData.CustomMusicScoreMusicInfoDisplayMode = _settingMusicInfoDisplayMode;
 			liveSettingData.IsFastLateFlick = _settingFastLateFlickEnabled;
+			if (ShouldShowDesktopFullscreenSetting())
+			{
+				localSettings.FullscreenEnabled = _settingFullscreenEnabled;
+			}
 
 			ApplicationLocalSettings.SaveToStorage(localSettings);
 			LiveSettingData.SaveToStorage(liveSettingData);
+			if (ShouldShowDesktopFullscreenSetting())
+			{
+				ScreenConfig.SetStandaloneFullscreen(_settingFullscreenEnabled);
+			}
 			SoundManager.Instance.SetupVolume(1f, liveVolume.Bgm, liveVolume.Se, liveVolume.Voice);
+			LiveConfig.LongNoteAlpha = liveSettingData.GetNoteAlpha();
+			LiveConfig.GuideAlpha = liveSettingData.GetGuideAlpha();
 			LiveConfig.SetNoteSkinAssetBundleName(liveSettingData.NoteSkinIndex);
+			LiveConfig.SetNoteSeName(liveSettingData.NoteSeIndex);
+			LiveConfig.SetNoteEffectName(liveSettingData.NoteEffect);
 
 			_settingLiveBgmInput.SetTextWithoutNotify(FormatSettingValue(liveVolume.Bgm));
 			_settingLiveSeInput.SetTextWithoutNotify(FormatSettingValue(liveVolume.Se));
 			_settingNoteSpeedInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.NoteSpeed));
 			_settingTimingAdjustInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.TimingAdjustData));
 			_settingNoteShowRateInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData._noteShowRate * 100f));
+			_settingNoteLineAlphaInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.GetNoteAlpha() * 100f));
+			_settingGuideLineAlphaInput.SetTextWithoutNotify(FormatSettingValue(liveSettingData.GetGuideAlpha() * 100f));
 			SetSettingNoteSkinIndex(liveSettingData.NoteSkinIndex);
+			SetSettingNoteSeIndex(liveSettingData.NoteSeIndex);
+			SetSettingNoteEffectIndex(liveSettingData.NoteEffect);
+			SetSettingSimultaneousLine(liveSettingData.UseSimultaneousPushingLine);
 			SetSettingMusicInfoDisplayMode(liveSettingData.CustomMusicScoreMusicInfoDisplayMode ?? LiveSettingData.MusicInfoDisplayModeCustomScore);
 			SetSettingFastLateFlick(liveSettingData.IsFastLateFlick);
+			SetSettingFullscreen(localSettings.FullscreenEnabled ?? Screen.fullScreen);
 			CloseSettings();
 			SetStatus("设置已保存。");
 		}
@@ -465,15 +579,138 @@ namespace Sekai.CustomMusicScoreManager
 
 		private void CycleSettingNoteSkin()
 		{
-			SetSettingNoteSkinIndex((_settingNoteSkinIndex + 1) % 2);
+			SetSettingNoteSkinIndex((_settingNoteSkinIndex + 1) % NoteSkinTypeCount);
 		}
 
 		private void SetSettingNoteSkinIndex(int index)
 		{
-			_settingNoteSkinIndex = Mathf.Clamp(index, 0, 1);
+			_settingNoteSkinIndex = Mathf.Clamp(index, 0, NoteSkinTypeCount - 1);
 			if (_settingNoteSkinLabel != null)
 			{
 				_settingNoteSkinLabel.text = string.Format("custom{0:00}", _settingNoteSkinIndex + 1);
+			}
+		}
+
+		private void CreateSettingNoteSeSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("NoteSeSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "Note音效", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingNoteSe, 220f, 54f);
+			_settingNoteSeLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingNoteSeIndex(0);
+		}
+
+		private void CycleSettingNoteSe()
+		{
+			SetSettingNoteSeIndex((_settingNoteSeIndex + 1) % NoteSeTypeCount);
+		}
+
+		private void SetSettingNoteSeIndex(int index)
+		{
+			_settingNoteSeIndex = Mathf.Clamp(index, 0, NoteSeTypeCount - 1);
+			if (_settingNoteSeLabel != null)
+			{
+				_settingNoteSeLabel.text = LiveConfig.GetNoteSeViewName(_settingNoteSeIndex);
+			}
+		}
+
+		private void CreateSettingNoteEffectSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("NoteEffectSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "击打特效", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingNoteEffect, 220f, 54f);
+			_settingNoteEffectLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingNoteEffectIndex(0);
+		}
+
+		private void CycleSettingNoteEffect()
+		{
+			SetSettingNoteEffectIndex((_settingNoteEffectIndex + 1) % NoteEffectTypeCount);
+		}
+
+		private void SetSettingNoteEffectIndex(int index)
+		{
+			_settingNoteEffectIndex = Mathf.Clamp(index, 0, NoteEffectTypeCount - 1);
+			if (_settingNoteEffectLabel != null)
+			{
+				_settingNoteEffectLabel.text = string.Format("TYPE {0}", _settingNoteEffectIndex + 1);
+			}
+		}
+
+		private void CreateSettingSimultaneousLineSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("SimultaneousLineSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "多押提示线", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingSimultaneousLine, 220f, 54f);
+			_settingSimultaneousLineLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingSimultaneousLine(true);
+		}
+
+		private void CycleSettingSimultaneousLine()
+		{
+			SetSettingSimultaneousLine(!_settingSimultaneousLineEnabled);
+		}
+
+		private void SetSettingSimultaneousLine(bool enabled)
+		{
+			_settingSimultaneousLineEnabled = enabled;
+			if (_settingSimultaneousLineLabel != null)
+			{
+				_settingSimultaneousLineLabel.text = enabled ? "开启" : "关闭";
 			}
 		}
 
@@ -564,6 +801,57 @@ namespace Sekai.CustomMusicScoreManager
 			{
 				_settingFastLateFlickLabel.text = enabled ? "开启" : "关闭";
 			}
+		}
+
+		private void CreateSettingFullscreenSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("FullscreenSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+			row.gameObject.SetActive(ShouldShowDesktopFullscreenSetting());
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "桌面全屏", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingFullscreen, 220f, 54f);
+			_settingFullscreenLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingFullscreen(Screen.fullScreen);
+		}
+
+		private void CycleSettingFullscreen()
+		{
+			SetSettingFullscreen(!_settingFullscreenEnabled);
+		}
+
+		private void SetSettingFullscreen(bool enabled)
+		{
+			_settingFullscreenEnabled = enabled;
+			if (_settingFullscreenLabel != null)
+			{
+				_settingFullscreenLabel.text = enabled ? "开启" : "关闭";
+			}
+		}
+
+		private static bool ShouldShowDesktopFullscreenSetting()
+		{
+#if UNITY_STANDALONE || UNITY_EDITOR
+			return true;
+#else
+			return false;
+#endif
 		}
 
 		private void UpdateManifestFieldLayout()
@@ -670,6 +958,40 @@ namespace Sekai.CustomMusicScoreManager
 				SetStretchOffsets(_manifestFormScrollRect, 28f, ManifestFormBottom, 28f, formTop);
 			}
 			LayoutRebuilder.MarkLayoutForRebuild(_actionButtonsContent);
+		}
+
+		private void UpdateDetailHeaderLayout()
+		{
+			if (_detailPanel == null || _detailTitle == null || _detailMeta == null || _detailStatus == null)
+			{
+				return;
+			}
+
+			float panelWidth = _detailPanel.rect.width;
+			if (panelWidth <= 0f)
+			{
+				return;
+			}
+
+			bool showBestResult = _selected != null && panelWidth >= 980f;
+			float bestWidth = Mathf.Clamp(panelWidth * 0.36f, BestResultMinWidth, BestResultPreferredWidth);
+			float textRight = showBestResult ? BestResultRight + bestWidth + BestResultGap : 30f;
+			SetStretchTop(_detailTitle.rectTransform, 252f, 30f, textRight, 54f);
+			SetStretchTop(_detailMeta.rectTransform, 252f, 88f, textRight, 88f);
+			SetStretchTop(_detailStatus.rectTransform, 252f, 184f, textRight, 38f);
+
+			if (_bestResultPanel == null)
+			{
+				return;
+			}
+
+			_bestResultPanel.gameObject.SetActive(showBestResult);
+			if (!showBestResult)
+			{
+				return;
+			}
+
+			SetAnchor(_bestResultPanel, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-BestResultRight, -BestResultTop), new Vector2(bestWidth, BestResultHeight));
 		}
 
 		private static int CalculateManifestColumnCount(float availableWidth)
@@ -786,6 +1108,7 @@ namespace Sekai.CustomMusicScoreManager
 				_detailTitle.text = "请选择谱面";
 				_detailMeta.text = string.Empty;
 				_detailStatus.text = string.Empty;
+				SetBestResultText(null);
 				ClearLoadedJacket();
 				ClearForm();
 				return;
@@ -802,8 +1125,49 @@ namespace Sekai.CustomMusicScoreManager
 				item.LastWriteTime);
 			_detailStatus.text = item.StatusText;
 			_detailStatus.color = item.HasAudio && item.HasScore ? new Color32(126, 221, 166, 255) : new Color32(255, 184, 100, 255);
+			UpdateBestResult(manifest);
 			LoadJacket(item.Entry.JacketPath);
 			LoadForm(manifest);
+		}
+
+		private void UpdateBestResult(CustomMusicScoreManifest manifest)
+		{
+			if (manifest != null && CustomMusicScorePlayHistoryStorage.TryLoadBestResult(manifest.id, out CustomMusicScorePlayHistoryRecord record))
+			{
+				SetBestResultText(record);
+				return;
+			}
+
+			SetBestResultText(null);
+		}
+
+		private void SetBestResultText(CustomMusicScorePlayHistoryRecord record)
+		{
+			if (_bestResultLeftText == null || _bestResultRightText == null)
+			{
+				return;
+			}
+
+			if (record == null)
+			{
+				_bestResultLeftText.text = _selected == null ? string.Empty : "暂无游玩记录";
+				_bestResultRightText.text = string.Empty;
+				return;
+			}
+
+			_bestResultLeftText.text = string.Format(
+				CultureInfo.InvariantCulture,
+				"COMBO: {0}/{1}\nPERFECT: {2}\nGREAT: {3}",
+				record.maxCombo,
+				record.totalComboCount,
+				record.perfectCount,
+				record.greatCount);
+			_bestResultRightText.text = string.Format(
+				CultureInfo.InvariantCulture,
+				"GOOD: {0}\nBAD: {1}\nMISS: {2}",
+				record.goodCount,
+				record.badCount,
+				record.missCount);
 		}
 
 		private void CreateEntry()
@@ -1175,26 +1539,26 @@ namespace Sekai.CustomMusicScoreManager
 
 #if UNITY_EDITOR || UNITY_STANDALONE
 			string path = PickStandaloneFile(
-				"替换音频文件",
+				"导入音频文件",
 				string.Empty,
 				new ExtensionFilter("音频文件", "ogg", "mp3", "wav"));
 			if (string.IsNullOrEmpty(path))
 			{
-				SetStatus("已取消替换音频。");
+				SetStatus("已取消导入音频。");
 				return;
 			}
 
-			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceAudioFile, "已替换音频");
+			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceAudioFile, "已导入音频");
 #elif UNITY_ANDROID || UNITY_IOS
 			PickNativeFile(
-				"替换音频文件",
-				"已取消替换音频。",
-				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceAudioFile, "已替换音频"),
+				"导入音频文件",
+				"已取消导入音频。",
+				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceAudioFile, "已导入音频"),
 				"ogg",
 				"mp3",
 				"wav");
 #else
-			SetStatus("当前平台暂不支持选择音频文件，请手动复制。");
+			SetStatus("当前平台暂不支持导入音频文件，请手动复制。");
 #endif
 		}
 
@@ -1207,26 +1571,26 @@ namespace Sekai.CustomMusicScoreManager
 
 #if UNITY_EDITOR || UNITY_STANDALONE
 			string path = PickStandaloneFile(
-				"替换封面文件",
+				"导入封面文件",
 				string.Empty,
 				new ExtensionFilter("图片文件", "png", "jpg", "jpeg"));
 			if (string.IsNullOrEmpty(path))
 			{
-				SetStatus("已取消替换封面。");
+				SetStatus("已取消导入封面。");
 				return;
 			}
 
-			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceJacketFile, "已替换封面");
+			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceJacketFile, "已导入封面");
 #elif UNITY_ANDROID || UNITY_IOS
 			PickNativeFile(
-				"替换封面文件",
-				"已取消替换封面。",
-				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceJacketFile, "已替换封面"),
+				"导入封面文件",
+				"已取消导入封面。",
+				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceJacketFile, "已导入封面"),
 				"png",
 				"jpg",
 				"jpeg");
 #else
-			SetStatus("当前平台暂不支持选择封面文件，请手动复制。");
+			SetStatus("当前平台暂不支持导入封面文件，请手动复制。");
 #endif
 		}
 
@@ -1239,25 +1603,26 @@ namespace Sekai.CustomMusicScoreManager
 
 #if UNITY_EDITOR || UNITY_STANDALONE
 			string path = PickStandaloneFile(
-				"替换谱面文件",
+				"导入谱面文件",
 				string.Empty,
-				new ExtensionFilter("谱面文件", "json", "txt"));
+				new ExtensionFilter("谱面文件", "json", "txt", "sus"));
 			if (string.IsNullOrEmpty(path))
 			{
-				SetStatus("已取消替换谱面。");
+				SetStatus("已取消导入谱面。");
 				return;
 			}
 
-			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceScoreFile, "已替换谱面");
+			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceScoreFile, "已导入谱面");
 #elif UNITY_ANDROID || UNITY_IOS
 			PickNativeFile(
-				"替换谱面文件",
-				"已取消替换谱面。",
-				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceScoreFile, "已替换谱面"),
+				"导入谱面文件",
+				"已取消导入谱面。",
+				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceScoreFile, "已导入谱面"),
 				"json",
-				"txt");
+				"txt",
+				"sus");
 #else
-			SetStatus("当前平台暂不支持选择谱面文件，请手动复制。");
+			SetStatus("当前平台暂不支持导入谱面文件，请手动复制。");
 #endif
 		}
 
@@ -1378,7 +1743,7 @@ namespace Sekai.CustomMusicScoreManager
 				CustomMusicScoreEntry entry = replaceFile(_selected.Entry, sourcePath);
 				if (entry == null)
 				{
-					SetStatus("替换失败。");
+					SetStatus("导入失败。");
 					return;
 				}
 
@@ -1704,7 +2069,7 @@ namespace Sekai.CustomMusicScoreManager
 				actionButton.colors = colors;
 				actionButton.onClick.AddListener(onClick);
 
-				TextMeshProUGUI actionLabel = CreateText("Label", actionRect, "选择", 20, FontStyles.Bold, TextAlignmentOptions.Center);
+				TextMeshProUGUI actionLabel = CreateText("Label", actionRect, "导入", 20, FontStyles.Bold, TextAlignmentOptions.Center);
 				actionLabel.enableWordWrapping = false;
 				actionLabel.overflowMode = TextOverflowModes.Ellipsis;
 				Stretch(actionLabel.rectTransform);

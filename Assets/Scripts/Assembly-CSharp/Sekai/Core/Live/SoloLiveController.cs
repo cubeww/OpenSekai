@@ -1,4 +1,5 @@
 using Sekai.Live;
+using Sekai.MusicScoreMaker.Common;
 using Sekai.MusicScoreMaker.Ingame.Presenters;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Sekai.Core.Live
 		private bool liveViewMusicStartInvoked;
 		private Coroutine finishCoroutine;
 		private Coroutine resumeCoroutine;
+		private bool playHistoryRecorded;
 		private LiveViewBase[] liveViews;
 		private LiveLogic liveLogic;
 
@@ -174,6 +176,7 @@ namespace Sekai.Core.Live
 			SoundManager.Instance.StopIngame();
 			isTestPlayFinishedCalled = false;
 			liveViewMusicStartInvoked = false;
+			playHistoryRecorded = false;
 			result = 0;
 			state = LiveControllerState.None;
 			currentMusicTimeMs = System.Math.Max(0L, BootData?.MusicData?.StartMusicTimeMs ?? 0L);
@@ -327,8 +330,23 @@ namespace Sekai.Core.Live
 				result = 3;
 			}
 
+			TryAppendPlayHistory();
 			state = LiveControllerState.Finish;
 			SetFinish(delay, waitTime, BootData?.MusicData?.IsTestPlay == true ? 0.1f : 2f);
+		}
+
+		private void TryAppendPlayHistory()
+		{
+			if (playHistoryRecorded || result != 3 || BootData?.IsAuto == true || BootData?.MusicData?.IsTestPlay == true)
+			{
+				return;
+			}
+
+			playHistoryRecorded = true;
+			if (BootData is FreeLiveBootData freeLiveBootData)
+			{
+				CustomMusicScorePlayHistoryStorage.AppendLiveResult(freeLiveBootData, liveLogic?.Score ?? default, currentMusicTimeMs, musicLength);
+			}
 		}
 
 		protected override void OnExit()

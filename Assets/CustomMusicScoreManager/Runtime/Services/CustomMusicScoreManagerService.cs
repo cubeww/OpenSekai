@@ -35,7 +35,8 @@ namespace Sekai.CustomMusicScoreManager
 		private static readonly HashSet<string> ScoreExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			".json",
-			".txt"
+			".txt",
+			".sus"
 		};
 
 		public static IReadOnlyList<CustomMusicScoreManagerItem> LoadItems()
@@ -582,7 +583,8 @@ namespace Sekai.CustomMusicScoreManager
 			HashSet<string> deletePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
 				Path.Combine(rootDirectory, "score.json"),
-				Path.Combine(rootDirectory, "score.txt")
+				Path.Combine(rootDirectory, "score.txt"),
+				Path.Combine(rootDirectory, "score.sus")
 			};
 
 			if (!string.IsNullOrWhiteSpace(currentFileName))

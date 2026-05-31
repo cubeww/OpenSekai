@@ -14,10 +14,13 @@ namespace Sekai.MusicScoreMaker.Common
 	{
 		public const string DirectoryName = "CustomMusicScores";
 		public const string ManifestFileName = "manifest.json";
+		public const string PlayHistoryFileName = "PlayHistory.jsonl";
 
 		private const string ShortIdChars = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 		public static string RootDirectory => Path.Combine(Application.persistentDataPath, DirectoryName);
+
+		public static string PlayHistoryPath => Path.Combine(RootDirectory, PlayHistoryFileName);
 
 		public static CustomMusicScoreEntry[] LoadAllEntries()
 		{

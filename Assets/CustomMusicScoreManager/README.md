@@ -20,6 +20,10 @@ Local score entries are stored under:
 
 `Application.persistentDataPath/CustomMusicScores/<title>_<shortId>/`
 
+Normal non-auto play results are appended to:
+
+`Application.persistentDataPath/CustomMusicScores/PlayHistory.jsonl`
+
 Expected entry files:
 
 - `manifest.json`
@@ -27,7 +31,7 @@ Expected entry files:
 - audio file named by `manifest.audioFileName`
 - jacket image named by `manifest.jacketFileName`
 
-The manager's Score selector accepts `score.json` directly or an official SUS `.txt`;
+The manager's Score selector accepts `score.json` directly or an official SUS `.txt` / `.sus`;
 SUS files are converted to the local `score.json` format on import.
 
 `manifest.title` is the song title shown in live MusicInfo. `manifest.scoreTitle`

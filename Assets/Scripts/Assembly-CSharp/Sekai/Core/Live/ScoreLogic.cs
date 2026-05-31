@@ -93,6 +93,10 @@ namespace Sekai.Core.Live
 			{
 				score.lateCount++;
 			}
+			else if (note != null && note.Description == NoteResultDescription.FlickMiss)
+			{
+				score.flickCount++;
+			}
 		}
 
 		public virtual int CalculateAddScore(NoteBase note, float factor = 1f)

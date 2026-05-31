@@ -62,6 +62,7 @@ namespace Sekai.Live
 		private static void InitializeStandaloneResolution()
 		{
 			CaptureStandaloneRestoreSize();
+			ApplyStoredStandaloneFullscreenSetting();
 			if (ShouldRestoreStandaloneDefaultResolution())
 			{
 				RestoreStandaloneResolution();
@@ -115,6 +116,37 @@ namespace Sekai.Live
 			else if (ShouldRestoreStandaloneDefaultResolution())
 			{
 				RestoreStandaloneResolution();
+			}
+		}
+
+		public static void SetStandaloneFullscreen(bool fullscreen)
+		{
+			if (!ShouldRestoreStandaloneDefaultResolution())
+			{
+				return;
+			}
+
+			if (fullscreen)
+			{
+				CaptureStandaloneRestoreSize();
+				Screen.SetResolution(Screen.width, Screen.height, FullScreenMode.FullScreenWindow);
+				return;
+			}
+
+			Screen.SetResolution(standaloneRestoreSize.width, standaloneRestoreSize.height, FullScreenMode.Windowed);
+		}
+
+		private static void ApplyStoredStandaloneFullscreenSetting()
+		{
+			if (!ShouldRestoreStandaloneDefaultResolution())
+			{
+				return;
+			}
+
+			bool? fullscreenEnabled = ApplicationLocalSettings.LoadFromStorage().FullscreenEnabled;
+			if (fullscreenEnabled.HasValue)
+			{
+				SetStandaloneFullscreen(fullscreenEnabled.Value);
 			}
 		}
 

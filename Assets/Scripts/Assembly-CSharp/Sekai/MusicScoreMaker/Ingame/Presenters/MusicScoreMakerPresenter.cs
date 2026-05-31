@@ -1140,6 +1140,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		private void ReturnToMusicScoreMakerTop()
 		{
+			StopMusicIfPlaying();
 			SaveCustomMusicScoreBeforeReturningToManager();
 			MusicScoreMakerEntryPoint.BootData = null;
 			ScreenManager screenManager = ScreenManager.Instance;
@@ -1226,6 +1227,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 		public void Dispose()
 		{
+			StopMusicIfPlaying();
 			DisposeTapSe();
 			_model?.Dispose();
 			_view?.Dispose();
@@ -7778,6 +7780,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 		{
 			if (_model?.IsMusicPlaying == true)
 			{
+				_model.IsMusicPlaying = false;
 				PauseMusic();
 			}
 		}
