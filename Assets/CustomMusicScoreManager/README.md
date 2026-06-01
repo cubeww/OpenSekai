@@ -30,6 +30,7 @@ Expected entry files:
 - `score.json`
 - audio file named by `manifest.audioFileName`
 - jacket image named by `manifest.jacketFileName`
+- optional 2DMV mp4 named by `manifest.videoFileName`
 
 The manager's Score selector accepts `score.json` directly or an official SUS `.txt` / `.sus`;
 SUS files are converted to the local `score.json` format on import.

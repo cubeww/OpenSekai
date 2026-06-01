@@ -40,12 +40,13 @@ namespace Sekai.MusicScoreMaker.Ingame.Views
 			}
 			if (_liveModeButton != null)
 			{
-				MasterMusicAll musicAll = LoadMasterMusicAll(musicId);
-				// TODO(original): remove reflection fallback after MasterDataManager is copied.
-				_liveModeButton.SetupLiveMode(musicAll, true);
+				// OpenSekai: test play only supports the lightweight 2D background and local mp4 2DMV path.
+				_liveModeButton.SetupFixedModes(LiveSettingData.LiveModeType.Low, LiveSettingData.LiveModeType.Mode2D);
 				if (MusicScoreMakerSettingsManager.TryGetTestPlayLiveModeType(out LiveSettingData.LiveModeType liveModeType))
 				{
-					_liveModeButton.SelectLiveMode(liveModeType);
+					_liveModeButton.SelectLiveMode(liveModeType == LiveSettingData.LiveModeType.Mode2D
+						? LiveSettingData.LiveModeType.Mode2D
+						: LiveSettingData.LiveModeType.Low);
 				}
 				if (_enableSetStartMusicTimeMsToggle != null && _enableSetStartMusicTimeMsToggle.isOn)
 				{

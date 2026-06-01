@@ -24,6 +24,10 @@ namespace Sekai
 
 		public const int MusicInfoDisplayModeCustomScore = 1;
 
+		public const int CustomMusicScoreBackgroundModeJacket = 0;
+
+		public const int CustomMusicScoreBackgroundMode2DMV = 1;
+
 		private const string StorageFileName = "LiveSettingData.json";
 
 		private static LiveSettingData cachedStorage;
@@ -141,6 +145,9 @@ namespace Sekai
 		[Key("CustomMusicScoreMusicInfoDisplayMode")]
 		public int? CustomMusicScoreMusicInfoDisplayMode { get; set; }
 
+		[Key("CustomMusicScoreLiveBackgroundMode")]
+		public int? CustomMusicScoreLiveBackgroundMode { get; set; }
+
 		[IgnoreMember]
 		[JsonIgnore]
 		public bool UsesCustomMusicScoreMusicInfoDisplay
@@ -148,6 +155,16 @@ namespace Sekai
 			get
 			{
 				return (CustomMusicScoreMusicInfoDisplayMode ?? MusicInfoDisplayModeCustomScore) == MusicInfoDisplayModeCustomScore;
+			}
+		}
+
+		[IgnoreMember]
+		[JsonIgnore]
+		public bool UsesCustomMusicScore2DMVBackground
+		{
+			get
+			{
+				return (CustomMusicScoreLiveBackgroundMode ?? CustomMusicScoreBackgroundMode2DMV) == CustomMusicScoreBackgroundMode2DMV;
 			}
 		}
 
@@ -172,6 +189,7 @@ namespace Sekai
 			Brightness = 1f;
 			LaneTransparent = 1f;
 			CustomMusicScoreMusicInfoDisplayMode = MusicInfoDisplayModeCustomScore;
+			CustomMusicScoreLiveBackgroundMode = CustomMusicScoreBackgroundMode2DMV;
 		}
 
 		public static LiveSettingData LoadFromStorage()

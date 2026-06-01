@@ -122,6 +122,7 @@ namespace Sekai.CustomMusicScoreManager
 		private Button _audioSelectButton;
 		private Button _jacketSelectButton;
 		private Button _scoreSelectButton;
+		private Button _videoSelectButton;
 		private RectTransform _settingsOverlay;
 		private TMP_InputField _settingLiveBgmInput;
 		private TMP_InputField _settingLiveSeInput;
@@ -140,6 +141,8 @@ namespace Sekai.CustomMusicScoreManager
 		private bool _settingSimultaneousLineEnabled;
 		private TextMeshProUGUI _settingMusicInfoDisplayModeLabel;
 		private int _settingMusicInfoDisplayMode;
+		private TextMeshProUGUI _settingLiveBackgroundModeLabel;
+		private int _settingLiveBackgroundMode;
 		private TextMeshProUGUI _settingFastLateFlickLabel;
 		private bool _settingFastLateFlickEnabled;
 		private TextMeshProUGUI _settingFullscreenLabel;
@@ -163,6 +166,7 @@ namespace Sekai.CustomMusicScoreManager
 		private TMP_InputField _audioInput;
 		private TMP_InputField _jacketInput;
 		private TMP_InputField _scoreInput;
+		private TMP_InputField _videoInput;
 		private IReadOnlyList<CustomMusicScoreManagerItem> _items = Array.Empty<CustomMusicScoreManagerItem>();
 		private CustomMusicScoreManagerItem _selected;
 		private Sprite _jacketSprite;
@@ -334,6 +338,7 @@ namespace Sekai.CustomMusicScoreManager
 			_audioInput = CreateInputField(_manifestFieldGrid, "音频", "audioFileName", ReplaceSelectedAudio, out _audioSelectButton);
 			_jacketInput = CreateInputField(_manifestFieldGrid, "封面", "jacketFileName", ReplaceSelectedJacket, out _jacketSelectButton);
 			_scoreInput = CreateInputField(_manifestFieldGrid, "谱面", "scoreFileName", ReplaceSelectedScore, out _scoreSelectButton);
+			_videoInput = CreateInputField(_manifestFieldGrid, "2DMV", "videoFileName", ReplaceSelectedVideo, out _videoSelectButton);
 			_fillerInput = CreateInputField(_manifestFieldGrid, "前置空白秒", "fillerSec");
 			_durationInput = CreateInputField(_manifestFieldGrid, "编辑时长秒", "secForMusicScoreMaker");
 			_difficultyButton = CreateDifficultySelector(_manifestFieldGrid);
@@ -414,6 +419,7 @@ namespace Sekai.CustomMusicScoreManager
 			CreateSettingNoteEffectSelector(settingsContent);
 			CreateSettingSimultaneousLineSelector(settingsContent);
 			CreateSettingMusicInfoDisplayModeSelector(settingsContent);
+			CreateSettingLiveBackgroundModeSelector(settingsContent);
 			CreateSettingFastLateFlickSelector(settingsContent);
 			CreateSettingFullscreenSelector(settingsContent);
 
@@ -451,6 +457,7 @@ namespace Sekai.CustomMusicScoreManager
 			SetSettingNoteEffectIndex(liveSettingData.NoteEffect);
 			SetSettingSimultaneousLine(liveSettingData.UseSimultaneousPushingLine);
 			SetSettingMusicInfoDisplayMode(liveSettingData.CustomMusicScoreMusicInfoDisplayMode ?? LiveSettingData.MusicInfoDisplayModeCustomScore);
+			SetSettingLiveBackgroundMode(liveSettingData.CustomMusicScoreLiveBackgroundMode ?? LiveSettingData.CustomMusicScoreBackgroundMode2DMV);
 			SetSettingFastLateFlick(liveSettingData.IsFastLateFlick);
 			SetSettingFullscreen(localSettings.FullscreenEnabled ?? Screen.fullScreen);
 			_settingsOverlay.gameObject.SetActive(true);
@@ -499,6 +506,7 @@ namespace Sekai.CustomMusicScoreManager
 			liveSettingData.NoteEffect = _settingNoteEffectIndex;
 			liveSettingData.UseSimultaneousPushingLine = _settingSimultaneousLineEnabled;
 			liveSettingData.CustomMusicScoreMusicInfoDisplayMode = _settingMusicInfoDisplayMode;
+			liveSettingData.CustomMusicScoreLiveBackgroundMode = _settingLiveBackgroundMode;
 			liveSettingData.IsFastLateFlick = _settingFastLateFlickEnabled;
 			if (ShouldShowDesktopFullscreenSetting())
 			{
@@ -530,6 +538,7 @@ namespace Sekai.CustomMusicScoreManager
 			SetSettingNoteEffectIndex(liveSettingData.NoteEffect);
 			SetSettingSimultaneousLine(liveSettingData.UseSimultaneousPushingLine);
 			SetSettingMusicInfoDisplayMode(liveSettingData.CustomMusicScoreMusicInfoDisplayMode ?? LiveSettingData.MusicInfoDisplayModeCustomScore);
+			SetSettingLiveBackgroundMode(liveSettingData.CustomMusicScoreLiveBackgroundMode ?? LiveSettingData.CustomMusicScoreBackgroundMode2DMV);
 			SetSettingFastLateFlick(liveSettingData.IsFastLateFlick);
 			SetSettingFullscreen(localSettings.FullscreenEnabled ?? Screen.fullScreen);
 			CloseSettings();
@@ -759,6 +768,54 @@ namespace Sekai.CustomMusicScoreManager
 				_settingMusicInfoDisplayModeLabel.text = _settingMusicInfoDisplayMode == LiveSettingData.MusicInfoDisplayModeCustomScore
 					? "自制谱模式"
 					: "正常模式";
+			}
+		}
+
+		private void CreateSettingLiveBackgroundModeSelector(Transform parent)
+		{
+			RectTransform row = CreateRect("LiveBackgroundModeSelector", parent);
+			LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
+			rowLayout.preferredHeight = 58f;
+			rowLayout.minHeight = 58f;
+
+			HorizontalLayoutGroup rowGroup = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+			rowGroup.spacing = 16f;
+			rowGroup.childAlignment = TextAnchor.MiddleLeft;
+			rowGroup.childControlWidth = true;
+			rowGroup.childControlHeight = true;
+			rowGroup.childForceExpandWidth = false;
+			rowGroup.childForceExpandHeight = false;
+
+			TextMeshProUGUI title = CreateText("Label", row, "Live背景", 24, FontStyles.Bold, TextAlignmentOptions.Left);
+			LayoutElement titleLayout = title.gameObject.AddComponent<LayoutElement>();
+			titleLayout.preferredWidth = 180f;
+			titleLayout.minWidth = 180f;
+			titleLayout.preferredHeight = 58f;
+			titleLayout.minHeight = 58f;
+
+			Button button = CreateButton("Button", row, string.Empty, CycleSettingLiveBackgroundMode, 220f, 54f);
+			_settingLiveBackgroundModeLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+			SetSettingLiveBackgroundMode(LiveSettingData.CustomMusicScoreBackgroundMode2DMV);
+		}
+
+		private void CycleSettingLiveBackgroundMode()
+		{
+			int nextMode = _settingLiveBackgroundMode == LiveSettingData.CustomMusicScoreBackgroundMode2DMV
+				? LiveSettingData.CustomMusicScoreBackgroundModeJacket
+				: LiveSettingData.CustomMusicScoreBackgroundMode2DMV;
+			SetSettingLiveBackgroundMode(nextMode);
+		}
+
+		private void SetSettingLiveBackgroundMode(int mode)
+		{
+			_settingLiveBackgroundMode = mode == LiveSettingData.CustomMusicScoreBackgroundModeJacket
+				? LiveSettingData.CustomMusicScoreBackgroundModeJacket
+				: LiveSettingData.CustomMusicScoreBackgroundMode2DMV;
+			if (_settingLiveBackgroundModeLabel != null)
+			{
+				_settingLiveBackgroundModeLabel.text = _settingLiveBackgroundMode == LiveSettingData.CustomMusicScoreBackgroundMode2DMV
+					? "2DMV"
+					: "封面";
 			}
 		}
 
@@ -1101,6 +1158,7 @@ namespace Sekai.CustomMusicScoreManager
 			_audioSelectButton.interactable = hasSelection;
 			_jacketSelectButton.interactable = hasSelection;
 			_scoreSelectButton.interactable = hasSelection;
+			_videoSelectButton.interactable = hasSelection;
 			SetFormInteractable(hasSelection);
 
 			if (!hasSelection)
@@ -1303,7 +1361,8 @@ namespace Sekai.CustomMusicScoreManager
 			int deckId = UserDataManager.Instance.SelectedDeckId;
 			MasterMusicDifficulty difficulty = CreateDirectPlayDifficulty(entry, musicScore);
 			string difficultyString = difficulty?.musicDifficulty ?? "master";
-			MusicCategory musicCategory = MusicCategory.original;
+			LiveSettingData liveSettingData = LiveSettingData.LoadFromStorage();
+			MusicCategory musicCategory = ResolveDirectPlayMusicCategory(liveSettingData);
 
 			// Matches the original manager play route: normal FreeLive, not editor test play.
 			FreeLiveBootData bootData = new FreeLiveBootData(
@@ -1316,7 +1375,7 @@ namespace Sekai.CustomMusicScoreManager
 				musicCategory);
 
 			bootData.LiveEventData = new LiveEventData(Array.Empty<IngameLotterySkill>(), Array.Empty<IngameComboCutin>(), deckId, isAuto);
-			bootData.LiveSettingData = LiveSettingData.LoadFromStorage();
+			bootData.LiveSettingData = liveSettingData;
 			bootData.MVQualityType = bootData.LiveSettingData?.QualityType ?? Sekai.MVQualityType.Default;
 			bootData.MusicCategory = musicCategory;
 			bootData.IsAuto = isAuto;
@@ -1350,6 +1409,13 @@ namespace Sekai.CustomMusicScoreManager
 			}
 
 			return bootData;
+		}
+
+		private static MusicCategory ResolveDirectPlayMusicCategory(LiveSettingData liveSettingData)
+		{
+			return liveSettingData?.UsesCustomMusicScore2DMVBackground == true
+				? MusicCategory.mv_2d
+				: MusicCategory.image;
 		}
 
 		private static MasterMusicDifficulty CreateDirectPlayDifficulty(CustomMusicScoreEntry entry, MusicScore musicScore)
@@ -1626,6 +1692,36 @@ namespace Sekai.CustomMusicScoreManager
 #endif
 		}
 
+		private void ReplaceSelectedVideo()
+		{
+			if (_selected?.Entry == null)
+			{
+				return;
+			}
+
+#if UNITY_EDITOR || UNITY_STANDALONE
+			string path = PickStandaloneFile(
+				"导入2DMV视频",
+				string.Empty,
+				new ExtensionFilter("MP4视频", "mp4"));
+			if (string.IsNullOrEmpty(path))
+			{
+				SetStatus("已取消导入2DMV。");
+				return;
+			}
+
+			ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceVideoFile, "已导入2DMV");
+#elif UNITY_ANDROID || UNITY_IOS
+			PickNativeFile(
+				"导入2DMV视频",
+				"已取消导入2DMV。",
+				path => ReplaceSelectedFile(path, CustomMusicScoreManagerService.ReplaceVideoFile, "已导入2DMV"),
+				"mp4");
+#else
+			SetStatus("当前平台暂不支持导入2DMV视频，请手动复制。");
+#endif
+		}
+
 #if UNITY_EDITOR || UNITY_STANDALONE
 		private static string PickStandaloneFile(string title, string directory, params ExtensionFilter[] filters)
 		{
@@ -1820,6 +1916,7 @@ namespace Sekai.CustomMusicScoreManager
 			manifest.audioFileName = Path.GetFileName(_audioInput.text);
 			manifest.jacketFileName = Path.GetFileName(_jacketInput.text);
 			manifest.scoreFileName = Path.GetFileName(_scoreInput.text);
+			manifest.videoFileName = Path.GetFileName(_videoInput.text);
 			if (int.TryParse(_levelInput.text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int level))
 			{
 				manifest.playLevel = level;
@@ -1869,6 +1966,7 @@ namespace Sekai.CustomMusicScoreManager
 			_audioInput.SetTextWithoutNotify(manifest.audioFileName);
 			_jacketInput.SetTextWithoutNotify(manifest.jacketFileName);
 			_scoreInput.SetTextWithoutNotify(manifest.scoreFileName);
+			_videoInput.SetTextWithoutNotify(manifest.videoFileName);
 		}
 
 		private void ClearForm()
@@ -1876,7 +1974,7 @@ namespace Sekai.CustomMusicScoreManager
 			TMP_InputField[] inputs =
 			{
 				_titleInput, _scoreTitleInput, _userInput, _composerInput, _lyricistInput, _arrangerInput, _singerInput, _collaborationLabelInput, _descriptionInput, _levelInput,
-				_durationInput, _fillerInput, _audioInput, _jacketInput, _scoreInput
+				_durationInput, _fillerInput, _audioInput, _jacketInput, _scoreInput, _videoInput
 			};
 			foreach (TMP_InputField input in inputs)
 			{
@@ -1890,7 +1988,7 @@ namespace Sekai.CustomMusicScoreManager
 			TMP_InputField[] inputs =
 			{
 				_titleInput, _scoreTitleInput, _userInput, _composerInput, _lyricistInput, _arrangerInput, _singerInput, _collaborationLabelInput, _descriptionInput, _levelInput,
-				_durationInput, _fillerInput, _audioInput, _jacketInput, _scoreInput
+				_durationInput, _fillerInput, _audioInput, _jacketInput, _scoreInput, _videoInput
 			};
 			foreach (TMP_InputField input in inputs)
 			{

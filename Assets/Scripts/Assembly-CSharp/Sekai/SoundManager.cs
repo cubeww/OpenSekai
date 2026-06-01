@@ -277,6 +277,9 @@ namespace Sekai
 					ingameBgmPlayer.SetVolume(masterVolume * bgmVolume);
 					ingameBgmPlayer.SetStartTime(startTimeMs);
 					currentIngamePlayback = ingameBgmPlayer.Start();
+					// OpenSekai: CRI's prepared ingame BGM should not advance during the MusicInfo lead-in.
+					// Our AudioSource shim starts immediately, so pause it until ResumePreparedPlaybackIngame.
+					currentIngamePlayback.Pause();
 					audioSyncedUnityTimer = new AudioSyncedUnityTimer(currentIngamePlayback);
 					callback?.Invoke();
 					return requestId;

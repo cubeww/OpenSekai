@@ -41,6 +41,8 @@ namespace Sekai.MusicScoreMaker.Common
 
 		public string JacketPath => ResolveEntryPath(Manifest.jacketFileName);
 
+		public string VideoPath => ResolveEntryPath(Manifest.videoFileName);
+
 		public int MusicDurationSec
 		{
 			get

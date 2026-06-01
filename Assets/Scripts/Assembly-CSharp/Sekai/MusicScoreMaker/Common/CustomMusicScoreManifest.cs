@@ -30,6 +30,8 @@ namespace Sekai.MusicScoreMaker.Common
 
 		public string scoreFileName;
 
+		public string videoFileName;
+
 		public float fillerSec;
 
 		public int secForMusicScoreMaker;
@@ -75,6 +77,7 @@ namespace Sekai.MusicScoreMaker.Common
 			audioFileName ??= "audio.ogg";
 			jacketFileName ??= "jacket.png";
 			scoreFileName ??= "score.json";
+			videoFileName ??= string.Empty;
 			if (fillerSec < 0f)
 			{
 				fillerSec = 0f;

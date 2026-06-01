@@ -39,6 +39,11 @@ namespace Sekai.CustomMusicScoreManager
 			".sus"
 		};
 
+		private static readonly HashSet<string> VideoExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+		{
+			".mp4"
+		};
+
 		public static IReadOnlyList<CustomMusicScoreManagerItem> LoadItems()
 		{
 			Directory.CreateDirectory(CustomMusicScoreStorage.RootDirectory);
@@ -77,6 +82,7 @@ namespace Sekai.CustomMusicScoreManager
 				audioFileName = "audio.ogg",
 				jacketFileName = "jacket.png",
 				scoreFileName = "score.json",
+				videoFileName = string.Empty,
 				fillerSec = 0f,
 				secForMusicScoreMaker = 120,
 				previewStartTimeSec = 0f,
@@ -299,6 +305,17 @@ namespace Sekai.CustomMusicScoreManager
 			}
 		}
 
+		public static CustomMusicScoreEntry ReplaceVideoFile(CustomMusicScoreEntry entry, string sourcePath)
+		{
+			return ReplaceEntryFile(
+				entry,
+				sourcePath,
+				"video",
+				VideoExtensions,
+				manifest => manifest.videoFileName,
+				(manifest, fileName) => manifest.videoFileName = fileName);
+		}
+
 		private static CustomMusicScoreManagerItem CreateItem(CustomMusicScoreEntry entry)
 		{
 			string manifestPath = entry.ManifestPath;
@@ -313,6 +330,10 @@ namespace Sekai.CustomMusicScoreManager
 			if (File.Exists(scorePath))
 			{
 				lastWriteTime = Max(lastWriteTime, File.GetLastWriteTime(scorePath));
+			}
+			if (File.Exists(entry.VideoPath))
+			{
+				lastWriteTime = Max(lastWriteTime, File.GetLastWriteTime(entry.VideoPath));
 			}
 
 			return new CustomMusicScoreManagerItem(

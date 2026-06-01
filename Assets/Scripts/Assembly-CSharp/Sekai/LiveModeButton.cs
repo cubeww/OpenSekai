@@ -95,6 +95,31 @@ namespace Sekai
 			RefreshText();
 		}
 
+		public void SetupFixedModes(params LiveSettingData.LiveModeType[] selectableModes)
+		{
+			selectableSettingMode = true;
+			modes = new List<LiveSettingData.LiveModeType>();
+			if (selectableModes != null)
+			{
+				for (int i = 0; i < selectableModes.Length; i++)
+				{
+					LiveSettingData.LiveModeType mode = selectableModes[i];
+					if (!modes.Contains(mode))
+					{
+						modes.Add(mode);
+					}
+				}
+			}
+			if (modes.Count == 0)
+			{
+				modes.Add(LiveSettingData.LiveModeType.Low);
+			}
+			index = 0;
+			isUpdated = false;
+			RefreshChangeButtonEnabled();
+			RefreshText();
+		}
+
 		public void SetChangeButtonEnabled(bool enabled)
 		{
 			selectableSettingMode = enabled;
