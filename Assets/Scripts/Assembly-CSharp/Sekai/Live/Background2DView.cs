@@ -51,7 +51,6 @@ namespace Sekai.Live
 		private bool movieModeActive;
 		private bool pendingMoviePlay;
 		private float pendingMovieStartTime;
-		private bool deferMovieStartUntilRhythmGameStart;
 		private string moviePlaybackPath;
 
 		private void Awake()
@@ -160,23 +159,6 @@ namespace Sekai.Live
 				return;
 			}
 
-			if (ShouldDeferMovieStartUntilRhythmGameStart())
-			{
-				deferMovieStartUntilRhythmGameStart = true;
-				return;
-			}
-
-			PlayMovieAt(GetInitialMovieStartTime());
-		}
-
-		public override void RhythmGameStart()
-		{
-			if (!movieModeActive || !deferMovieStartUntilRhythmGameStart)
-			{
-				return;
-			}
-
-			deferMovieStartUntilRhythmGameStart = false;
 			PlayMovieAt(GetInitialMovieStartTime());
 		}
 
@@ -588,12 +570,6 @@ namespace Sekai.Live
 			return 0f;
 		}
 
-		private bool ShouldDeferMovieStartUntilRhythmGameStart()
-		{
-			return baseController?.BootData?.MusicData?.PlayStartEffectEnabled == true
-				&& baseController?.BootData?.ReleaseTransitionBeforeMusicStart == true;
-		}
-
 		private string PrepareMoviePlaybackPath(string moviePath)
 		{
 #if UNITY_ANDROID
@@ -690,7 +666,6 @@ namespace Sekai.Live
 		{
 			pendingMoviePlay = false;
 			pendingMovieStartTime = 0f;
-			deferMovieStartUntilRhythmGameStart = false;
 			if (videoPlayer != null)
 			{
 				videoPlayer.Stop();

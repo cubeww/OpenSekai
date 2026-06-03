@@ -34,6 +34,11 @@ namespace Sekai
 
 		private float time;
 
+		private void Awake()
+		{
+			Hide();
+		}
+
 		private void Start()
 		{
 			sprites = new Dictionary<NoteResult, Sprite>
@@ -46,6 +51,7 @@ namespace Sekai
 				{ NoteResult.JustPerfect, perfect },
 				{ NoteResult.Auto, auto }
 			};
+			Hide();
 		}
 
 		public void Excute((NoteResult result, NoteResultDescription description) judgeInfo)
@@ -78,6 +84,15 @@ namespace Sekai
 			float scale = 1f - inv * inv * inv;
 			spriteRenderer.transform.localScale = Vector3.one * scale;
 			time += Time.deltaTime;
+		}
+
+		private void Hide()
+		{
+			time = 1f;
+			if (spriteRenderer != null)
+			{
+				spriteRenderer.transform.localScale = Vector3.zero;
+			}
 		}
 
 		public JudgmentView()

@@ -8,7 +8,6 @@ namespace Sekai.Core.Live
 	public class SoloLiveController : BaseLiveController
 	{
 		private bool isTestPlayFinishedCalled;
-		private bool liveViewMusicStartInvoked;
 		private Coroutine finishCoroutine;
 		private Coroutine resumeCoroutine;
 		private bool playHistoryRecorded;
@@ -36,26 +35,11 @@ namespace Sekai.Core.Live
 			StartCoroutine(LiveStart(6f));
 		}
 
-		protected override void OnBeforeMusicStartWait(float waitSeconds)
-		{
-			if (BootData?.ReleaseTransitionBeforeMusicStart != true || waitSeconds <= 0f || liveViewMusicStartInvoked)
-			{
-				return;
-			}
-
-			liveViewMusicStartInvoked = true;
-			LiveViewExt.MusicStart(liveViews, currentAudioLatencyMusicTimeMs);
-		}
-
 		protected override void OnMusicStart()
 		{
 			LiveTransitioner.SafeFinish(null, null);
 			base.OnMusicStart();
-			if (!liveViewMusicStartInvoked)
-			{
-				liveViewMusicStartInvoked = true;
-				LiveViewExt.MusicStart(liveViews, currentAudioLatencyMusicTimeMs);
-			}
+			LiveViewExt.MusicStart(liveViews, currentAudioLatencyMusicTimeMs);
 		}
 
 		protected override void OnRhythmGameStart()
@@ -175,7 +159,6 @@ namespace Sekai.Core.Live
 			liveOutUIController?.Destroy();
 			SoundManager.Instance.StopIngame();
 			isTestPlayFinishedCalled = false;
-			liveViewMusicStartInvoked = false;
 			playHistoryRecorded = false;
 			result = 0;
 			state = LiveControllerState.None;

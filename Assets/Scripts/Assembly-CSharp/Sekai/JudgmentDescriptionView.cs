@@ -24,6 +24,11 @@ namespace Sekai
 
 		private bool isFastLateFlick;
 
+		private void Awake()
+		{
+			Hide();
+		}
+
 		private void Start()
 		{
 			sprites = new Dictionary<NoteResultDescription, Sprite>
@@ -34,6 +39,7 @@ namespace Sekai
 			};
 			LiveSettingData liveSetting = LiveSettingData.LoadFromStorage();
 			isFastLateFlick = liveSetting == null || liveSetting.IsFastLateFlick;
+			Hide();
 		}
 
 		public void Excute((NoteResult result, NoteResultDescription description) judgeInfo)
@@ -72,6 +78,15 @@ namespace Sekai
 			float scale = 1f - inv * inv * inv;
 			spriteRenderer.transform.localScale = Vector3.one * scale;
 			time += Time.deltaTime;
+		}
+
+		private void Hide()
+		{
+			time = 1f;
+			if (spriteRenderer != null)
+			{
+				spriteRenderer.transform.localScale = Vector3.zero;
+			}
 		}
 
 		public JudgmentDescriptionView()
