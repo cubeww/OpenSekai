@@ -438,7 +438,7 @@ namespace Sekai.Live
 			Damages = new Dictionary<NoteResult, int>
 			{
 				{ NoteResult.Bad, 60 },
-				{ NoteResult.Miss, 100 }
+				{ NoteResult.Miss, 80 }
 			};
 			ConfigBundleNamePath = "Live/Config/LiveBundleBuildData";
 			NoteBundleName = "live/note/custom01";

@@ -40,4 +40,20 @@ namespace AcbDecoder
             return $"{Index}: wave={WaveId}, codec={Codec}, size={Size}, name={Name}";
         }
     }
+
+    public sealed class AcbCueWaveform
+    {
+        internal AcbCueWaveform(string cueName, int waveId, float volumeScale)
+        {
+            CueName = cueName;
+            WaveId = waveId;
+            VolumeScale = volumeScale;
+        }
+
+        public string CueName { get; }
+
+        public int WaveId { get; }
+
+        public float VolumeScale { get; }
+    }
 }

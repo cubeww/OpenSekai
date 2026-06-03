@@ -59,7 +59,7 @@ namespace CriWare
 	public sealed class CriAtomExAcb
 	{
 		private readonly AcbFile acbFile;
-		private readonly Dictionary<string, AcbEntry> entriesByCueName = new Dictionary<string, AcbEntry>(StringComparer.Ordinal);
+		private readonly Dictionary<string, List<CueEntry>> entriesByCueName = new Dictionary<string, List<CueEntry>>(StringComparer.Ordinal);
 		private readonly Dictionary<string, AudioClip> clipsByCueName = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
 		private readonly Dictionary<AcbEntry, AudioClip> clipsByEntry = new Dictionary<AcbEntry, AudioClip>();
 		private readonly Dictionary<string, AudioClip> externalClipsByCueName = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
@@ -73,9 +73,29 @@ namespace CriWare
 				return;
 			}
 
+			Dictionary<int, AcbEntry> entriesByWaveId = new Dictionary<int, AcbEntry>();
 			foreach (AcbEntry entry in acbFile.Entries)
 			{
-				RegisterCueName(entry.Name, entry);
+				if (!entriesByWaveId.ContainsKey(entry.WaveId))
+				{
+					entriesByWaveId.Add(entry.WaveId, entry);
+				}
+			}
+
+			foreach (KeyValuePair<string, IReadOnlyList<AcbCueWaveform>> pair in acbFile.CueWaveforms)
+			{
+				foreach (AcbCueWaveform waveform in pair.Value)
+				{
+					if (entriesByWaveId.TryGetValue(waveform.WaveId, out AcbEntry entry))
+					{
+						RegisterCueName(pair.Key, entry, waveform.VolumeScale);
+					}
+				}
+			}
+
+			foreach (AcbEntry entry in acbFile.Entries)
+			{
+				RegisterCueNameFallback(entry.Name, entry);
 			}
 		}
 
@@ -136,12 +156,12 @@ namespace CriWare
 				cueInfo = CreateCueInfo(cueName, clip);
 				return true;
 			}
-			if (string.IsNullOrEmpty(cueName) || !entriesByCueName.TryGetValue(cueName, out AcbEntry entry))
+			if (string.IsNullOrEmpty(cueName) || !entriesByCueName.TryGetValue(cueName, out List<CueEntry> entries) || entries.Count == 0)
 			{
 				return false;
 			}
 
-			cueInfo = CreateCueInfo(cueName, entry);
+			cueInfo = CreateCueInfo(cueName, entries);
 			return true;
 		}
 
@@ -155,7 +175,7 @@ namespace CriWare
 				cueInfos[index++] = CreateCueInfo(pair.Key, pair.Value);
 				addedNames.Add(pair.Key);
 			}
-			foreach (KeyValuePair<string, AcbEntry> pair in entriesByCueName)
+			foreach (KeyValuePair<string, List<CueEntry>> pair in entriesByCueName)
 			{
 				if (addedNames.Contains(pair.Key))
 				{
@@ -176,11 +196,12 @@ namespace CriWare
 			{
 				return externalClip;
 			}
-			if (string.IsNullOrEmpty(cueName) || !entriesByCueName.TryGetValue(cueName, out AcbEntry entry))
+			if (string.IsNullOrEmpty(cueName) || !entriesByCueName.TryGetValue(cueName, out List<CueEntry> entries) || entries.Count == 0)
 			{
 				return null;
 			}
 
+			AcbEntry entry = entries[0].Entry;
 			if (clipsByCueName.TryGetValue(cueName, out AudioClip cachedClip) && cachedClip != null)
 			{
 				return cachedClip;
@@ -195,6 +216,34 @@ namespace CriWare
 			AudioClip clip = DecodeEntryToAudioClip(entry, cueName);
 			RegisterDecodedClip(entry, clip);
 			return clip;
+		}
+
+		internal CueAudioClip[] GetOrCreateAudioClips(string cueName)
+		{
+			if (!string.IsNullOrEmpty(cueName) && externalClipsByCueName.TryGetValue(cueName, out AudioClip externalClip))
+			{
+				return new[] { new CueAudioClip(externalClip, 1f) };
+			}
+			if (string.IsNullOrEmpty(cueName) || !entriesByCueName.TryGetValue(cueName, out List<CueEntry> entries) || entries.Count == 0)
+			{
+				return Array.Empty<CueAudioClip>();
+			}
+
+			var clips = new List<CueAudioClip>(entries.Count);
+			foreach (CueEntry cueEntry in entries)
+			{
+				if (cueEntry?.Entry == null)
+				{
+					continue;
+				}
+
+				AudioClip clip = GetOrCreateAudioClip(cueEntry.Entry, cueName);
+				if (clip != null)
+				{
+					clips.Add(new CueAudioClip(clip, cueEntry.VolumeScale));
+				}
+			}
+			return clips.ToArray();
 		}
 
 		internal int PreloadAllAudioClips()
@@ -239,7 +288,7 @@ namespace CriWare
 			{
 				try
 				{
-					if (GetOrCreateAudioClip(cueName) != null)
+					if (GetOrCreateAudioClips(cueName).Length > 0)
 					{
 						count++;
 					}
@@ -258,6 +307,23 @@ namespace CriWare
 			return audioData.ToAudioClip(clipName, false);
 		}
 
+		private AudioClip GetOrCreateAudioClip(AcbEntry entry, string clipName)
+		{
+			if (entry == null)
+			{
+				return null;
+			}
+
+			if (clipsByEntry.TryGetValue(entry, out AudioClip cachedEntryClip) && cachedEntryClip != null)
+			{
+				return cachedEntryClip;
+			}
+
+			AudioClip clip = DecodeEntryToAudioClip(entry, clipName);
+			RegisterDecodedClip(entry, clip);
+			return clip;
+		}
+
 		private void RegisterDecodedClip(AcbEntry entry, AudioClip clip)
 		{
 			if (entry == null || clip == null)
@@ -266,24 +332,28 @@ namespace CriWare
 			}
 
 			clipsByEntry[entry] = clip;
-			foreach (KeyValuePair<string, AcbEntry> pair in entriesByCueName)
+			foreach (KeyValuePair<string, List<CueEntry>> pair in entriesByCueName)
 			{
-				if (ReferenceEquals(pair.Value, entry))
+				foreach (CueEntry cueEntry in pair.Value)
 				{
-					clipsByCueName[pair.Key] = clip;
+					if (ReferenceEquals(cueEntry.Entry, entry) && !clipsByCueName.ContainsKey(pair.Key))
+					{
+						clipsByCueName[pair.Key] = clip;
+					}
 				}
 			}
 		}
 
-		private static CriAtomEx.CueInfo CreateCueInfo(string cueName, AcbEntry entry)
+		private static CriAtomEx.CueInfo CreateCueInfo(string cueName, List<CueEntry> entries)
 		{
+			AcbEntry entry = entries != null && entries.Count > 0 ? entries[0].Entry : null;
 			return new CriAtomEx.CueInfo
 			{
-				id = entry.WaveId,
+				id = entry != null ? entry.WaveId : 0,
 				name = cueName,
 				length = 0,
-				numTracks = 1,
-				numRelatedWaveforms = 1
+				numTracks = entries != null ? entries.Count : 0,
+				numRelatedWaveforms = entries != null ? entries.Count : 0
 			};
 		}
 
@@ -299,27 +369,68 @@ namespace CriWare
 			};
 		}
 
-		private static void RegisterCueName(Dictionary<string, AcbEntry> map, string cueName, AcbEntry entry)
+		private static void RegisterCueName(Dictionary<string, List<CueEntry>> map, string cueName, AcbEntry entry, float volumeScale)
 		{
-			if (!string.IsNullOrEmpty(cueName) && !map.ContainsKey(cueName))
-			{
-				map.Add(cueName, entry);
-			}
-		}
-
-		private void RegisterCueName(string cueNames, AcbEntry entry)
-		{
-			RegisterCueName(entriesByCueName, cueNames, entry);
-			if (string.IsNullOrEmpty(cueNames))
+			if (string.IsNullOrEmpty(cueName) || entry == null)
 			{
 				return;
 			}
 
+			if (!map.TryGetValue(cueName, out List<CueEntry> entries))
+			{
+				entries = new List<CueEntry>();
+				map.Add(cueName, entries);
+			}
+
+			entries.Add(new CueEntry(entry, volumeScale));
+		}
+
+		private void RegisterCueName(string cueName, AcbEntry entry, float volumeScale)
+		{
+			RegisterCueName(entriesByCueName, cueName, entry, volumeScale);
+		}
+
+		private void RegisterCueNameFallback(string cueNames, AcbEntry entry)
+		{
+			if (string.IsNullOrEmpty(cueNames))
+			{
+				return;
+			}
 			string[] splitNames = cueNames.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (string splitName in splitNames)
 			{
-				RegisterCueName(entriesByCueName, splitName.Trim(), entry);
+				string cueName = splitName.Trim();
+				if (!entriesByCueName.ContainsKey(cueName))
+				{
+					RegisterCueName(entriesByCueName, cueName, entry, 1f);
+				}
 			}
+		}
+
+		internal readonly struct CueAudioClip
+		{
+			public CueAudioClip(AudioClip clip, float volumeScale)
+			{
+				Clip = clip;
+				VolumeScale = volumeScale;
+			}
+
+			public AudioClip Clip { get; }
+
+			public float VolumeScale { get; }
+		}
+
+		private sealed class CueEntry
+		{
+			public CueEntry(AcbEntry entry, float volumeScale)
+			{
+				Entry = entry;
+				VolumeScale = Mathf.Max(0f, volumeScale);
+			}
+
+			public AcbEntry Entry { get; }
+
+			public float VolumeScale { get; }
 		}
 
 		private static byte[] ReadAllBytes(string path)
@@ -389,8 +500,8 @@ namespace CriWare
 				return currentPlayback;
 			}
 
-			AudioClip clip = acb.GetOrCreateAudioClip(cueName);
-			currentPlayback = CriAtomAudioRuntime.Play(clip, volume, startTimeMs / 1000f);
+			CriAtomExAcb.CueAudioClip[] clips = acb.GetOrCreateAudioClips(cueName);
+			currentPlayback = CriAtomAudioRuntime.Play(clips, volume, startTimeMs / 1000f);
 			startTimeMs = 0L;
 			return currentPlayback;
 		}
@@ -477,7 +588,8 @@ namespace CriWare
 		private sealed class PlaybackState
 		{
 			public GameObject GameObject;
-			public AudioSource Source;
+			public AudioSource PrimarySource;
+			public AudioSource[] Sources;
 			public bool Stopped;
 			public float BaseTimeSeconds;
 			public long BaseStopwatchTicks;
@@ -517,40 +629,76 @@ namespace CriWare
 				return CriAtomExPlayback.Invalid;
 			}
 
+			return Play(new[] { new CriAtomExAcb.CueAudioClip(clip, 1f) }, volume, startTimeSeconds);
+		}
+
+		public static CriAtomExPlayback Play(CriAtomExAcb.CueAudioClip[] clips, float volume, float startTimeSeconds)
+		{
+			if (clips == null || clips.Length == 0)
+			{
+				return CriAtomExPlayback.Invalid;
+			}
+
 			EnsureInitialized();
 			uint id = AllocatePlaybackId();
 			GameObject playbackObject = new GameObject("CriAtomExPlayback");
 			playbackObject.transform.SetParent(root.transform, false);
 			playbackObject.AddComponent<CriAtomPlaybackCleaner>().Id = id;
-			AudioSource source = playbackObject.AddComponent<AudioSource>();
-			source.playOnAwake = false;
-			source.spatialBlend = 0f;
-			source.clip = clip;
-			source.volume = Mathf.Max(0f, volume);
-			float sourceStartTimeSeconds = 0f;
-			if (startTimeSeconds > 0f && startTimeSeconds < clip.length)
+			List<AudioSource> sources = new List<AudioSource>(clips.Length);
+			float primaryStartTimeSeconds = 0f;
+			for (int i = 0; i < clips.Length; i++)
 			{
-				source.time = startTimeSeconds;
-				sourceStartTimeSeconds = startTimeSeconds;
+				AudioClip clip = clips[i].Clip;
+				if (clip == null)
+				{
+					continue;
+				}
+
+				AudioSource source = playbackObject.AddComponent<AudioSource>();
+				source.playOnAwake = false;
+				source.spatialBlend = 0f;
+				source.clip = clip;
+				source.volume = Mathf.Max(0f, volume * clips[i].VolumeScale);
+
+				float sourceStartTimeSeconds = 0f;
+				if (startTimeSeconds > 0f && startTimeSeconds < clip.length)
+				{
+					source.time = startTimeSeconds;
+					sourceStartTimeSeconds = startTimeSeconds;
+				}
+				if (sources.Count == 0)
+				{
+					primaryStartTimeSeconds = sourceStartTimeSeconds;
+				}
+
+				sources.Add(source);
+			}
+
+			if (sources.Count == 0)
+			{
+				UnityEngine.Object.Destroy(playbackObject);
+				return CriAtomExPlayback.Invalid;
 			}
 
 			PlaybackState state = new PlaybackState
 			{
 				GameObject = playbackObject,
-				Source = source,
+				PrimarySource = sources[0],
+				Sources = sources.ToArray(),
 				Stopped = false,
-				BaseTimeSeconds = sourceStartTimeSeconds,
+				BaseTimeSeconds = primaryStartTimeSeconds,
 				BaseStopwatchTicks = Stopwatch.GetTimestamp(),
-				PausedTimeSeconds = sourceStartTimeSeconds,
+				PausedTimeSeconds = primaryStartTimeSeconds,
 				Paused = false
 			};
 			playbacks[id] = state;
 
 			EnsureAudioListener();
 			state.BaseStopwatchTicks = Stopwatch.GetTimestamp();
-			source.Play();
-			float destroyDelay = Math.Max(0.1f, clip.length - sourceStartTimeSeconds + 0.1f);
-			UnityEngine.Object.Destroy(playbackObject, destroyDelay);
+			foreach (AudioSource source in sources)
+			{
+				source.Play();
+			}
 			return new CriAtomExPlayback(id);
 		}
 
@@ -567,7 +715,7 @@ namespace CriWare
 				return CriAtomExPlayback.Status.Stop;
 			}
 
-			if (state.Source == null || state.GameObject == null)
+			if (state.PrimarySource == null || state.GameObject == null)
 			{
 				playbacks.Remove(id);
 				return CriAtomExPlayback.Status.PlayEnd;
@@ -578,12 +726,24 @@ namespace CriWare
 				return CriAtomExPlayback.Status.Playing;
 			}
 
-			return state.Source.isPlaying ? CriAtomExPlayback.Status.Playing : CriAtomExPlayback.Status.PlayEnd;
+			if (state.Sources != null)
+			{
+				for (int i = 0; i < state.Sources.Length; i++)
+				{
+					AudioSource source = state.Sources[i];
+					if (source != null && source.isPlaying)
+					{
+						return CriAtomExPlayback.Status.Playing;
+					}
+				}
+			}
+
+			return CriAtomExPlayback.Status.PlayEnd;
 		}
 
 		public static long GetTimeMs(uint id)
 		{
-			if (id == 0 || !playbacks.TryGetValue(id, out PlaybackState state) || state.Source == null)
+			if (id == 0 || !playbacks.TryGetValue(id, out PlaybackState state) || state.PrimarySource == null)
 			{
 				return 0L;
 			}
@@ -595,13 +755,13 @@ namespace CriWare
 		{
 			playbackTime = -1L;
 			timeScale = 1f;
-			if (id == 0 || !playbacks.TryGetValue(id, out PlaybackState state) || state.Source == null)
+			if (id == 0 || !playbacks.TryGetValue(id, out PlaybackState state) || state.PrimarySource == null)
 			{
 				return;
 			}
 
 			playbackTime = (long)(GetMonotonicPlaybackTimeSeconds(state) * 1000f);
-			timeScale = state.Source.pitch;
+			timeScale = state.PrimarySource.pitch;
 			if (timeScale <= 0f)
 			{
 				timeScale = 1f;
@@ -616,9 +776,16 @@ namespace CriWare
 			}
 
 			state.Stopped = true;
-			if (state.Source != null)
+			if (state.Sources != null)
 			{
-				state.Source.Stop();
+				for (int i = 0; i < state.Sources.Length; i++)
+				{
+					AudioSource source = state.Sources[i];
+					if (source != null)
+					{
+						source.Stop();
+					}
+				}
 			}
 			if (state.GameObject != null)
 			{
@@ -629,20 +796,30 @@ namespace CriWare
 
 		public static void Pause(uint id)
 		{
-			if (id != 0 && playbacks.TryGetValue(id, out PlaybackState state) && state.Source != null)
+			if (id != 0 && playbacks.TryGetValue(id, out PlaybackState state) && state.PrimarySource != null)
 			{
 				if (!state.Paused)
 				{
 					state.PausedTimeSeconds = GetMonotonicPlaybackTimeSeconds(state);
 					state.Paused = true;
 				}
-				state.Source.Pause();
+				if (state.Sources != null)
+				{
+					for (int i = 0; i < state.Sources.Length; i++)
+					{
+						AudioSource source = state.Sources[i];
+						if (source != null)
+						{
+							source.Pause();
+						}
+					}
+				}
 			}
 		}
 
 		public static void Resume(uint id)
 		{
-			if (id != 0 && playbacks.TryGetValue(id, out PlaybackState state) && state.Source != null)
+			if (id != 0 && playbacks.TryGetValue(id, out PlaybackState state) && state.PrimarySource != null)
 			{
 				if (state.Paused)
 				{
@@ -650,7 +827,17 @@ namespace CriWare
 					state.BaseStopwatchTicks = Stopwatch.GetTimestamp();
 					state.Paused = false;
 				}
-				state.Source.UnPause();
+				if (state.Sources != null)
+				{
+					for (int i = 0; i < state.Sources.Length; i++)
+					{
+						AudioSource source = state.Sources[i];
+						if (source != null)
+						{
+							source.UnPause();
+						}
+					}
+				}
 			}
 		}
 
@@ -658,7 +845,7 @@ namespace CriWare
 		// Use a process monotonic clock for visual sync while AudioSource still owns actual audio output.
 		private static float GetMonotonicPlaybackTimeSeconds(PlaybackState state)
 		{
-			if (state == null || state.Source == null)
+			if (state == null || state.PrimarySource == null)
 			{
 				return 0f;
 			}
@@ -667,7 +854,7 @@ namespace CriWare
 				return state.PausedTimeSeconds;
 			}
 
-			float pitch = state.Source.pitch;
+			float pitch = state.PrimarySource.pitch;
 			if (pitch <= 0f)
 			{
 				pitch = 1f;
@@ -675,7 +862,7 @@ namespace CriWare
 
 			double elapsedSeconds = (Stopwatch.GetTimestamp() - state.BaseStopwatchTicks) * StopwatchSecondsPerTick * pitch;
 			float playbackTimeSeconds = state.BaseTimeSeconds + (float)Math.Max(0d, elapsedSeconds);
-			AudioClip clip = state.Source.clip;
+			AudioClip clip = state.PrimarySource.clip;
 			if (clip != null && clip.length > 0f)
 			{
 				playbackTimeSeconds = Mathf.Min(playbackTimeSeconds, clip.length);
@@ -784,11 +971,42 @@ namespace CriWare
 				playbacks.Remove(id);
 			}
 		}
+
+		internal static void DestroyIfPlaybackEnded(uint id)
+		{
+			if (id == 0 || !playbacks.TryGetValue(id, out PlaybackState state))
+			{
+				return;
+			}
+			if (state.Stopped || state.Paused || state.GameObject == null)
+			{
+				return;
+			}
+
+			if (state.Sources != null)
+			{
+				for (int i = 0; i < state.Sources.Length; i++)
+				{
+					AudioSource source = state.Sources[i];
+					if (source != null && source.isPlaying)
+					{
+						return;
+					}
+				}
+			}
+
+			UnityEngine.Object.Destroy(state.GameObject);
+		}
 	}
 
 	internal sealed class CriAtomPlaybackCleaner : MonoBehaviour
 	{
 		public uint Id { get; set; }
+
+		private void Update()
+		{
+			CriAtomAudioRuntime.DestroyIfPlaybackEnded(Id);
+		}
 
 		private void OnDestroy()
 		{

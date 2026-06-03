@@ -9,14 +9,21 @@ namespace AcbDecoder
         private readonly byte[] _data;
         private readonly ushort _awbSubKey;
 
-        private AcbFile(byte[] data, IReadOnlyList<AcbEntry> entries, ushort awbSubKey)
+        private AcbFile(
+            byte[] data,
+            IReadOnlyList<AcbEntry> entries,
+            ushort awbSubKey,
+            IReadOnlyDictionary<string, IReadOnlyList<AcbCueWaveform>> cueWaveforms)
         {
             _data = data;
             Entries = entries;
             _awbSubKey = awbSubKey;
+            CueWaveforms = cueWaveforms;
         }
 
         public IReadOnlyList<AcbEntry> Entries { get; }
+
+        public IReadOnlyDictionary<string, IReadOnlyList<AcbCueWaveform>> CueWaveforms { get; }
 
         public static AcbFile Load(string path)
         {
@@ -38,10 +45,10 @@ namespace AcbDecoder
             if (!header.TryGetData(0, "AwbFile", out int awbOffset, out int awbSize) || awbSize <= 0)
                 throw new AcbException("ACB has no embedded AwbFile data.");
 
-            Dictionary<int, string> namesByWaveId = TryBuildNames(data, header);
+            ResolveResult resolveResult = TryBuildNames(data, header);
             var awb = new AwbParser(data, awbOffset, awbSize);
-            IReadOnlyList<AcbEntry> entries = awb.ReadEntries(namesByWaveId);
-            return new AcbFile(data, entries, awb.SubKey);
+            IReadOnlyList<AcbEntry> entries = awb.ReadEntries(resolveResult.NamesByWaveId);
+            return new AcbFile(data, entries, awb.SubKey, resolveResult.CueWaveforms);
         }
 
         public AudioData Decode(int index, DecodeOptions? options = null)
@@ -69,7 +76,7 @@ namespace AcbDecoder
             }
         }
 
-        private static Dictionary<int, string> TryBuildNames(byte[] data, CriUtfTable header)
+        private static ResolveResult TryBuildNames(byte[] data, CriUtfTable header)
         {
             try
             {
@@ -77,7 +84,7 @@ namespace AcbDecoder
             }
             catch (AcbException)
             {
-                return new Dictionary<int, string>();
+                return ResolveResult.Empty;
             }
         }
 
@@ -102,13 +109,17 @@ namespace AcbDecoder
             private readonly byte[] _data;
             private readonly CriUtfTable _header;
             private readonly Dictionary<int, string> _names = new Dictionary<int, string>();
+            private readonly Dictionary<string, List<AcbCueWaveform>> _cueWaveforms = new Dictionary<string, List<AcbCueWaveform>>(StringComparer.Ordinal);
 
             private CriUtfTable? _cueNames;
             private CriUtfTable? _cues;
             private CriUtfTable? _waveforms;
             private CriUtfTable? _synths;
+            private CriUtfTable? _synthCommands;
             private CriUtfTable? _sequences;
+            private CriUtfTable? _sequenceCommands;
             private CriUtfTable? _tracks;
+            private CriUtfTable? _trackParameterCommands;
             private CriUtfTable? _trackCommands;
             private CriUtfTable? _blocks;
             private CriUtfTable? _blockSequences;
@@ -119,13 +130,13 @@ namespace AcbDecoder
                 _header = header;
             }
 
-            public Dictionary<int, string> Resolve()
+            public ResolveResult Resolve()
             {
                 _cueNames = LoadTable("CueNameTable");
                 _cues = LoadTable("CueTable");
                 _waveforms = LoadTable("WaveformTable");
                 if (_cueNames == null || _cues == null || _waveforms == null)
-                    return _names;
+                    return new ResolveResult(_names, FreezeCueWaveforms());
 
                 for (int i = 0; i < _cueNames.RowCount; i++)
                 {
@@ -134,10 +145,10 @@ namespace AcbDecoder
                         string.IsNullOrEmpty(cueName))
                         continue;
 
-                    ResolveCue(cueIndex, cueName, 0);
+                    ResolveCue(cueIndex, cueName, 1f, 0);
                 }
 
-                return _names;
+                return new ResolveResult(_names, FreezeCueWaveforms());
             }
 
             private CriUtfTable? LoadTable(string name)
@@ -147,7 +158,15 @@ namespace AcbDecoder
                 return CriUtfTable.Open(_data, offset);
             }
 
-            private void ResolveCue(int index, string cueName, int depth)
+            private IReadOnlyDictionary<string, IReadOnlyList<AcbCueWaveform>> FreezeCueWaveforms()
+            {
+                var result = new Dictionary<string, IReadOnlyList<AcbCueWaveform>>(StringComparer.Ordinal);
+                foreach (KeyValuePair<string, List<AcbCueWaveform>> pair in _cueWaveforms)
+                    result[pair.Key] = pair.Value.AsReadOnly();
+                return result;
+            }
+
+            private void ResolveCue(int index, string cueName, float volumeScale, int depth)
             {
                 if (_cues == null || index < 0 || index >= _cues.RowCount || depth > 8)
                     return;
@@ -158,21 +177,21 @@ namespace AcbDecoder
                 switch (referenceType)
                 {
                     case 1:
-                        ResolveWaveform(referenceIndex, cueName);
+                        ResolveWaveform(referenceIndex, cueName, volumeScale);
                         break;
                     case 2:
-                        ResolveSynth(referenceIndex, cueName, depth + 1);
+                        ResolveSynth(referenceIndex, cueName, volumeScale, depth + 1);
                         break;
                     case 3:
-                        ResolveSequence(referenceIndex, cueName, depth + 1);
+                        ResolveSequence(referenceIndex, cueName, volumeScale, depth + 1);
                         break;
                     case 8:
-                        ResolveBlockSequence(referenceIndex, cueName, depth + 1);
+                        ResolveBlockSequence(referenceIndex, cueName, volumeScale, depth + 1);
                         break;
                 }
             }
 
-            private void ResolveWaveform(int index, string cueName)
+            private void ResolveWaveform(int index, string cueName, float volumeScale)
             {
                 if (_waveforms == null || !TryGetWaveId(_waveforms, index, out int waveId))
                     return;
@@ -185,9 +204,16 @@ namespace AcbDecoder
                 {
                     _names.Add(waveId, cueName);
                 }
+
+                if (!_cueWaveforms.TryGetValue(cueName, out List<AcbCueWaveform> waveforms))
+                {
+                    waveforms = new List<AcbCueWaveform>();
+                    _cueWaveforms.Add(cueName, waveforms);
+                }
+                waveforms.Add(new AcbCueWaveform(cueName, waveId, volumeScale));
             }
 
-            private void ResolveSynth(int index, string cueName, int depth)
+            private void ResolveSynth(int index, string cueName, float volumeScale, int depth)
             {
                 if (depth > 8)
                     return;
@@ -197,6 +223,7 @@ namespace AcbDecoder
                 if (!_synths.TryGetData(index, "ReferenceItems", out int offset, out int size))
                     return;
 
+                volumeScale *= GetCommandVolumeScale(_synths, index, "CommandIndex", ref _synthCommands, "SynthCommandTable");
                 int count = size / 4;
                 for (int i = 0; i < count; i++)
                 {
@@ -208,19 +235,19 @@ namespace AcbDecoder
                         case 0:
                             return;
                         case 1:
-                            ResolveWaveform(itemIndex, cueName);
+                            ResolveWaveform(itemIndex, cueName, volumeScale);
                             break;
                         case 2:
-                            ResolveSynth(itemIndex, cueName, depth + 1);
+                            ResolveSynth(itemIndex, cueName, volumeScale, depth + 1);
                             break;
                         case 3:
-                            ResolveSequence(itemIndex, cueName, depth + 1);
+                            ResolveSequence(itemIndex, cueName, volumeScale, depth + 1);
                             break;
                     }
                 }
             }
 
-            private void ResolveSequence(int index, string cueName, int depth)
+            private void ResolveSequence(int index, string cueName, float volumeScale, int depth)
             {
                 if (depth > 8)
                     return;
@@ -231,23 +258,25 @@ namespace AcbDecoder
                     !_sequences.TryGetData(index, "TrackIndex", out int offset, out int size))
                     return;
 
+                volumeScale *= GetCommandVolumeScale(_sequences, index, "CommandIndex", ref _sequenceCommands, "SeqCommandTable");
                 int count = Math.Min(numTracks, size / 2);
                 for (int i = 0; i < count; i++)
-                    ResolveTrack(ReadInt16BE(offset + i * 2), cueName, depth + 1);
+                    ResolveTrack(ReadInt16BE(offset + i * 2), cueName, volumeScale, depth + 1);
             }
 
-            private void ResolveTrack(int index, string cueName, int depth)
+            private void ResolveTrack(int index, string cueName, float volumeScale, int depth)
             {
                 if (depth > 8)
                     return;
                 _tracks = _tracks ?? LoadTable("TrackTable");
                 if (_tracks == null || index < 0 || index >= _tracks.RowCount)
                     return;
+                volumeScale *= GetCommandVolumeScale(_tracks, index, "CommandIndex", ref _trackParameterCommands, "TrackCommandTable");
                 if (_tracks.TryGetUInt16(index, "EventIndex", out ushort eventIndex) && eventIndex != 0xFFFF)
-                    ResolveTrackCommand(eventIndex, cueName, depth + 1);
+                    ResolveTrackCommand(eventIndex, cueName, volumeScale, depth + 1);
             }
 
-            private void ResolveTrackCommand(int index, string cueName, int depth)
+            private void ResolveTrackCommand(int index, string cueName, float volumeScale, int depth)
             {
                 if (depth > 8)
                     return;
@@ -272,16 +301,16 @@ namespace AcbDecoder
                         ushort type = BinaryUtil.U16BE(_data, offset + pos);
                         ushort itemIndex = BinaryUtil.U16BE(_data, offset + pos + 2);
                         if (type == 2)
-                            ResolveSynth(itemIndex, cueName, depth + 1);
+                            ResolveSynth(itemIndex, cueName, volumeScale, depth + 1);
                         else if (type == 3)
-                            ResolveSequence(itemIndex, cueName, depth + 1);
+                            ResolveSequence(itemIndex, cueName, volumeScale, depth + 1);
                     }
 
                     pos += tlvSize;
                 }
             }
 
-            private void ResolveBlockSequence(int index, string cueName, int depth)
+            private void ResolveBlockSequence(int index, string cueName, float volumeScale, int depth)
             {
                 if (depth > 8)
                     return;
@@ -294,7 +323,7 @@ namespace AcbDecoder
                 {
                     int count = Math.Min(numTracks, trackSize / 2);
                     for (int i = 0; i < count; i++)
-                        ResolveTrack(ReadInt16BE(trackOffset + i * 2), cueName, depth + 1);
+                        ResolveTrack(ReadInt16BE(trackOffset + i * 2), cueName, volumeScale, depth + 1);
                 }
 
                 if (_blockSequences.TryGetUInt16(index, "NumBlocks", out ushort numBlocks) &&
@@ -302,11 +331,11 @@ namespace AcbDecoder
                 {
                     int count = Math.Min(numBlocks, blockSize / 2);
                     for (int i = 0; i < count; i++)
-                        ResolveBlock(ReadInt16BE(blockOffset + i * 2), cueName, depth + 1);
+                        ResolveBlock(ReadInt16BE(blockOffset + i * 2), cueName, volumeScale, depth + 1);
                 }
             }
 
-            private void ResolveBlock(int index, string cueName, int depth)
+            private void ResolveBlock(int index, string cueName, float volumeScale, int depth)
             {
                 if (depth > 8)
                     return;
@@ -319,13 +348,73 @@ namespace AcbDecoder
 
                 int count = Math.Min(numTracks, size / 2);
                 for (int i = 0; i < count; i++)
-                    ResolveTrack(ReadInt16BE(offset + i * 2), cueName, depth + 1);
+                    ResolveTrack(ReadInt16BE(offset + i * 2), cueName, volumeScale, depth + 1);
+            }
+
+            private float GetCommandVolumeScale(CriUtfTable owner, int row, string commandIndexColumn, ref CriUtfTable? commandTable, string commandTableName)
+            {
+                if (!owner.TryGetUInt16(row, commandIndexColumn, out ushort commandIndex) || commandIndex == 0xFFFF)
+                    return 1f;
+
+                commandTable = commandTable ?? LoadTable(commandTableName);
+                if (commandTable == null || commandIndex >= commandTable.RowCount)
+                    return 1f;
+                if (!commandTable.TryGetData(commandIndex, "Command", out int offset, out int size))
+                    return 1f;
+
+                return ReadCommandVolumeScale(offset, size);
+            }
+
+            private float ReadCommandVolumeScale(int offset, int size)
+            {
+                float volumeScale = 1f;
+                int pos = 0;
+                while (pos + 3 <= size)
+                {
+                    int commandOffset = offset + pos;
+                    ushort code = BinaryUtil.U16BE(_data, commandOffset);
+                    byte tlvSize = _data[commandOffset + 2];
+                    pos += 3;
+                    if (pos + tlvSize > size)
+                        break;
+
+                    // OpenSekai: CRI cue command 0x57 stores the sequence/track volume
+                    // as a percentage. custom02 relies on this for layered tap sounds.
+                    if (code == 0x57 && tlvSize >= 2)
+                    {
+                        ushort value = BinaryUtil.U16BE(_data, offset + pos);
+                        volumeScale *= Math.Max(0f, value / 100f);
+                    }
+
+                    pos += tlvSize;
+                }
+
+                return volumeScale;
             }
 
             private short ReadInt16BE(int offset)
             {
                 return unchecked((short)BinaryUtil.U16BE(_data, offset));
             }
+        }
+
+        private sealed class ResolveResult
+        {
+            public static readonly ResolveResult Empty = new ResolveResult(
+                new Dictionary<int, string>(),
+                new Dictionary<string, IReadOnlyList<AcbCueWaveform>>(StringComparer.Ordinal));
+
+            public ResolveResult(
+                Dictionary<int, string> namesByWaveId,
+                IReadOnlyDictionary<string, IReadOnlyList<AcbCueWaveform>> cueWaveforms)
+            {
+                NamesByWaveId = namesByWaveId;
+                CueWaveforms = cueWaveforms;
+            }
+
+            public Dictionary<int, string> NamesByWaveId { get; }
+
+            public IReadOnlyDictionary<string, IReadOnlyList<AcbCueWaveform>> CueWaveforms { get; }
         }
     }
 }
