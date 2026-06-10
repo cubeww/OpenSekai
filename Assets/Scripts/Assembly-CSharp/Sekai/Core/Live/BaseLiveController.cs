@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using CP;
+using Cysharp.Threading.Tasks;
 using CriWare;
 using Sekai.Live;
+using Sekai.MusicScoreMaker.Common;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -128,8 +130,18 @@ namespace Sekai.Core.Live
 			string cueName = ResolveMusicCueName();
 			if (!string.IsNullOrEmpty(cueName))
 			{
-				SoundManager.Instance.LoadSoundBundle(GetLiveMusicBundleName(cueName), true);
-				UpdateMusicLength(cueName);
+				if (IsCustomMusicScoreCue(cueName))
+				{
+					if (SoundManager.Instance.IsExternalAudioRegistered(cueName))
+					{
+						UpdateMusicLength(cueName);
+					}
+				}
+				else
+				{
+					SoundManager.Instance.LoadSoundBundle(GetLiveMusicBundleName(cueName), true);
+					UpdateMusicLength(cueName);
+				}
 			}
 		}
 
@@ -185,7 +197,28 @@ namespace Sekai.Core.Live
 			string cueName = ResolveMusicCueName();
 			if (!string.IsNullOrEmpty(cueName))
 			{
+				if (IsCustomMusicScoreCue(cueName) && !SoundManager.Instance.IsExternalAudioRegistered(cueName))
+				{
+					bool audioRegistered = false;
+					Exception audioException = null;
+					yield return EnsureCustomMusicScoreAudioRegisteredAsync()
+						.ToCoroutine(result => audioRegistered = result, exception => audioException = exception);
+					if (audioException != null)
+					{
+						Debug.LogException(audioException);
+						yield break;
+					}
+					if (!audioRegistered)
+					{
+						yield break;
+					}
+					UpdateMusicLength(cueName);
+				}
 				cueId = SoundManager.Instance.PrepareIngameBGM(cueName, currentMusicTimeMs / 1000f);
+				while (!SoundManager.Instance.IsIngamePlaybackReady(cueId))
+				{
+					yield return null;
+				}
 			}
 
 			yield return null;
@@ -363,6 +396,39 @@ namespace Sekai.Core.Live
 					return;
 				}
 			}
+		}
+
+		private bool IsCustomMusicScoreCue(string cueName)
+		{
+			return BootData is FreeLiveBootData freeLiveBootData
+				&& !string.IsNullOrEmpty(freeLiveBootData.CustomMusicScoreId)
+				&& string.Equals(cueName, "custom_" + freeLiveBootData.CustomMusicScoreId, StringComparison.OrdinalIgnoreCase);
+		}
+
+		private async UniTask<bool> EnsureCustomMusicScoreAudioRegisteredAsync()
+		{
+			if (!(BootData is FreeLiveBootData freeLiveBootData)
+				|| string.IsNullOrEmpty(freeLiveBootData.CustomMusicScorePath)
+				|| string.IsNullOrEmpty(freeLiveBootData.CustomMusicScoreId))
+			{
+				return false;
+			}
+
+			string cueName = "custom_" + freeLiveBootData.CustomMusicScoreId;
+			if (SoundManager.Instance.IsExternalAudioRegistered(cueName))
+			{
+				return true;
+			}
+
+			CustomMusicScoreEntry entry = CustomMusicScoreStorage.LoadEntry(freeLiveBootData.CustomMusicScorePath);
+			if (entry == null)
+			{
+				return false;
+			}
+
+			// OpenSekai: external custom-score audio is runtime state. Scene changes,
+			// build target switches, or domain reloads can drop it before live starts.
+			return await entry.RegisterAudioAsync(default);
 		}
 
 		private static string GetLiveMusicBundleName(string cueName)

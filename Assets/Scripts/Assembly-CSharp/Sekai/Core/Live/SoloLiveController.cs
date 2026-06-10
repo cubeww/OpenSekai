@@ -80,7 +80,7 @@ namespace Sekai.Core.Live
 			if ((state == LiveControllerState.Playing || state == LiveControllerState.ResumeCountDown) && result == 0)
 			{
 				state = LiveControllerState.Pause;
-				SoundManager.Instance.Pause();
+				SoundManager.Instance.PauseIngame(currentMusicTimeMs);
 				LiveViewExt.Pause(liveViews);
 				ShowPauseDialog();
 			}
@@ -113,7 +113,7 @@ namespace Sekai.Core.Live
 			}
 
 			state = LiveControllerState.Pause;
-			SoundManager.Instance.Pause();
+			SoundManager.Instance.PauseIngame(currentMusicTimeMs);
 			LiveViewExt.Pause(liveViews);
 		}
 

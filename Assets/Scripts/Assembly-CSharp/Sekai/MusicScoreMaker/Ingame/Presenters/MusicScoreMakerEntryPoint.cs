@@ -35,6 +35,7 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 
 			AssetBundleMetaManager.Instance.Initialize();
 			AssetBundleManager.Instance.Initialize();
+			SoundManager.Instance.Initialize();
 			SoundUtility.SetupGlobalSeSettings(GlobalSeSettings.Normal);
 		}
 

@@ -2296,15 +2296,21 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 				}
 				return;
 			}
+			if (!await EnsureCustomMusicScoreAudioRegisteredForPlayback())
+			{
+				_model.IsMusicPlaying = false;
+				if (MusicScoreMakerEventDispatcher.ExistsInstance)
+				{
+					MusicScoreMakerEventDispatcher.Instance.Publish(new PauseMusicEvent());
+				}
+				return;
+			}
 			uint playbackId = SoundManager.Instance.PrepareIngameBGM(_model.AssetbundleName, playbackStartTime);
-			CriAtomExPlayback? playback = SoundManager.Instance.GetPlayback(playbackId);
 			_musicUpdateCts?.Cancel();
 			_musicUpdateCts?.Dispose();
 			_musicUpdateCts = new CancellationTokenSource();
 			CancellationTokenSource cancellationTokenSource = _musicUpdateCts;
-			while (playback.HasValue
-				&& playback.Value.GetStatus() != CriAtomExPlayback.Status.Playing
-				&& !cancellationTokenSource.IsCancellationRequested)
+			while (!SoundManager.Instance.IsIngamePlaybackReady(playbackId) && !cancellationTokenSource.IsCancellationRequested)
 			{
 				await UniTask.Yield();
 			}
@@ -2324,6 +2330,30 @@ namespace Sekai.MusicScoreMaker.Ingame.Presenters
 			{
 				PauseMusic();
 			}
+		}
+
+		private async UniTask<bool> EnsureCustomMusicScoreAudioRegisteredForPlayback()
+		{
+			CustomMusicScoreEntry entry = _model?.CustomMusicScoreEntry;
+			if (entry == null)
+			{
+				return true;
+			}
+
+			_model.AssetbundleName = entry.AudioCueName;
+			if (SoundManager.Instance.IsExternalAudioRegistered(entry.AudioCueName))
+			{
+				return true;
+			}
+
+			// OpenSekai: custom-score audio is registered in runtime memory, so target
+			// switches/domain reloads can drop it while the editor model still exists.
+			bool audioRegistered = await entry.RegisterAudioAsync(_musicUpdateCts != null ? _musicUpdateCts.Token : CancellationToken.None);
+			if (audioRegistered && entry.AudioLengthMs > 0L)
+			{
+				_model.MusicLength = entry.AudioLengthMs;
+			}
+			return audioRegistered;
 		}
 
 		[AsyncStateMachine(typeof(_003CUpdatePlayingMusicCurrentMusicScoreStartTicks_003Ed__80))]
