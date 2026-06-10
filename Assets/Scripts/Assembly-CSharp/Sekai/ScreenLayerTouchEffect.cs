@@ -41,12 +41,7 @@ namespace Sekai
 
 		private void Update()
 		{
-			if (uiCamera == null)
-			{
-				uiCamera = ScreenManager.Instance != null ? ScreenManager.Instance.GetUICamera() : Camera.main;
-			}
-
-			if (uiCamera == null || touchEffects == null || touchEffects.Length == 0)
+			if (!EnsureInitialized())
 			{
 				return;
 			}
@@ -178,14 +173,16 @@ namespace Sekai
 
 		private void PlayTapEffect(int fingerId, Vector3 screenPos)
 		{
-			if (touchEffects == null || touchEffects.Length == 0 || uiCamera == null)
+			if (!EnsureInitialized())
 			{
 				return;
 			}
 
+			playTapEffectIndex = Wrap(playTapEffectIndex, 0, touchEffects.Length);
 			var touchEffect = touchEffects[playTapEffectIndex];
 			if (touchEffect == null)
 			{
+				playTapEffectIndex = Wrap(playTapEffectIndex + 1, 0, touchEffects.Length);
 				return;
 			}
 
@@ -200,6 +197,27 @@ namespace Sekai
 			}
 
 			playTapEffectIndex = Wrap(playTapEffectIndex + 1, 0, touchEffects.Length);
+		}
+
+		private bool EnsureInitialized()
+		{
+			if (uiCamera == null)
+			{
+				uiCamera = ScreenManager.Instance != null ? ScreenManager.Instance.GetUICamera() : Camera.main;
+			}
+
+			if (touchEffectMap == null)
+			{
+				touchEffectMap = new Dictionary<int, TouchEffect>();
+			}
+
+			if (touchEffects == null || touchEffects.Length == 0)
+			{
+				touchEffects = GetComponentsInChildren<TouchEffect>(true);
+				playTapEffectIndex = 0;
+			}
+
+			return uiCamera != null && touchEffects != null && touchEffects.Length > 0;
 		}
 
 		private void EndTapEffect(int fingerId)

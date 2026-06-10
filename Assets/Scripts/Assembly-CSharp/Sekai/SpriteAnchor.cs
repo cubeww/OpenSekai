@@ -22,6 +22,9 @@ namespace Sekai
 
 		public const float SAFEAREA_WIDTH = 60f;
 
+		// Original ClientConfig.Live.SpriteAnchorSizeOffset, clientConfig id=34 in 6.5.0.51.
+		private const float SPRITE_ANCHOR_SIZE_OFFSET = -0.1f;
+
 		[SerializeField]
 		private VerticalAnchor verticalAnchor;
 
@@ -46,7 +49,7 @@ namespace Sekai
 				return;
 			}
 
-			float orthographicSize = cachedCamera.orthographicSize;
+			float anchorSize = cachedCamera.orthographicSize + SPRITE_ANCHOR_SIZE_OFFSET;
 			Rect safeArea = Screen.safeArea;
 			float safeWidth = safeArea.width;
 			float safeHeight = Mathf.Max(1f, safeArea.height);
@@ -59,22 +62,22 @@ namespace Sekai
 			float y = 0f;
 			if (verticalAnchor == VerticalAnchor.Top)
 			{
-				y = orthographicSize;
+				y = anchorSize;
 			}
 			else if (verticalAnchor == VerticalAnchor.Bottom)
 			{
-				y = -orthographicSize;
+				y = -anchorSize;
 			}
 
 			float x = 0f;
 			float aspect = safeWidth / safeHeight;
 			if (horaizontalAnchor == HoraizontalAnchor.Left)
 			{
-				x = -orthographicSize * aspect;
+				x = -anchorSize * aspect;
 			}
 			else if (horaizontalAnchor == HoraizontalAnchor.Right)
 			{
-				x = orthographicSize * aspect;
+				x = anchorSize * aspect;
 			}
 			transform.localPosition = new Vector3(x, y, localPosition.z);
 		}

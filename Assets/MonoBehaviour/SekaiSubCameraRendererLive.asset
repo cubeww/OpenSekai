@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
   m_Name: SekaiSubCameraRendererLive
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   debugShaders:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
@@ -24,7 +24,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 23ba08c8423ddaa40821189af477a9c1, type: 2}
   - {fileID: 11400000, guid: 8897275f9861f4f48849ac41db08a10d, type: 2}
   - {fileID: 11400000, guid: 478979b1efe352e49b3278c64f9dfeba, type: 2}
-  m_RendererFeatureMap: 64305df1dddfb94636e63923a01ccf-c6bec8544b8b78e/51f916837dfffa931ed1d42122b579d462b71440c82e3db3dd716647bc67659-89d11674dd21119(7
+  m_RendererFeatureMap: 64305df1dddfb94636e63923a01ccfdc6bec8544b8b78ef51f916837dfffa931ed1d42122b579d462b71440c82e3db3dd716647bc67659d89d11674dd2111987
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -43,6 +43,9 @@ MonoBehaviour:
     cameraMotionVector: {fileID: 4800000, guid: c56b7e0d4c7cb484e959caeeedae9bbf, type: 3}
     objectMotionVector: {fileID: 4800000, guid: 7b3ede40266cd49a395def176e1bc486, type: 3}
     dataDrivenLensFlare: {fileID: 4800000, guid: 6cda457ac28612740adb23da5d39ea92, type: 3}
+    terrainDetailLitPS: {fileID: 4800000, guid: f6783ab646d374f94b199774402a5144, type: 3}
+    terrainDetailGrassPS: {fileID: 4800000, guid: e507fdfead5ca47e8b9a768b51c291a1, type: 3}
+    terrainDetailGrassBillboardPS: {fileID: 4800000, guid: 29868e73b638e48ca99a19ea58c48d90, type: 3}
   m_AssetVersion: 2
   m_OpaqueLayerMask:
     serializedVersion: 2
@@ -63,4 +66,3 @@ MonoBehaviour:
   m_CopyDepthMode: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 1
-  useSekaiPostProcess: 0
